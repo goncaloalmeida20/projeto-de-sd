@@ -6,8 +6,9 @@ import java.io.*;
 
 public class ClientInterface{
     public static int UDPPORT = 6789;
-    private static Scanner scanner = new Scanner(System.in);
-    static String msg;
+    private static final Scanner scanner = new Scanner(System.in);
+    static String msg, hostname;
+    static DatagramSocket mySocket;
 
     private static String readString(){
         String str;
@@ -27,7 +28,7 @@ public class ClientInterface{
         return -1;
     }
 
-    public static void main(String args[]){
+    public static void main(String[] args){
         // argumentos da linha de comando: hostname
         if(args.length == 0){
             System.out.println("java UDPClient hostname");
@@ -35,8 +36,9 @@ public class ClientInterface{
         }
 
         try (DatagramSocket aSocket = new DatagramSocket()) {
-            int op = 0;
-            byte[] m, buffer;
+            mySocket = aSocket;
+            hostname = args[0];
+            int op;
             do{
                 msg = null;
                 System.out.println("Client Menu:");
@@ -48,30 +50,15 @@ public class ClientInterface{
                 System.out.println("6 - Sair do programa");
                 System.out.print("Option: ");
                 op = readInt();
-                switch(op){
+                switch(op) {
                     case 1 -> login();
                     case 2 -> indexUrl();
                     case 3 -> search();
                     case 4 -> searchPages();
-                    case 5 -> { msg = "type | admin"; }
-                    case 6 -> { msg = "type | logout"; }
+                    case 5 -> msg = "type | admin";
+                    case 6 -> msg = "type | logout";
                     default -> System.out.println("Invalid option!");
                 }
-                System.out.println(msg);
-                m = msg.getBytes();
-
-                InetAddress aHost = InetAddress.getByName(args[0]);
-                DatagramPacket request = new DatagramPacket(m,m.length,aHost,UDPPORT);
-                aSocket.send(request);
-
-                buffer = new byte[0];
-                //aSocket.setSoTimeout(10000);
-                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-                aSocket.receive(reply);
-
-                String response = new String(reply.getData());
-
-                System.out.println('\n' + response);
             } while(op != 6);
         }catch (SocketException e){
             System.out.println("Socket: " + e.getMessage());
@@ -80,7 +67,32 @@ public class ClientInterface{
         }
     }
 
-    private static void login(){
+    private static void send() throws IOException {
+        //System.out.println(msg);
+        byte[] m = msg.getBytes();
+
+        InetAddress aHost = InetAddress.getByName(hostname);
+        DatagramPacket request = new DatagramPacket(m,m.length,aHost,UDPPORT);
+        mySocket.send(request);
+    }
+
+    private static String[] receive() throws IOException {
+        byte[] buffer = new byte[0];
+        //aSocket.setSoTimeout(10000);
+
+        DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+        mySocket.receive(reply);
+
+        String[] res_splitted = new String(reply.getData()).split("[|;]");
+
+        for(int i = 0; i < res_splitted.length; i++){
+            res_splitted[i] = res_splitted[i].trim();
+        }
+
+        return res_splitted;
+    }
+
+    private static void login() throws IOException {
         String username, password;
         System.out.print("Username: ");
         username = readString();
@@ -90,20 +102,26 @@ public class ClientInterface{
             password = readString();
             if(password == null) { System.out.println("Invalid password!"); }
             msg = "type | login ; username | " + username + " ; password | " + password;
+            send();
+
+            String[] res = receive(); // ex.: type | status ; logged | on ; msg | Welcome to the app
+            System.out.println(res[5]);
         }
+        System.out.println();
     }
 
-    private static void indexUrl(){
+    private static void indexUrl() throws IOException {
         String url;
         System.out.print("\nUrl to index: ");
         url = readString();
         if(url == null) { System.out.println("Invalid url!"); }
         else {
             msg = "type | index_url ; url | " + url;
+            send();
         }
     }
 
-    private static void search(){
+    private static void search() throws IOException {
         int term_count, n_page = 0, count = 1;
         String[] terms;
         System.out.print("\nNumber of terms to search: ");
@@ -128,10 +146,25 @@ public class ClientInterface{
                     msg += terms[count - 1] + " ; page | " + n_page;
                 }
             }
+            send();
+
+            String[] res = receive();
+            int item_count = Integer.parseInt(res[3]);
+            System.out.print("Pages that contain the terms ");
+            for(int i = 0 ; i < term_count; i++){
+                System.out.print(terms[i]);
+            }
+            System.out.println(" - Page " + n_page);
+            for (int i = 0; i < item_count; i++) {
+                System.out.println("Title of the page" + res[5 + i * 6]);
+                System.out.println("Complete Url: " + res[7 + i * 6]);
+                System.out.println("Short citation: " + res[9 + i * 6] + '\n');
+            }
+            System.out.println();
         }
     }
 
-    private static void searchPages(){
+    private static void searchPages() throws IOException {
         String url;
         int n_page;
         System.out.print("\nUrl: ");
@@ -144,6 +177,16 @@ public class ClientInterface{
             else {
                 msg = "type | search_pages ; url | " + url + " ; page | " + n_page;
             }
+            send();
+
+            String[] res = receive();
+            int item_count = Integer.parseInt(res[3]);
+            System.out.print("Pages that have a link to " + url);
+            System.out.println(" - Page " + n_page);
+            for (int i = 0; i < item_count; i++) {
+                System.out.println("Url " + (i+1) + ": " + res[5 + i * 2]);
+            }
+            System.out.println();
         }
     }
 }

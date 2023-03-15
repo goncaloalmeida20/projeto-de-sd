@@ -20,7 +20,7 @@ public class SearchServer implements Runnable {
     public void run() {
         try {
             HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
-            HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
+            HashMap<Integer, Page> all_pages = new HashMap<>();
 
             SearchIf searchImpl = new SearchImpl(invertedIndex, all_pages);
             Registry registry = LocateRegistry.createRegistry(PORT0);
@@ -34,10 +34,10 @@ public class SearchServer implements Runnable {
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         try {
             HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
-            HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
+            HashMap<Integer, Page> all_pages = new HashMap<>();
 
             SearchIf searchImpl = new SearchImpl(invertedIndex, all_pages);
             LocateRegistry.createRegistry(PORT0).rebind(arg0, searchImpl);
