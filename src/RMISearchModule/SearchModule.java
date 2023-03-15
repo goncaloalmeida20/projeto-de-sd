@@ -6,7 +6,7 @@ import java.rmi.registry.LocateRegistry;
 import java.io.*;
 import java.util.*;
 
-import URLQueue.URLQueue;
+import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
 import IndexStorageBarrels.SearchIf;
 import IndexStorageBarrels.SearchServer;

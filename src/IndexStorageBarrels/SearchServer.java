@@ -19,9 +19,10 @@ public class SearchServer implements Runnable {
 
     public void run() {
         try {
-            HashMap<String, ArrayList<Page>> invertedIndex = new HashMap<String, ArrayList<Page>>();
+            HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
+            HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
 
-            SearchIf searchImpl = new SearchImpl(invertedIndex);
+            SearchIf searchImpl = new SearchImpl(invertedIndex, all_pages);
             Registry registry = LocateRegistry.createRegistry(PORT0);
             registry.rebind("search", searchImpl);
 
@@ -35,9 +36,11 @@ public class SearchServer implements Runnable {
 
     public static void main(String args[]) {
         try {
-            HashMap<String, ArrayList<Page>> invertedIndex = new HashMap<String, ArrayList<Page>>();
-            SearchImpl h = new SearchImpl(invertedIndex);
-            LocateRegistry.createRegistry(PORT0).rebind(arg0, h);
+            HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
+            HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
+
+            SearchIf searchImpl = new SearchImpl(invertedIndex, all_pages);
+            LocateRegistry.createRegistry(PORT0).rebind(arg0, searchImpl);
             System.out.println("Search Server ready.");
         } catch (RemoteException re) {
             System.out.println("Exception in SearchImpl.main: " + re);
