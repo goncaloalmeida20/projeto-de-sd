@@ -27,7 +27,7 @@ public class JsoupAnalyzer{
             }
             Elements links = doc.select("a[href]");
             for(Element link: links){
-                p.addLink(link.text());
+                p.addLink(link.attr("abs:href"));
             }
             return p;
         }
