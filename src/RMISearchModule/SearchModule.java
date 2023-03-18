@@ -4,7 +4,7 @@ import java.rmi.registry.LocateRegistry;
 import java.util.*;
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
-import IndexStorageBarrels.SearchIf;
+import IndexStorageBarrels.SearchServer_S_I;
 import IndexStorageBarrels.SearchServer;
 import RMIClient.ClientInterface;
 import classes.Page;
@@ -22,14 +22,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     public SearchModule() throws RemoteException {
         super();
-        clients_log = new HashMap<String, Integer>();
-        clients_info = new HashMap<String, String[]>();
+        clients_log = new HashMap<>();
+        clients_info = new HashMap<>();
     }
 
     public String login(String username, String password) throws RemoteException, ServerNotActiveException {
         String c = RemoteServer.getClientHost();
-        //System.out.println(c);
-        //clients_log.forEach((key, value)-> System.out.println(key + " = " + value));
+        // System.out.println(c);
+        // clients_log.forEach((key, value)-> System.out.println(key + " = " + value));
         int logged = clients_log.get(c) == null ? 0 : 1;
         // System.out.println("logged: " + logged);
         try {
@@ -44,7 +44,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
             clientI = new ClientInterface(username, password);
             clients_log.put(c, 1);
             clients_info.put(c, new String[]{username, password});
-            //clients.forEach((key, value)-> System.out.println(key + " = " + value));
+            // clients.forEach((key, value)-> System.out.println(key + " = " + value));
             return "Client is now logged on!";
         }
     }
@@ -54,16 +54,20 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         uqi.addURL(url);
     }
 
-    // TODO: IT IS NECESSARY TO CREATE A THREAD TO DO THIS
     public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException {
-        SearchIf si = (SearchIf) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
+        SearchServer_S_I si = (SearchServer_S_I) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
         return si.search(terms, n_page);
     }
 
-    // TODO: IT IS NECESSARY TO CREATE A THREAD TO DO THIS
-    public ArrayList<Page> searchPages(String url, int n_page) throws RemoteException, NotBoundException {
-        SearchIf si = (SearchIf) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
-        return si.search_pages(url, n_page);
+    public ArrayList<Page> searchPages(String url, int n_page) throws RemoteException, NotBoundException, ServerNotActiveException {
+        String c = RemoteServer.getClientHost();
+        int logged = clients_log.get(c) == null ? 0 : 1;
+        if (logged == 0){
+            return null;
+        } else {
+            SearchServer_S_I si = (SearchServer_S_I) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
+            return si.search_pages(url, n_page);
+        }
     }
 
     // TODO: IT IS NECESSARY TO CREATE A THREAD TO DO THIS

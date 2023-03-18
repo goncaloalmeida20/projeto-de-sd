@@ -14,15 +14,10 @@ import java.rmi.server.*;
 
 public class ClientInterface extends UnicastRemoteObject implements ClientInterface_C_I{
     private static final Scanner scanner = new Scanner(System.in);
-    static String msg;
 
     private static SearchModule_S_I searchM;
 
-    public String username = null, password = null;
-
-    ClientInterface() throws RemoteException {
-        super();
-    }
+    public String username, password;
 
     public ClientInterface(String username, String password) throws RemoteException {
         super();
@@ -54,7 +49,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             searchM = (SearchModule_S_I) r.lookup(SearchModule.hostname);
             int op;
             do{
-                msg = null;
                 System.out.println("Client Menu:");
                 System.out.println("1 - Fazer login");
                 System.out.println("2 - Indexar novo URL");
@@ -147,7 +141,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
-    private static void searchPages() throws IOException, NotBoundException {
+    private static void searchPages() throws IOException, NotBoundException, ServerNotActiveException {
         String url;
         int n_page;
         System.out.print("\nUrl: ");
@@ -159,13 +153,16 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             if (n_page < 0) { System.out.println("Invalid number!"); }
             else {
                 ArrayList<Page> pages = searchM.searchPages(url, n_page);
-
-                System.out.print("Pages that have a link to " + url);
-                System.out.println(" - Page " + n_page);
-                for (int i = 0; i < pages.size(); i++) {
-                    System.out.println("Url " + (i+1) + ": " + pages.get(5 + i * 2).url);
+                if(pages == null){
+                    System.out.println("Client needs to be logged on to perform this operation!");
+                } else {
+                    System.out.print("Pages that have a link to " + url);
+                    System.out.println(" - Page " + n_page);
+                    for (int i = 0; i < pages.size(); i++) {
+                        System.out.println("Url " + (i+1) + ": " + pages.get(5 + i * 2).url);
+                    }
+                    System.out.println();
                 }
-                System.out.println();
             }
         }
     }

@@ -1,6 +1,5 @@
 package RMISearchModule;
 
-import RMIClient.ClientInterface;
 import classes.Page;
 
 import java.rmi.*;
@@ -11,7 +10,7 @@ public interface SearchModule_S_I extends Remote{
     String login(String username, String password) throws java.rmi.RemoteException, ServerNotActiveException;
     void indexUrl(String url) throws java.rmi.RemoteException, NotBoundException;
     ArrayList<Page> search(int termCount, String[] terms, int n_page) throws java.rmi.RemoteException, NotBoundException;
-    ArrayList<Page> searchPages(String url, int n_page) throws java.rmi.RemoteException, NotBoundException;
+    ArrayList<Page> searchPages(String url, int n_page) throws java.rmi.RemoteException, NotBoundException, ServerNotActiveException;
     void admin() throws java.rmi.RemoteException;
     String logout() throws java.rmi.RemoteException, ServerNotActiveException;
 }
