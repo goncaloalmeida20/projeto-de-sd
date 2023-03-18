@@ -19,15 +19,6 @@ public class SearchServer implements Runnable {
 
     public void run() {
         try {
-            HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
-            HashMap<Integer, Page> all_pages = new HashMap<>();
-
-            SearchIf searchImpl = new SearchImpl(invertedIndex, all_pages);
-            Registry registry = LocateRegistry.createRegistry(PORT0);
-            registry.rebind("search", searchImpl);
-
-            System.out.println("Search server started...");
-
 
         } catch (Exception e) {
             System.err.println("Search server exception:" + e.getMessage());
