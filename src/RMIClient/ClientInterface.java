@@ -17,7 +17,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     static String msg;
 
     private static SearchModule_S_I searchM;
-    private static ClientInterface clientI;
 
     public String username = null, password = null;
 
@@ -53,7 +52,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         try {
             Registry r = LocateRegistry.getRegistry(SearchModule.PORT);
             searchM = (SearchModule_S_I) r.lookup(SearchModule.hostname);
-            clientI = new ClientInterface();
             int op;
             do{
                 msg = null;
