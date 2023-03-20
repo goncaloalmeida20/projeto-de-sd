@@ -16,6 +16,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static final Scanner scanner = new Scanner(System.in);
 
     private static SearchModule_S_I searchM;
+    private static int id;
 
     public String username, password;
 
@@ -47,6 +48,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         try {
             Registry r = LocateRegistry.getRegistry(SearchModule.PORT);
             searchM = (SearchModule_S_I) r.lookup(SearchModule.hostname);
+            id = searchM.connectSM();
             int op;
             do{
                 System.out.println("Client Menu:");
@@ -66,7 +68,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     case 4 -> searchPages();
                     case 5 -> admin();
                     case 6 -> logout();
-                    case 7 -> searchM.logout();
+                    case 7 -> searchM.logout(id);
                     default -> System.out.println("Invalid option!");
                 }
             } while(op != 7);
@@ -87,7 +89,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             password = readString();
             if(password == null) { System.out.println("Invalid password!"); }
             else{
-                String msg = searchM.login(username, password);
+                String msg = searchM.login(username, password, id);
                 System.out.println("Server message: " + msg);
                 System.out.println();
             }
@@ -152,7 +154,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             n_page = readInt();
             if (n_page < 0) { System.out.println("Invalid number!"); }
             else {
-                ArrayList<Page> pages = searchM.searchPages(url, n_page);
+                ArrayList<Page> pages = searchM.searchPages(url, n_page, id);
                 if(pages == null){
                     System.out.println("Client needs to be logged on to perform this operation!");
                 } else {
@@ -172,7 +174,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void logout() throws IOException, ServerNotActiveException {
-        String msg = searchM.logout();
+        String msg = searchM.logout(id);
         System.out.println("Server message: " + msg);
     }
 }
