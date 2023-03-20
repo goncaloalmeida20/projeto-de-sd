@@ -1,5 +1,6 @@
 package RMISearchModule;
 
+import IndexStorageBarrels.BarrelModule;
 import classes.Page;
 
 import java.rmi.RemoteException;
@@ -13,6 +14,7 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I{
     public static String hostname1 = "127.0.0.2";
 
     private final SearchModule father;
+    private BarrelModule barrelM;
 
     public Map<String, Integer> barrels;
 
@@ -22,6 +24,10 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I{
         father = f;
     }
 
+    public void connect(BarrelModule bm) throws RemoteException {
+        barrelM = bm;
+    }
+
     public void run() {
         try {
             Registry rB = LocateRegistry.createRegistry(PORT1);
@@ -29,8 +35,16 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I{
 
             while (true){
                 Map.Entry<Integer, HashMap<Object, Integer>> entry = father.nextTask();
-                if (entry.getKey() == 1){
+                HashMap<Object, Integer> task = new HashMap<Object, Integer>(entry.getValue());
 
+                if (entry.getKey() == 1){
+                    String[] terms = (String[]) task.keySet().toArray()[0];
+                    int n_page = task.get(terms);
+                    barrelM.search(terms, n_page);
+                } else{
+                    String url = (String) task.keySet().toArray()[0];
+                    int n_page = task.get(url);
+                    barrelM.search_pages(url, n_page);
                 }
             }
 
