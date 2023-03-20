@@ -6,7 +6,7 @@ import java.util.List;
 public class Page {
     public String url, title, citation;
     public List<String> words;
-    public List<String> links;
+    public final List<String> links;
 
     public Page(){
         url = null;

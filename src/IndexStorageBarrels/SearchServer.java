@@ -12,47 +12,58 @@ public class SearchServer implements Runnable, SearchServer_S_I{
     public static String arg0 = "search";
     private Thread t;
     private final HashMap<String, ArrayList<Integer>> invertedIndex;
-    private final HashMap<Integer, Page> all_pages;
+    private final HashMap<Integer, Page> allPages;
 
-    public SearchServer(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> all_pages) throws RemoteException {
+    public SearchServer(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> allPages) throws RemoteException {
         t = new Thread(this);
         t.start();
         this.invertedIndex = invertedIndex;
-        this.all_pages = all_pages;
+        this.allPages = allPages;
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
         boolean get_pages = true;
-        ArrayList<ArrayList<Integer>> pages_ids = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> pagesIds = new ArrayList<>();
 
         // Verify if the inverted index have all the terms
+        ArrayList<Integer> p;
         for (String term : terms) {
-            ArrayList<Integer> p = invertedIndex.get(term);
+            synchronized (invertedIndex){
+                p = invertedIndex.get(term);
+            }
             if (p == null) {
                 get_pages = false;
                 break;
             }
-            pages_ids.add(p);
+            pagesIds.add(p);
         }
 
         if(!get_pages) return null;
 
-        ArrayList<Integer> common = new ArrayList<>(pages_ids.get(0));
-        int common_size;
+        ArrayList<Integer> common = new ArrayList<>(pagesIds.get(0));
+        int commonSize, allPagesSize;
 
-        for(int i = 1; i < all_pages.size(); i++){
-            common.retainAll(pages_ids.get(i));
-            common_size = common.size();
-            if(common_size == 0) break;
-            if(common_size > n_page * 10) break;
+        synchronized (allPages){
+            allPagesSize = allPages.size();
         }
 
-        common_size = common.size();
-        if(common_size == 0) return null;
+        for(int i = 1; i < allPagesSize; i++){
+            common.retainAll(pagesIds.get(i));
+            commonSize = common.size();
+            if(commonSize == 0) break;
+            if(commonSize > n_page * 10) break;
+        }
+
+        commonSize = common.size();
+        if(commonSize == 0) return null;
 
         ArrayList<Page> ten_pages = new ArrayList<>();
-        for (int i = 0; i < common_size && i < 10; i++) {
-            ten_pages.add(all_pages.get(common.get(i)));
+        Page page;
+        for (int i = 0; i < commonSize && i < 10; i++) {
+            synchronized (allPages){
+                page = allPages.get(common.get(i));
+            }
+            ten_pages.add(page);
         }
 
         return order_pages(ten_pages);
@@ -70,9 +81,20 @@ public class SearchServer implements Runnable, SearchServer_S_I{
         ArrayList<Page> ten_pages = new ArrayList<>();
         int count = 0;
 
-        for (int i = 0; i < all_pages.size(); i++) {
-            Page p = all_pages.get(i);
-            if(p.links.contains(url)){
+        int allPagesSize;
+        Page p;
+        boolean contains;
+        synchronized (allPages){
+            allPagesSize = allPages.size();
+        }
+        for (int i = 0; i < allPagesSize; i++) {
+            synchronized (allPages){
+                p = allPages.get(i);
+            }
+            synchronized (p.links){
+                contains = p.links.contains(url);
+            }
+            if(contains){
                 ten_pages.add(p);
                 count++;
             }

@@ -12,8 +12,8 @@ import java.rmi.server.*;
 import java.rmi.*;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModule_S_I{
-    public HashMap<Integer, Integer> clients_log;
-    public HashMap<Integer, String[]> clients_info;
+    public final Map<Integer, Integer> clients_log; // 0 - off 1 - on (login)
+    public final Map<Integer, String[]> clients_info;
 
     public static int PORT = 7000;
     public static String hostname = "127.0.0.1";
@@ -22,31 +22,32 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     public SearchModule() throws RemoteException {
         super();
-        clients_log = new HashMap<>();
-        clients_info = new HashMap<>();
+        clients_log = Collections.synchronizedMap(new HashMap<>());
+        clients_info = Collections.synchronizedMap(new HashMap<>());
     }
 
-    public int connectSM() throws RemoteException {
+    public synchronized int connectSM() throws RemoteException {
         cAllCounter++;
         return cAllCounter;
     }
 
-    public String login(String username, String password, int id) throws RemoteException, ServerNotActiveException {
+    public String login(String username, String password, int id) throws RemoteException {
         // System.out.println(c);
         // clients_log.forEach((key, value)-> System.out.println(key + " = " + value));
-        int logged = clients_log.get(id) == null ? 0 : 1;
-        // System.out.println("logged: " + logged);
-        try {
-            Thread.sleep(5000);
-            System.out.println(username == null);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        int logged;
+        synchronized (clients_log){
+            logged = clients_log.get(id) == null ? 0 : 1;
         }
+        // System.out.println("logged: " + logged);
         if (logged == 1){
             return "Client already logged on! Username and password not changed.";
         } else {
-            clients_log.put(id, 1);
-            clients_info.put(id, new String[]{username, password});
+            synchronized (clients_log){
+                clients_log.put(id, 1);
+            }
+            synchronized (clients_info){
+                clients_info.put(id, new String[]{username, password});
+            }
             // clients.forEach((key, value)-> System.out.println(key + " = " + value));
             return "Client is now logged on!";
         }
@@ -62,8 +63,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         return si.search(terms, n_page);
     }
 
-    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, ServerNotActiveException {
-        int logged = clients_log.get(id) == null ? 0 : 1;
+    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException {
+        int logged;
+        synchronized (clients_log){
+            logged = clients_log.get(id) == null ? 0 : 1;
+        }
         if (logged == 0){
             return null;
         } else {
@@ -77,8 +81,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     }
 
-    public String logout(int id) throws RemoteException, ServerNotActiveException {
-        int logged = clients_log.get(id) == null ? 0 : 1;
+    public String logout(int id) throws RemoteException {
+        int logged;
+        synchronized (clients_log){
+            logged = clients_log.get(id) == null ? 0 : 1;
+        }
         if (logged == 0){
             return "Client is not logged on, so it cannot loggout!";
         } else {

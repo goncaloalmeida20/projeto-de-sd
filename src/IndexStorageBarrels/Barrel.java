@@ -15,8 +15,10 @@ public class Barrel {
     private int id;
     private Thread t;
     private SearchServer ss;
+
     public HashMap<String, Integer> downloaders;
     public HashMap<String, Integer> barrels;
+
 
     HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<String, ArrayList<Integer>>();
     HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
