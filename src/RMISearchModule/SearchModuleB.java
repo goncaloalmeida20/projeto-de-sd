@@ -33,22 +33,25 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I{
             Registry rB = LocateRegistry.createRegistry(PORT1);
             rB.rebind(hostname1, this);
 
+            System.out.println("Search Module - Barrel connection ready.");
+
+            Map.Entry<Integer, HashMap<Object, Integer>> entry;
+            HashMap<Object, Integer> task;
+
             while (true){
-                Map.Entry<Integer, HashMap<Object, Integer>> entry = father.nextTask();
-                HashMap<Object, Integer> task = new HashMap<Object, Integer>(entry.getValue());
+                entry = father.nextTask();
+                task = new HashMap<>(entry.getValue());
 
                 if (entry.getKey() == 1){
                     String[] terms = (String[]) task.keySet().toArray()[0];
                     int n_page = task.get(terms);
                     barrelM.search(terms, n_page);
-                } else{
+                } else {
                     String url = (String) task.keySet().toArray()[0];
                     int n_page = task.get(url);
                     barrelM.search_pages(url, n_page);
                 }
             }
-
-            //System.out.println("Search Module - Barrel connection ready.");
         } catch (RemoteException e) {
             e.printStackTrace();
         }

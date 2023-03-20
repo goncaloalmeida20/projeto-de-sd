@@ -11,12 +11,10 @@ import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I {
-    private final HashMap<String, ArrayList<Integer>> invertedIndex;
-    private final HashMap<Integer, Page> allPages;
+    private Barrel barrel;
 
-    public BarrelModule(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> allPages) throws RemoteException {
-        this.invertedIndex = invertedIndex;
-        this.allPages = allPages;
+    public BarrelModule(Barrel b) {
+        barrel = b;
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
@@ -26,8 +24,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I {
         // Verify if the inverted index have all the terms
         ArrayList<Integer> p;
         for (String term : terms) {
-            synchronized (invertedIndex){
-                p = invertedIndex.get(term);
+            synchronized (barrel.invertedIndex){
+                p = barrel.invertedIndex.get(term);
             }
             if (p == null) {
                 get_pages = false;
@@ -41,8 +39,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I {
         ArrayList<Integer> common = new ArrayList<>(pagesIds.get(0));
         int commonSize, allPagesSize;
 
-        synchronized (allPages){
-            allPagesSize = allPages.size();
+        synchronized (barrel.all_pages){
+            allPagesSize = barrel.all_pages.size();
         }
 
         for(int i = 1; i < allPagesSize; i++){
@@ -58,8 +56,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I {
         ArrayList<Page> ten_pages = new ArrayList<>();
         Page page;
         for (int i = 0; i < commonSize && i < 10; i++) {
-            synchronized (allPages){
-                page = allPages.get(common.get(i));
+            synchronized (barrel.all_pages){
+                page = barrel.all_pages.get(common.get(i));
             }
             ten_pages.add(page);
         }
@@ -82,12 +80,12 @@ public class BarrelModule implements Runnable, BarrelModule_S_I {
         int allPagesSize;
         Page p;
         boolean contains;
-        synchronized (allPages){
-            allPagesSize = allPages.size();
+        synchronized (barrel.all_pages){
+            allPagesSize = barrel.all_pages.size();
         }
         for (int i = 0; i < allPagesSize; i++) {
-            synchronized (allPages){
-                p = allPages.get(i);
+            synchronized (barrel.all_pages){
+                p = barrel.all_pages.get(i);
             }
             synchronized (p.links){
                 contains = p.links.contains(url);

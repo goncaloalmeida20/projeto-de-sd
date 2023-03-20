@@ -13,14 +13,17 @@ public class Barrel {
     private BarrelModule ss;
 
 
-    HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<String, ArrayList<Integer>>();
-    HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
+    final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<String, ArrayList<Integer>>();
+    final HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
 
 
-    public Barrel(int i) throws RemoteException {
-        this.id = i;
-        ss = new BarrelModule(invertedIndex, all_pages);
+    public Barrel() throws RemoteException {
+        ss = new BarrelModule(this);
         t = new Thread(ss);
         t.start();
+    }
+
+    public static void main(String[] args) throws RemoteException {
+        Barrel barrel = new Barrel();
     }
 }
