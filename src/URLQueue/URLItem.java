@@ -1,21 +1,31 @@
 package URLQueue;
 
-public class URLItem {
+import java.io.Serializable;
+
+public class URLItem implements Serializable {
     public String url;
-    public boolean update_if_exists;
+    public int recursion_count;
+
+    public final int MAX_RECURSION = 2;
 
     public URLItem(String url){
         this.url = url;
-        update_if_exists = true;
+        recursion_count = MAX_RECURSION-1;
     }
 
-    public URLItem(String url, boolean update_if_exists){
-        this.url = url;
-        this.update_if_exists = update_if_exists;
+    public void decrease_recursion_count(){
+        recursion_count--;
+        System.out.println("URL " + url + " with new recursion count " + recursion_count);
     }
 
     @Override
     public boolean equals(Object obj) {
+        if(!(obj instanceof URLItem)) return false;
         return url.equals(((URLItem)obj).url);
+    }
+
+    @Override
+    public String toString() {
+        return url;
     }
 }
