@@ -1,20 +1,23 @@
 package IndexStorageBarrels;
 
+import java.rmi.NotBoundException;
 import java.rmi.registry.Registry;
 import java.util.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
+import RMISearchModule.SearchModuleB;
+import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
-public class SearchServer implements Runnable, SearchServer_S_I{
+public class BarrelModule implements Runnable, BarrelModule_S_I {
     public static int PORT0 = 1099;
     public static String arg0 = "search";
     private Thread t;
     private final HashMap<String, ArrayList<Integer>> invertedIndex;
     private final HashMap<Integer, Page> allPages;
 
-    public SearchServer(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> allPages) throws RemoteException {
+    public BarrelModule(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> allPages) throws RemoteException {
         t = new Thread(this);
         t.start();
         this.invertedIndex = invertedIndex;
@@ -110,15 +113,11 @@ public class SearchServer implements Runnable, SearchServer_S_I{
 
     public static void main(String[] args) {
         try {
-            HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
-            HashMap<Integer, Page> all_pages = new HashMap<>();
-
-            SearchServer searchS = new SearchServer(invertedIndex, all_pages);
-            Registry r = LocateRegistry.createRegistry(PORT0);
-            r.rebind(arg0, searchS);
+            Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
+            SearchModuleB_S_I searchM = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
 
             System.out.println("Search Server ready.");
-        } catch (RemoteException re) {
+        } catch (RemoteException | NotBoundException re) {
             System.out.println("Exception in SearchImpl.main: " + re);
         }
     }
