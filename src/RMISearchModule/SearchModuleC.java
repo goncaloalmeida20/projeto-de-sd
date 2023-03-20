@@ -21,18 +21,25 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     private int cAllCounter = 0;
 
-    private final SearchModule father;
+    private final NavigableMap<Integer, HashMap<Object, Integer>> tasks;
 
-    public SearchModuleC(SearchModule f) throws RemoteException {
+    public SearchModuleC(NavigableMap<Integer, HashMap<Object, Integer>> t) throws RemoteException {
         super();
         clients_log = Collections.synchronizedMap(new HashMap<>());
         clients_info = Collections.synchronizedMap(new HashMap<>());
-        father = f;
+        tasks = t;
     }
 
     public synchronized int connectSM() throws RemoteException {
         cAllCounter++;
         return cAllCounter;
+    }
+
+    private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
+        synchronized (tasks){
+            tasks.put(type, task);
+            tasks.notify();
+        }
     }
 
     public String login(String username, String password, int id) throws RemoteException {
@@ -62,7 +69,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
-        father.addTask(1, task);
+        addTask(1, task);
         return new ArrayList<>();
     }
 
@@ -77,7 +84,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
             HashMap<Object, Integer> task = new HashMap<>();
             task.put(url, n_page);
-            father.addTask(2, task);
+            addTask(2, task);
             return new ArrayList<>();
         }
     }

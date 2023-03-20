@@ -14,33 +14,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
     public SearchModule() throws RemoteException {
         super();
         tasks = new TreeMap<>();
-        sb = new SearchModuleB(this);
+        sb = new SearchModuleB(tasks);
         t1 = new Thread(sb);
-        sc = new SearchModuleC(this);
-        t2 = new Thread(sb);
+        sc = new SearchModuleC(tasks);
+        t2 = new Thread(sc);
         t1.start();
         t2.start();
-    }
-
-    public void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
-        synchronized (tasks){
-            tasks.put(type, task);
-            tasks.notify();
-        }
-    }
-
-    public Map.Entry<Integer, HashMap<Object, Integer>> nextTask() throws RemoteException{
-        synchronized(tasks){
-            try{
-                while(tasks.size() == 0)
-                    tasks.wait();
-                return tasks.lastEntry();
-            }
-            catch(Exception e){
-                System.out.println("Tasks exception: " + e.getMessage());
-            }
-        }
-        return null;
     }
 
     // =======================================================
