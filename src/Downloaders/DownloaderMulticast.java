@@ -13,13 +13,13 @@ public class DownloaderMulticast implements Runnable{
     public void run(){
         try{
             while(true){
-                synchronized (DownloaderManager.pageList){
-                    while(DownloaderManager.pageList.size() == 0){
-                        DownloaderManager.pageList.wait();
+                synchronized (DownloaderManager.pageQueue){
+                    while(DownloaderManager.pageQueue.size() == 0){
+                        DownloaderManager.pageQueue.wait();
                     }
-                    Page currentPage = DownloaderManager.pageList.remove(0);
+                    Page currentPage = DownloaderManager.pageQueue.remove(0);
                     System.out.println("DownloaderMulticast " + id + " sending page " + currentPage.url);
-                    DownloaderManager.pageList.notify();
+                    DownloaderManager.pageQueue.notify();
                 }
             }
         }
