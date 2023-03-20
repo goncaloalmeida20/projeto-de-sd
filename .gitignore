@@ -1,0 +1,6 @@
+/src/RMIClient/*.class
+/src/RMISearchModule/*.class
+/src/IndexStorageBarrels/*.class
+/src/Downloaders/*.class
+/src/classes/*.class
+/src/URLQueue/*.class

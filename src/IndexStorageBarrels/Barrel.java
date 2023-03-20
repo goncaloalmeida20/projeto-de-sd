@@ -4,6 +4,7 @@ import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.*;
 
 import classes.Page;
@@ -14,14 +15,16 @@ public class Barrel {
     private int id;
     private Thread t;
     private SearchServer ss;
+    public HashMap<String, Integer> downloaders;
+    public HashMap<String, Integer> barrels;
 
     HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<String, ArrayList<Integer>>();
     HashMap<Integer, Page> all_pages = new HashMap<Integer, Page>();
 
 
-    public Barrel(int i) {
+    public Barrel(int i) throws RemoteException {
         this.id = i;
-        ss = new SearchServer();
+        ss = new SearchServer(invertedIndex, all_pages);
         t = new Thread(ss);
         t.start();
     }

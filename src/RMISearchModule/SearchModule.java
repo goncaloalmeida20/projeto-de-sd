@@ -1,144 +1,103 @@
 package RMISearchModule;
 
-import java.net.*;
-import java.rmi.NotBoundException;
 import java.rmi.registry.LocateRegistry;
-import java.io.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
-import IndexStorageBarrels.SearchIf;
+import IndexStorageBarrels.SearchServer_S_I;
 import IndexStorageBarrels.SearchServer;
-import RMIClient.ClientInterface;
 import classes.Page;
+import java.rmi.registry.Registry;
+import java.rmi.server.*;
+import java.rmi.*;
 
-public class SearchModule {
-    static HashMap<String, Thread> threadMap = new HashMap<String, Thread>();
+public class SearchModule extends UnicastRemoteObject implements SearchModule_S_I{
+    public HashMap<Integer, Integer> clients_log;
+    public HashMap<Integer, String[]> clients_info;
 
-    public static void main(String[] args) throws InterruptedException, NotBoundException{
-        try (DatagramSocket aSocket = new DatagramSocket(ClientInterface.UDPPORT)) {
-            while(true){
-                byte[] buffer = new byte[1000];
-                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-                aSocket.receive(request);
-                String s = new String(request.getData(), 0, request.getLength());
+    public static int PORT = 7000;
+    public static String hostname = "127.0.0.1";
 
-                InetAddress clientAddress = request.getAddress();
-                int clientPort = request.getPort();
-                String clientId = clientAddress.getHostAddress() + ":" + clientPort;
-                Thread clientThread = threadMap.get(clientId);
+    private int cAllCounter = 0;
 
-                AtomicBoolean close_client_t = new AtomicBoolean(false);
+    public SearchModule() throws RemoteException {
+        super();
+        clients_log = new HashMap<>();
+        clients_info = new HashMap<>();
+    }
 
-                // Verify if already exists a thread associated with the client that made the request
-                if (clientThread == null || !clientThread.isAlive()) {
-                    clientThread = new Thread(() -> {try {
-                        close_client_t.set(runRequest(s, aSocket, request, false));
-                    } catch (NotBoundException e) {
-                        System.out.println("NBE: " + e.getMessage());
-                    }});
-                    threadMap.put(clientId, clientThread);
-                    clientThread.start();
-                } else {
-                    close_client_t.set(runRequest(s, aSocket, request, true));
-                }
-                if(close_client_t.get()){
-                    clientThread.interrupt();
-                }
-            }
-        } catch (SocketException e) {
-            System.out.println("Socket: " + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("IO: " + e.getMessage());
+    public int connectSM() throws RemoteException {
+        cAllCounter++;
+        return cAllCounter;
+    }
+
+    public String login(String username, String password, int id) throws RemoteException, ServerNotActiveException {
+        // System.out.println(c);
+        // clients_log.forEach((key, value)-> System.out.println(key + " = " + value));
+        int logged = clients_log.get(id) == null ? 0 : 1;
+        // System.out.println("logged: " + logged);
+        try {
+            Thread.sleep(5000);
+            System.out.println(username == null);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (logged == 1){
+            return "Client already logged on! Username and password not changed.";
+        } else {
+            clients_log.put(id, 1);
+            clients_info.put(id, new String[]{username, password});
+            // clients.forEach((key, value)-> System.out.println(key + " = " + value));
+            return "Client is now logged on!";
         }
     }
 
-    public static boolean runRequest(String s, DatagramSocket aSocket, DatagramPacket request, Boolean c_on) throws NotBoundException{
-        try{
-            SearchIf si = (SearchIf) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
+    public void indexUrl(String url) throws RemoteException, NotBoundException {
+        URLQueue_I uqi = (URLQueue_I) LocateRegistry.getRegistry(URLQueueStarter.URLQUEUE_PORT).lookup(URLQueueStarter.URLQUEUE_NAME);
+        uqi.addURL(url);
+    }
 
-            String[] types = {"login", "status", "url_list", "index_url", "search", "search_response", "search_pages", "admin", "logout"};
-            int type = 0;
+    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException {
+        SearchServer_S_I si = (SearchServer_S_I) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
+        return si.search(terms, n_page);
+    }
 
-            String[] s_splitted = s.split("[|;]");
-
-            for(int i = 0; i < s_splitted.length; i++){
-                s_splitted[i] = s_splitted[i].trim();
-            }
-
-            // type | login ; username | tintin ; password | unicorn
-            if (s_splitted[1].equals(types[0])){
-                String msg;
-                if(c_on) { msg = "type | status ; logged | on ; msg | Already logged on\n";}
-                else { msg = "type | status ; logged | on ; msg | Welcome to the app\n";}
-
-                byte[] m = msg.getBytes();
-                DatagramPacket reply = new DatagramPacket(m, m.length, request.getAddress(), request.getPort());
-                aSocket.send(reply);
-            }
-            // type | index_url ; url | www.not_uc.pt
-            else if (s_splitted[1].equals(types[3])){
-                String url = s_splitted[3];
-                URLQueue_I uqi = (URLQueue_I) LocateRegistry.getRegistry(URLQueueStarter.URLQUEUE_PORT).lookup(URLQueueStarter.URLQUEUE_NAME);
-                uqi.addURL(url);
-            }
-            // type | search ; term_count | 2 ; term_0 | Portugal ; term_1 | Espanha ; page | 1
-            else if (s_splitted[1].equals(types[4])){
-                type = 4;
-                int term_count = Integer.parseInt(s_splitted[3]);
-                String[] terms = new String[term_count];
-                for (int i = 0; i < term_count; i++){
-                    terms[i] = s_splitted[5 + i * 2];
-                }
-
-                ArrayList<Page> pages = si.search(terms, Integer.parseInt(s_splitted[s_splitted.length - 1]));
-
-                int item_count = pages.size();
-                String msg = "type | search_url_list ; item_count | " + item_count;
-                for(int i = 0; i < item_count; i++){
-                    msg += "; item_" + i + "_title | " + pages.get(i).title +
-                            "; item_" + i + "_url | " + pages.get(i).url +
-                            "; item_" + i + "_citation" + pages.get(i).citation;
-                }
-                byte[] m = msg.getBytes();
-                DatagramPacket reply = new DatagramPacket(m, m.length, request.getAddress(), request.getPort());
-                aSocket.send(reply);
-            }
-            // type | search_pages ; url | www.not_uc.pt ; page | 1
-            else if (s_splitted[1].equals(types[6])){
-                type = 6;
-                ArrayList<Page> pages = si.search_pages(s_splitted[3], Integer.parseInt(s_splitted[5]));
-                int item_count = pages.size();
-                String msg = "type | search_pages_url_list ; item_count | " + item_count;
-                for(int i = 0; i < item_count; i++){
-                    msg += "; item_" + i + "_url | " + pages.get(i).url;
-                }
-                byte[] m = msg.getBytes();
-                DatagramPacket reply = new DatagramPacket(m, m.length, request.getAddress(), request.getPort());
-                aSocket.send(reply);
-            }
-            // type | admin
-            else if (s_splitted[1].equals(types[7])){
-                // TODO: GET THAT INFORMATION
-            }
-            // type | logout
-            else if (s_splitted[1].equals(types[8])){
-                InetAddress clientAddress = request.getAddress();
-                int clientPort = request.getPort();
-                String clientId = clientAddress.getHostAddress() + ":" + clientPort;
-                Thread clientThread = threadMap.remove(clientId);
-
-                String msg = "type | status ; logged | off ; msg | Bye!!\n";
-                byte[] m = msg.getBytes();
-                DatagramPacket reply = new DatagramPacket(m, m.length, request.getAddress(), request.getPort());
-                aSocket.send(reply);
-                return true;
-            }
-        } catch (IOException e) {
-            System.out.println("IO: " + e.getMessage());
+    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, ServerNotActiveException {
+        int logged = clients_log.get(id) == null ? 0 : 1;
+        if (logged == 0){
+            return null;
+        } else {
+            SearchServer_S_I si = (SearchServer_S_I) LocateRegistry.getRegistry(SearchServer.PORT0).lookup(SearchServer.arg0);
+            return si.search_pages(url, n_page);
         }
-        return false;
+    }
+
+    // TODO: IT IS NECESSARY TO CREATE A THREAD TO DO THIS
+    public void admin() throws RemoteException {
+
+    }
+
+    public String logout(int id) throws RemoteException, ServerNotActiveException {
+        int logged = clients_log.get(id) == null ? 0 : 1;
+        if (logged == 0){
+            return "Client is not logged on, so it cannot loggout!";
+        } else {
+            clients_log.remove(id);
+            return "Client is now logged off!";
+        }
+    }
+
+    // =======================================================
+
+    public static void main(String[] args){
+        try {
+            SearchModule searchM = new SearchModule();
+            Registry r = LocateRegistry.createRegistry(PORT);
+            r.rebind(hostname, searchM);
+
+            System.out.println("Search Module ready.");
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 }
