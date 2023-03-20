@@ -46,7 +46,7 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
             try{
                 while(URLList.size() == 0)
                     URLList.wait();
-                return URLList.remove(URLList.size()-1);
+                return URLList.remove(0);
             }
             catch(Exception e){
                 System.out.println("URLQueue exception: " + e.getMessage());

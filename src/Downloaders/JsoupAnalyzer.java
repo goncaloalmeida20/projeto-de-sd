@@ -18,7 +18,7 @@ public class JsoupAnalyzer{
         try{
             Document doc = Jsoup.connect(url).get();
             Page p = new Page();
-
+            p.url = url;
             StringTokenizer tokens = new StringTokenizer(doc.text());
             int wordCount = 0;
             while(tokens.hasMoreElements() && wordCount++ < 100)
