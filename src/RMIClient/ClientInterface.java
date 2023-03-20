@@ -1,7 +1,7 @@
 package RMIClient;
 
-import RMISearchModule.SearchModule;
-import RMISearchModule.SearchModule_S_I;
+import RMISearchModule.SearchModuleC;
+import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
 
 import java.rmi.NotBoundException;
@@ -15,7 +15,7 @@ import java.rmi.server.*;
 public class ClientInterface extends UnicastRemoteObject implements ClientInterface_C_I{
     private static final Scanner scanner = new Scanner(System.in);
 
-    private static SearchModule_S_I searchM;
+    private static SearchModuleC_S_I searchM;
     private static int id;
 
     public String username, password;
@@ -46,8 +46,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     public static void main(String[] args){
         try {
-            Registry r = LocateRegistry.getRegistry(SearchModule.PORT);
-            searchM = (SearchModule_S_I) r.lookup(SearchModule.hostname);
+            Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
+            searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
             id = searchM.connectSM();
             int op;
             do{
