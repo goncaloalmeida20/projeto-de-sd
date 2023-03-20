@@ -6,7 +6,7 @@ import java.util.*;
 
 public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
     public final List<URLItem> URLList;
-    public List<URLItem> indexedURLs;
+    public final List<URLItem> indexedURLs;
 
     public URLQueue() throws RemoteException{
         super();
@@ -18,20 +18,23 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         URLItem uIt = new URLItem(newURL);
         synchronized(URLList){
             if(URLList.contains(uIt)) return false;
+
+            indexedURLs.add(uIt);
             URLList.add(uIt);
             URLList.notify();
         }
         return true;
     }
 
-    public boolean replaceURL(String newURL, int recursion_count) throws RemoteException{
-        URLItem uIt = new URLItem(newURL);
+    public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException{
+        URLItem uIt = new URLItem(newURL, recursion_count);
+        synchronized(indexedURLs){
+            if(indexedURLs.contains(uIt)) return false;
+        }
         synchronized(URLList){
-            int ind = URLList.indexOf(uIt);
-            if(ind >= 0){
-                uIt = URLList.get(ind);
-                uIt.decrease_recursion_count();
-            }
+            if(URLList.contains(uIt)) return false;
+
+            indexedURLs.add(uIt);
             URLList.add(uIt);
             URLList.notify();
         }

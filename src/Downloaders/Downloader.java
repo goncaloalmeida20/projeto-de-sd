@@ -30,7 +30,7 @@ public class Downloader implements Runnable{
                 String url = urlItem.url;
                 int next_recursion_count = urlItem.recursion_count - 1;
 
-                System.out.println("Downloader " + id + " starting to analyze" + url + " with recursion count " +
+                System.out.println("Downloader " + id + " starting to analyze " + url + " with recursion count " +
                         next_recursion_count);
 
                 //Analyze the URL using Jsoup
@@ -38,11 +38,11 @@ public class Downloader implements Runnable{
                 if(resultingPage == null) continue;
                 System.out.println("Received text: " + resultingPage.citation);
 
-                if(next_recursion_count != 0){
+                if(next_recursion_count > 0){
                     //Add links in the page to the Queue
                     for (String link : resultingPage.links) {
                         System.out.println("Adding link " + link + " to the list");
-                        uq.replaceURL(link, next_recursion_count);
+                        uq.addURLRecursively(link, next_recursion_count);
                     }
                 }
             }

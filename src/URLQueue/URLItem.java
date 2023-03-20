@@ -10,12 +10,12 @@ public class URLItem implements Serializable {
 
     public URLItem(String url){
         this.url = url;
-        recursion_count = MAX_RECURSION-1;
+        recursion_count = MAX_RECURSION;
     }
 
-    public void decrease_recursion_count(){
-        recursion_count--;
-        System.out.println("URL " + url + " with new recursion count " + recursion_count);
+    public URLItem(String url, int recursion_count){
+        this.url = url;
+        this.recursion_count = recursion_count;
     }
 
     @Override
