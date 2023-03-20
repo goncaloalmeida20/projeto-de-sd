@@ -45,6 +45,14 @@ public class Downloader implements Runnable{
                         uq.addURLRecursively(link, next_recursion_count);
                     }
                 }
+                synchronized(DownloaderManager.pageQueue){
+                    while(DownloaderManager.pageQueue.size() >= DownloaderManager.MAX_PAGE_LIST_SIZE){
+                        DownloaderManager.pageQueue.wait();
+                    }
+                    DownloaderManager.pageQueue.add(resultingPage);
+                    DownloaderManager.pageQueue.notify();
+                }
+
             }
         }
         catch(Exception e){
