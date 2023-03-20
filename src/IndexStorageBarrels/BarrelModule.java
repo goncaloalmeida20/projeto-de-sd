@@ -11,15 +11,10 @@ import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I {
-    public static int PORT0 = 1099;
-    public static String arg0 = "search";
-    private Thread t;
     private final HashMap<String, ArrayList<Integer>> invertedIndex;
     private final HashMap<Integer, Page> allPages;
 
     public BarrelModule(HashMap<String, ArrayList<Integer>> invertedIndex, HashMap<Integer, Page> allPages) throws RemoteException {
-        t = new Thread(this);
-        t.start();
         this.invertedIndex = invertedIndex;
         this.allPages = allPages;
     }
@@ -108,13 +103,11 @@ public class BarrelModule implements Runnable, BarrelModule_S_I {
     }
 
     public void run() {
-
-    }
-
-    public static void main(String[] args) {
         try {
             Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
-            SearchModuleB_S_I searchM = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
+            SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
+
+
 
             System.out.println("Search Server ready.");
         } catch (RemoteException | NotBoundException re) {

@@ -21,10 +21,13 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     private int cAllCounter = 0;
 
-    public SearchModuleC() throws RemoteException {
+    private final SearchModule father;
+
+    public SearchModuleC(SearchModule f) throws RemoteException {
         super();
         clients_log = Collections.synchronizedMap(new HashMap<>());
         clients_info = Collections.synchronizedMap(new HashMap<>());
+        father = f;
     }
 
     public synchronized int connectSM() throws RemoteException {
@@ -56,8 +59,11 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException {
-        BarrelModule_S_I si = (BarrelModule_S_I) LocateRegistry.getRegistry(BarrelModule.PORT0).lookup(BarrelModule.arg0);
-        return si.search(terms, n_page);
+        // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
+        HashMap<Object, Integer> task = new HashMap<>();
+        task.put(terms, n_page);
+        father.addTask(1, task);
+        return new ArrayList<>();
     }
 
     public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException {
@@ -68,8 +74,11 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (logged == 0){
             return null;
         } else {
-            BarrelModule_S_I si = (BarrelModule_S_I) LocateRegistry.getRegistry(BarrelModule.PORT0).lookup(BarrelModule.arg0);
-            return si.search_pages(url, n_page);
+            // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
+            HashMap<Object, Integer> task = new HashMap<>();
+            task.put(url, n_page);
+            father.addTask(2, task);
+            return new ArrayList<>();
         }
     }
 
@@ -97,9 +106,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public void run() {
         try {
-            SearchModule searchClient = new SearchModule();
             Registry rC = LocateRegistry.createRegistry(PORT0);
-            rC.rebind(hostname0, searchClient);
+            rC.rebind(hostname0, this);
 
             System.out.println("Search Module - Client connection ready.");
         } catch (RemoteException e) {
