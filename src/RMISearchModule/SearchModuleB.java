@@ -2,8 +2,10 @@ package RMISearchModule;
 
 import IndexStorageBarrels.BarrelModule;
 import IndexStorageBarrels.BarrelModule_S_I;
+import classes.Page;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -15,25 +17,27 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
     public static String hostname1 = "127.0.0.1";
 
     public List<BarrelModule_S_I> barrels;
-    private SearchModule father;
+    public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
+    public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
 
-    public SearchModuleB(SearchModule_S_I f) {
+    public SearchModuleB(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) {
         super();
         barrels = Collections.synchronizedList(new ArrayList<>());
-        System.out.println(f + " " + f.getClass());
-        father = (SearchModule) f;
+        tasks = t;
+        result_pages = p;
     }
 
     public void connect(BarrelModule_S_I bm) throws RemoteException {
         barrels.add(bm);
     }
 
-    private Map.Entry<Integer, HashMap<Object, Integer>> nextTask() throws RemoteException{
-        synchronized(father.tasks){
+    private Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> nextTask() throws RemoteException{
+        synchronized(tasks){
             try{
-                while(father.tasks.size() == 0)
-                    father.tasks.wait();
-                return father.tasks.lastEntry();
+                while(tasks.size() == 0)
+                    tasks.wait();
+                List<Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>>> entryList = new ArrayList<>(tasks.entrySet());
+                return entryList.get(entryList.size()-1);
             }
             catch(Exception e){
                 System.out.println("Tasks exception: " + e.getMessage());
@@ -49,27 +53,45 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
 
             System.out.println("Search Module - Barrel connection ready.");
 
-            Map.Entry<Integer, HashMap<Object, Integer>> entry;
+            Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> entry;
             HashMap<Object, Integer> task;
+            HashMap<SearchModuleC, Integer> cliendThreadAndTaskType;
+            ArrayList<Page> p;
             BarrelModule_S_I barrelM;
+            int n_page, taskType;
+            SearchModuleC clientThread;
             Random rand = new Random();
 
             while (true){
                 entry = nextTask();
                 assert entry != null;
                 task = new HashMap<>(entry.getValue());
-                System.out.println(1);
+                cliendThreadAndTaskType = new HashMap<>(entry.getKey());
                 barrelM = barrels.get(rand.nextInt(barrels.size()));
-                System.out.println(2);
+                clientThread = (SearchModuleC) cliendThreadAndTaskType.keySet().toArray()[0];
+                taskType = cliendThreadAndTaskType.get(cliendThreadAndTaskType.keySet().toArray()[0]);
 
-                if (entry.getKey() == 1){
+                if (taskType == 1){
                     String[] terms = (String[]) task.keySet().toArray()[0];
-                    int n_page = task.get(terms);
-                    father.updateResultPages(barrelM.search(terms, n_page));
+                    n_page = task.get(terms);
+                    p = barrelM.search(terms, n_page);
+                    synchronized (clientThread){
+                        synchronized (result_pages){
+                            result_pages.put(clientThread, p);
+                        }
+                        clientThread.notify();
+                    }
+
                 } else {
                     String url = (String) task.keySet().toArray()[0];
-                    int n_page = task.get(url);
-                    father.updateResultPages(barrelM.search_pages(url, n_page));
+                    n_page = task.get(url);
+                    p = barrelM.search_pages(url, n_page);
+                    synchronized (clientThread){
+                        synchronized (result_pages){
+                            result_pages.put(clientThread, p);
+                        }
+                        clientThread.notify();
+                    }
                 }
             }
         } catch (RemoteException e) {

@@ -22,13 +22,15 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     private int cAllCounter = 0;
 
-    private SearchModule father;
+    public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
+    public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
 
-    public SearchModuleC(SearchModule f) throws RemoteException {
+    public SearchModuleC(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) throws RemoteException {
         super();
         clients_log = Collections.synchronizedMap(new HashMap<>());
         clients_info = Collections.synchronizedMap(new HashMap<>());
-        father = f;
+        tasks = t;
+        result_pages = p;
     }
 
     public synchronized int connectSM() throws RemoteException {
@@ -37,9 +39,11 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
-        synchronized (father.tasks){
-            father.tasks.put(type, task);
-            father.tasks.notify();
+        synchronized (tasks){
+            HashMap<SearchModuleC, Integer> cliendThreadAndTaskType = new HashMap<>();
+            cliendThreadAndTaskType.put(this, type);
+            tasks.put(cliendThreadAndTaskType, task);
+            tasks.notify();
         }
     }
 
@@ -66,15 +70,20 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         uqi.addURL(url);
     }
 
-    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException {
-        // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
+    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException, InterruptedException {
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
         addTask(1, task);
-        return new ArrayList<>();
+        this.wait();
+        ArrayList<Page> res;
+        synchronized (result_pages){
+            res = result_pages.get(this);
+            result_pages.remove(this);
+        }
+        return res;
     }
 
-    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException {
+    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, InterruptedException {
         int logged;
         synchronized (clients_log){
             logged = clients_log.get(id) == null ? 0 : 1;
@@ -82,11 +91,16 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (logged == 0){
             return null;
         } else {
-            // TODO: CREATE A WAY TO BARREL WRITE SOMEWHERE
             HashMap<Object, Integer> task = new HashMap<>();
             task.put(url, n_page);
             addTask(2, task);
-            return new ArrayList<>();
+            this.wait();
+            ArrayList<Page> res;
+            synchronized (result_pages){
+                res = result_pages.get(this);
+                result_pages.remove(this);
+            }
+            return res;
         }
     }
 

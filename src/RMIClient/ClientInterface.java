@@ -74,7 +74,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             } while(op != 7);
         }catch (IOException e){
             System.out.println("IO_1: " + e.getMessage());
-        } catch (NotBoundException | ServerNotActiveException e) {
+        } catch (NotBoundException | ServerNotActiveException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -106,7 +106,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
-    private static void search() throws IOException, NotBoundException {
+    private static void search() throws IOException, NotBoundException, InterruptedException {
         int termCount, n_page = 0;
         String[] terms;
         System.out.print("\nNumber of terms to search: ");
@@ -143,7 +143,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
-    private static void searchPages() throws IOException, NotBoundException, ServerNotActiveException {
+    private static void searchPages() throws IOException, NotBoundException, ServerNotActiveException, InterruptedException {
         String url;
         int n_page;
         System.out.print("\nUrl: ");

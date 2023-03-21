@@ -12,25 +12,16 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
     private SearchModuleB sb;
     private SearchModuleC sc;
 
-    public NavigableMap<Integer, HashMap<Object, Integer>> tasks;
-    public ArrayList<Page> result_pages;
-
-    public synchronized void updateResultPages(ArrayList<Page> pages) {
-        result_pages.clear();
-        result_pages.addAll(pages);
-    }
-
-    public synchronized ArrayList<Page> getResultPages(){
-        return result_pages;
-    }
+    public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
+    public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
 
     public SearchModule() throws RemoteException {
         super();
-        tasks = new TreeMap<>();
-        result_pages = new ArrayList<>();
-        sb = new SearchModuleB(this);
+        tasks = new LinkedHashMap<>();
+        result_pages = new HashMap<>();
+        sb = new SearchModuleB(tasks, result_pages);
         t1 = new Thread(sb);
-        sc = new SearchModuleC(this);
+        sc = new SearchModuleC(tasks, result_pages);
         t2 = new Thread(sc);
         t1.start();
         t2.start();
