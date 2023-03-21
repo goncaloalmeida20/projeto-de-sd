@@ -74,13 +74,14 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
         addTask(1, task);
-        this.wait();
-        ArrayList<Page> res;
-        synchronized (result_pages){
-            res = result_pages.get(this);
+        synchronized(result_pages) {
+            while (!result_pages.containsKey(this)) {
+                result_pages.wait();
+            }
+            ArrayList<Page> res = result_pages.get(this);
             result_pages.remove(this);
+            return res;
         }
-        return res;
     }
 
     public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, InterruptedException {
@@ -94,13 +95,14 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             HashMap<Object, Integer> task = new HashMap<>();
             task.put(url, n_page);
             addTask(2, task);
-            this.wait();
-            ArrayList<Page> res;
-            synchronized (result_pages){
-                res = result_pages.get(this);
+            synchronized(result_pages) {
+                while (!result_pages.containsKey(this)) {
+                    result_pages.wait();
+                }
+                ArrayList<Page> res = result_pages.get(this);
                 result_pages.remove(this);
+                return res;
             }
-            return res;
         }
     }
 

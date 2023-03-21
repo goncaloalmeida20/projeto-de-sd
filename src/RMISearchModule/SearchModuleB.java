@@ -31,21 +31,6 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
         barrels.add(bm);
     }
 
-    private Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> nextTask() throws RemoteException{
-        synchronized(tasks){
-            try{
-                while(tasks.size() == 0)
-                    tasks.wait();
-                List<Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>>> entryList = new ArrayList<>(tasks.entrySet());
-                return entryList.get(entryList.size()-1);
-            }
-            catch(Exception e){
-                System.out.println("Tasks exception: " + e.getMessage());
-            }
-        }
-        return null;
-    }
-
     public void run() {
         try {
             Registry rB = LocateRegistry.createRegistry(PORT1);
@@ -53,46 +38,45 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
 
             System.out.println("Search Module - Barrel connection ready.");
 
-            Map.Entry<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> entry;
             HashMap<Object, Integer> task;
-            HashMap<SearchModuleC, Integer> cliendThreadAndTaskType;
-            ArrayList<Page> p;
             BarrelModule_S_I barrelM;
-            int n_page, taskType;
-            SearchModuleC clientThread;
             Random rand = new Random();
 
             while (true){
-                entry = nextTask();
-                assert entry != null;
-                task = new HashMap<>(entry.getValue());
-                cliendThreadAndTaskType = new HashMap<>(entry.getKey());
-                barrelM = barrels.get(rand.nextInt(barrels.size()));
-                clientThread = (SearchModuleC) cliendThreadAndTaskType.keySet().toArray()[0];
-                taskType = cliendThreadAndTaskType.get(cliendThreadAndTaskType.keySet().toArray()[0]);
-
-                if (taskType == 1){
-                    String[] terms = (String[]) task.keySet().toArray()[0];
-                    n_page = task.get(terms);
-                    p = barrelM.search(terms, n_page);
-                    synchronized (clientThread){
-                        synchronized (result_pages){
-                            result_pages.put(clientThread, p);
+                synchronized (tasks) {
+                    while (tasks.isEmpty()) {
+                        try {
+                            tasks.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                        clientThread.notify();
                     }
-
-                } else {
-                    String url = (String) task.keySet().toArray()[0];
-                    n_page = task.get(url);
-                    p = barrelM.search_pages(url, n_page);
-                    synchronized (clientThread){
-                        synchronized (result_pages){
-                            result_pages.put(clientThread, p);
+                for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
+                    if (barrels.size() > 0) {
+                        int randomIndex = rand.nextInt(barrels.size());
+                        barrelM = barrels.get(randomIndex);
+                    int type = key.values().iterator().next();
+                    task = tasks.get(key);
+                    if (type == 1) {
+                        ArrayList<Page> res = barrelM.search((String[]) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
+                        synchronized(result_pages) {
+                            for (SearchModuleC client : key.keySet()) {
+                                result_pages.put(client, res);
+                                result_pages.notifyAll();
+                            }
                         }
-                        clientThread.notify();
+                    } else if (type == 2) {
+                        ArrayList<Page> res = barrelM.search_pages((String) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
+                        synchronized(result_pages) {
+                            for (SearchModuleC client : key.keySet()) {
+                                result_pages.put(client, res);
+                                result_pages.notifyAll();
+                            }
+                        }
                     }
-                }
+                    tasks.remove(key);
+                }}
+            }
             }
         } catch (RemoteException e) {
             e.printStackTrace();
