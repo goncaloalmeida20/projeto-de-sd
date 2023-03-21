@@ -1,10 +1,11 @@
 package IndexStorageBarrels;
 
+import java.io.Serializable;
 import java.util.*;
 
 import classes.Page;
 
-public class Barrel {
+public class Barrel implements Serializable {
     private Thread t;
     private BarrelModule ss;
 

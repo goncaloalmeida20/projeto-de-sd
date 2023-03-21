@@ -2,6 +2,7 @@ package IndexStorageBarrels;
 
 import java.rmi.NotBoundException;
 import java.rmi.registry.Registry;
+import java.rmi.server.ServerNotActiveException;
 import java.util.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -11,8 +12,8 @@ import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
-public class BarrelModule implements Runnable, BarrelModule_S_I{
-    private Barrel barrel;
+public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
+    private final Barrel barrel;
 
     public BarrelModule(Barrel b) {
         barrel = b;
@@ -103,18 +104,20 @@ public class BarrelModule implements Runnable, BarrelModule_S_I{
 
     public void run() {
         try {
+            System.out.println(6);
             Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
-            r.lookup(SearchModuleB.hostname1);
+            System.out.println(5);
             SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
-
+            System.out.println(3);
             searchMB.connect(this);
+            System.out.println(4);
 
             System.out.println("Search Server ready.");
 
             while (true){
 
             }
-        } catch (RemoteException | NotBoundException re) {
+        } catch (RemoteException | NotBoundException | ServerNotActiveException re) {
             System.out.println("Exception in BarrelModule.main: " + re);
         }
     }
