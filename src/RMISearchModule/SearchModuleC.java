@@ -1,5 +1,6 @@
 package RMISearchModule;
 
+import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 import URLQueue.URLQueueStarter;
@@ -11,7 +12,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.*;
 import java.rmi.*;
 
-public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I{
+public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I, Serializable {
     public final Map<Integer, Integer> clients_log; // 0 - off 1 - on (login)
     public final Map<Integer, String[]> clients_info;
 
@@ -21,13 +22,13 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     private int cAllCounter = 0;
 
-    private final NavigableMap<Integer, HashMap<Object, Integer>> tasks;
+    private SearchModule father;
 
-    public SearchModuleC(NavigableMap<Integer, HashMap<Object, Integer>> t) throws RemoteException {
+    public SearchModuleC(SearchModule f) throws RemoteException {
         super();
         clients_log = Collections.synchronizedMap(new HashMap<>());
         clients_info = Collections.synchronizedMap(new HashMap<>());
-        tasks = t;
+        father = f;
     }
 
     public synchronized int connectSM() throws RemoteException {
@@ -36,9 +37,9 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
-        synchronized (tasks){
-            tasks.put(type, task);
-            tasks.notify();
+        synchronized (father.tasks){
+            father.tasks.put(type, task);
+            father.tasks.notify();
         }
     }
 

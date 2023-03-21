@@ -1,6 +1,7 @@
 package RMISearchModule;
 
 import IndexStorageBarrels.BarrelModule;
+import IndexStorageBarrels.BarrelModule_S_I;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -13,25 +14,26 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
     public static int PORT1 = 100;
     public static String hostname1 = "127.0.0.1";
 
-    private final NavigableMap<Integer, HashMap<Object, Integer>> tasks;
-    public List<BarrelModule> barrels;
+    public List<BarrelModule_S_I> barrels;
+    private SearchModule father;
 
-    public SearchModuleB(NavigableMap<Integer, HashMap<Object, Integer>> t) {
+    public SearchModuleB(SearchModule_S_I f) {
         super();
         barrels = Collections.synchronizedList(new ArrayList<>());
-        tasks = t;
+        System.out.println(f + " " + f.getClass());
+        father = (SearchModule) f;
     }
 
-    public void connect(BarrelModule bm) throws RemoteException {
+    public void connect(BarrelModule_S_I bm) throws RemoteException {
         barrels.add(bm);
     }
 
     private Map.Entry<Integer, HashMap<Object, Integer>> nextTask() throws RemoteException{
-        synchronized(tasks){
+        synchronized(father.tasks){
             try{
-                while(tasks.size() == 0)
-                    tasks.wait();
-                return tasks.lastEntry();
+                while(father.tasks.size() == 0)
+                    father.tasks.wait();
+                return father.tasks.lastEntry();
             }
             catch(Exception e){
                 System.out.println("Tasks exception: " + e.getMessage());
@@ -49,10 +51,9 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
 
             Map.Entry<Integer, HashMap<Object, Integer>> entry;
             HashMap<Object, Integer> task;
-            BarrelModule barrelM;
+            BarrelModule_S_I barrelM;
             Random rand = new Random();
 
-            // TODO: SELECT BARREL TO PROCEDE
             while (true){
                 entry = nextTask();
                 assert entry != null;
@@ -64,11 +65,11 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
                 if (entry.getKey() == 1){
                     String[] terms = (String[]) task.keySet().toArray()[0];
                     int n_page = task.get(terms);
-                    barrelM.search(terms, n_page);
+                    father.updateResultPages(barrelM.search(terms, n_page));
                 } else {
                     String url = (String) task.keySet().toArray()[0];
                     int n_page = task.get(url);
-                    barrelM.search_pages(url, n_page);
+                    father.updateResultPages(barrelM.search_pages(url, n_page));
                 }
             }
         } catch (RemoteException e) {
