@@ -14,9 +14,12 @@ import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
     private final Barrel barrel;
+    public Thread t;
 
     public BarrelModule(Barrel b) {
         barrel = b;
+        t = new Thread(this);
+        t.start();
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
