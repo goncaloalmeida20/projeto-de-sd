@@ -45,19 +45,31 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    public String login(String username, String password, int id) throws RemoteException {
-        int logged;
-        synchronized (clients_log){
-            logged = clients_log.get(id) == null ? 0 : 1;
+    public String register(String username, String password, int id) throws RemoteException {
+        boolean exist;
+        synchronized (clients_info){
+            exist = clients_info.get(id) != null;
         }
-        if (logged == 1){
-            return "Client already logged on! Username and password not changed.";
+        if (exist){
+            return "Client already exists!";
+        } else {
+            synchronized (clients_info){
+                clients_info.put(id, new String[]{username, password});
+            }
+            return "Client is now registered!";
+        }
+    }
+
+    public String login(int id) throws RemoteException {
+        boolean logged;
+        synchronized (clients_log){
+            logged = clients_log.get(id) != null;
+        }
+        if (logged){
+            return "Client already logged on!";
         } else {
             synchronized (clients_log){
                 clients_log.put(id, 1);
-            }
-            synchronized (clients_info){
-                clients_info.put(id, new String[]{username, password});
             }
             return "Client is now logged on!";
         }

@@ -52,30 +52,51 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             int op;
             do {
                 System.out.println("Client Menu:");
-                System.out.println("1 - Fazer login");
-                System.out.println("2 - Indexar novo URL");
-                System.out.println("3 - Pesquisar páginas que contenham um conjunto de termos");
-                System.out.println("4 - Consultar lista de páginas com ligação para uma página específica");
-                System.out.println("5 - Consultar página de administração");
-                System.out.println("6 - Fazer logout");
-                System.out.println("7 - Sair do programa");
+                System.out.println("1 - Registar");
+                System.out.println("2 - Fazer login");
+                System.out.println("3 - Indexar novo URL");
+                System.out.println("4 - Pesquisar páginas que contenham um conjunto de termos");
+                System.out.println("5 - Consultar lista de páginas com ligação para uma página específica");
+                System.out.println("6 - Consultar página de administração");
+                System.out.println("7 - Fazer logout");
+                System.out.println("8 - Sair do programa");
                 System.out.print("Option: ");
                 op = readInt();
                 switch (op) {
-                    case 1 -> login();
-                    case 2 -> indexUrl();
-                    case 3 -> search();
-                    case 4 -> searchPages();
-                    case 5 -> admin();
-                    case 6 -> logout();
-                    case 7 -> searchM.logout(id);
+                    case 1 -> register();
+                    case 2 -> login();
+                    case 3 -> indexUrl();
+                    case 4 -> search();
+                    case 5 -> searchPages();
+                    case 6 -> admin();
+                    case 7 -> logout();
+                    case 8 -> searchM.logout(id);
                     default -> System.out.println("Invalid option!");
                 }
-            } while (op != 7);
+            } while (op != 8);
         } catch (IOException e) {
             System.out.println("IO_1: " + e.getMessage());
         } catch (NotBoundException | ServerNotActiveException | InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void register() throws IOException, ServerNotActiveException {
+        String username, password;
+        System.out.print("Username: ");
+        username = readString();
+        if (username == null) {
+            System.out.println("Invalid username!");
+        } else {
+            System.out.print("Password: ");
+            password = readString();
+            if (password == null) {
+                System.out.println("Invalid password!");
+            } else {
+                String msg = searchM.register(username, password, id);
+                System.out.println("Server message: " + msg);
+                System.out.println();
+            }
         }
     }
 
@@ -91,7 +112,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             if (password == null) {
                 System.out.println("Invalid password!");
             } else {
-                String msg = searchM.login(username, password, id);
+                String msg = searchM.login(id);
                 System.out.println("Server message: " + msg);
                 System.out.println();
             }
