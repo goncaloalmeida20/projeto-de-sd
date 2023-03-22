@@ -1,11 +1,9 @@
 package RMISearchModule;
 
-import IndexStorageBarrels.BarrelModule;
 import IndexStorageBarrels.BarrelModule_S_I;
 import classes.Page;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;

@@ -1,6 +1,5 @@
 package IndexStorageBarrels;
 
-import java.io.Serializable;
 import java.rmi.*;
 import java.util.*;
 

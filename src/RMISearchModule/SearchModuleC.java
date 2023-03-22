@@ -5,8 +5,6 @@ import java.rmi.registry.LocateRegistry;
 import java.util.*;
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
-import IndexStorageBarrels.BarrelModule_S_I;
-import IndexStorageBarrels.BarrelModule;
 import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
