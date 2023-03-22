@@ -17,6 +17,21 @@ public class Barrel{
     public Barrel(int id) {
         this.id = id;
 
+        int id_page = 1;
+        List<String> s = new ArrayList<>();
+        s.add("this");
+        s.add("is");
+        s.add("google");
+        List<String> l = new ArrayList<>();
+        s.add("bing.pt");
+        s.add("yahoo.pt");
+        Page p = new Page("google.pt", "Google", "this is google", s , l);
+        ArrayList<Integer> ids = new ArrayList<>();
+        ids.add(id_page);
+        invertedIndex.put("this", ids);
+        invertedIndex.put("is", ids);
+        invertedIndex.put("google", ids);
+        all_pages.put(id_page, p);
     }
 
     public static void main(String[] args) {
