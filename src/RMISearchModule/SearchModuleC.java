@@ -60,7 +60,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    public String login(int id) throws RemoteException {
+    public String login(String username, String password, int id) throws RemoteException {
         boolean logged;
         synchronized (clients_log){
             logged = clients_log.get(id) != null;
@@ -69,6 +69,10 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             return "Client already logged on!";
         } else {
             synchronized (clients_log){
+                synchronized (clients_info){
+                    String[] info = clients_info.get(id);
+                    if(!info[0].equals(username) || !info[1].equals(password)) return "Invalid credentials!";
+                }
                 clients_log.put(id, 1);
             }
             return "Client is now logged on!";

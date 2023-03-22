@@ -94,8 +94,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                 System.out.println("Invalid password!");
             } else {
                 String msg = searchM.register(username, password, id);
-                System.out.println("Server message: " + msg);
-                System.out.println();
+                System.out.println("Server message: " + msg + '\n');
             }
         }
     }
@@ -112,9 +111,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             if (password == null) {
                 System.out.println("Invalid password!");
             } else {
-                String msg = searchM.login(id);
-                System.out.println("Server message: " + msg);
-                System.out.println();
+                String msg = searchM.login(username, password, id);
+                System.out.println("Server message: " + msg + '\n');
             }
         }
     }
