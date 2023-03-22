@@ -109,14 +109,16 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         try {
             Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
             SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
-            searchMB.connect(this);
+
+            BarrelModule_S_I bmSI = new BarrelModule(id);
+            searchMB.connect(bmSI);
 
             System.out.println("Search Server ready.");
 
             while (true){
 
             }
-        } catch (RemoteException | NotBoundException | ServerNotActiveException re) {
+        } catch (RemoteException | NotBoundException re) {
             System.out.println("Exception in BarrelModule.main: " + re);
         }
     }

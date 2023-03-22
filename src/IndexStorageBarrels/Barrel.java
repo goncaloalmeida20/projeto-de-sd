@@ -37,7 +37,6 @@ public class Barrel{
     public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
         bMult = new BarrelMulticast(id);
-
         ss = new BarrelModule(id);
         System.out.println("Barrel is ready");
     }

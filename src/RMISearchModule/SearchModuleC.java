@@ -88,10 +88,14 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
         addTask(1, task);
+        System.out.println(4);
         synchronized(result_pages) {
+            System.out.println(5);
             while (!result_pages.containsKey(this)) {
                 result_pages.wait();
+                System.out.println(3);
             }
+            System.out.println(6);
             ArrayList<Page> res = result_pages.get(this);
             result_pages.remove(this);
             return res;
