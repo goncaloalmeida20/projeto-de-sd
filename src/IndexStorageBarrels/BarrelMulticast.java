@@ -10,6 +10,6 @@ public class BarrelMulticast implements Runnable{
     }
 
     public void run(){
-
+        System.out.println("BarrelMulticast " + id);
     }
 }

@@ -13,11 +13,11 @@ import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
-    private final Barrel barrel;
     public Thread t;
+    public int id;
 
-    public BarrelModule(Barrel b) {
-        barrel = b;
+    public BarrelModule(int id) {
+        this.id = id;
         t = new Thread(this);
         t.start();
     }
@@ -29,8 +29,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         // Verify if the inverted index have all the terms
         ArrayList<Integer> p;
         for (String term : terms) {
-            synchronized (barrel.invertedIndex){
-                p = barrel.invertedIndex.get(term);
+            synchronized (Barrel.invertedIndex){
+                p = Barrel.invertedIndex.get(term);
             }
             if (p == null) {
                 get_pages = false;
@@ -44,8 +44,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         ArrayList<Integer> common = new ArrayList<>(pagesIds.get(0));
         int commonSize, allPagesSize;
 
-        synchronized (barrel.all_pages){
-            allPagesSize = barrel.all_pages.size();
+        synchronized (Barrel.all_pages){
+            allPagesSize = Barrel.all_pages.size();
         }
 
         for(int i = 1; i < allPagesSize; i++){
@@ -61,8 +61,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         ArrayList<Page> ten_pages = new ArrayList<>();
         Page page;
         for (int i = 0; i < commonSize && i < 10; i++) {
-            synchronized (barrel.all_pages){
-                page = barrel.all_pages.get(common.get(i));
+            synchronized (Barrel.all_pages){
+                page = Barrel.all_pages.get(common.get(i));
             }
             ten_pages.add(page);
         }
@@ -85,12 +85,12 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         int allPagesSize;
         Page p;
         boolean contains;
-        synchronized (barrel.all_pages){
-            allPagesSize = barrel.all_pages.size();
+        synchronized (Barrel.all_pages){
+            allPagesSize = Barrel.all_pages.size();
         }
         for (int i = 0; i < allPagesSize; i++) {
-            synchronized (barrel.all_pages){
-                p = barrel.all_pages.get(i);
+            synchronized (Barrel.all_pages){
+                p = Barrel.all_pages.get(i);
             }
             synchronized (p.links){
                 contains = p.links.contains(url);
