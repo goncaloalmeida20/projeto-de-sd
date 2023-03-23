@@ -6,7 +6,7 @@ public class URLItem implements Serializable {
     public String url;
     public int recursion_count;
 
-    public final int MAX_RECURSION = 1;
+    public final int MAX_RECURSION = 2;
 
     public URLItem(String url){
         this.url = url;

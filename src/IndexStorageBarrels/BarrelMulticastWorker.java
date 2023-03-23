@@ -4,10 +4,12 @@ import classes.MulticastPacket;
 
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BarrelMulticastWorker implements Runnable{
-    private static final String MULTICAST_ADDRESS = "224.0.1.0";
-    private static final int MULTICAST_PORT = 5000;
+    private final Map<Integer, ByteBuffer> downloadersBuffer= new HashMap<>();
+
     public Thread t;
     public int id;
     public BarrelMulticastWorker(int id){
@@ -18,54 +20,37 @@ public class BarrelMulticastWorker implements Runnable{
 
     public void run(){
         System.out.println("BarrelMulticastWorker " + id);
-        try (MulticastSocket socket = new MulticastSocket(MULTICAST_PORT)) {
-            // create socket and bind it
-            InetAddress mcastaddr = InetAddress.getByName(MULTICAST_ADDRESS);
-            InetSocketAddress group = new InetSocketAddress(mcastaddr, MULTICAST_PORT);
-            NetworkInterface netIf = NetworkInterface.getByName("bge0");
-
-            socket.joinGroup(group, netIf);
-
+        try {
             while (true) {
-                byte[] packet_buffer = new byte[MulticastPacket.PACKET_SIZE];
-                DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length);
-                socket.receive(packet);
-
+                byte[] packetBuffer;
+                synchronized (Barrel.bPageQueue){
+                    while(Barrel.bPageQueue.size() == 0)
+                        Barrel.bPageQueue.wait();
+                    packetBuffer = Barrel.bPageQueue.remove(0);
+                }
                 //Get packet bytes
-                ByteBuffer bb = ByteBuffer.wrap(packet.getData());
+                ByteBuffer bb = ByteBuffer.wrap(packetBuffer);
 
                 //"Unpack" the bytes
                 int downloader_id = bb.getInt(), seq_number = bb.getInt(), msgs_left = bb.getInt(),
                         first_msg = bb.getInt();
 
-                //Allocate a buffer
-                int msgSize = (msgs_left + 1) * MulticastPacket.MSG_BYTES_SIZE;
-                ByteBuffer msgBuffer = ByteBuffer.allocate(msgSize);
-                msgBuffer.put(bb);
-
-                while (msgs_left > 0) {
-                    packet_buffer = new byte[MulticastPacket.PACKET_SIZE];
-                    packet = new DatagramPacket(packet_buffer, packet_buffer.length);
-                    socket.receive(packet);
-
-                    //Get packet bytes
-                    bb = ByteBuffer.wrap(packet.getData());
-
-                    //"Unpack" the bytes
-                    downloader_id = bb.getInt();
-                    seq_number = bb.getInt();
-                    msgs_left = bb.getInt();
-                    first_msg = bb.getInt();
-
-                    msgBuffer.put(bb);
-
+                //If it's the first msg, allocate a buffer
+                if(msgs_left == first_msg){
+                    downloadersBuffer.put(downloader_id,
+                            ByteBuffer.allocate((msgs_left + 1) * MulticastPacket.MSG_BYTES_SIZE));
                 }
-                byte[] msgBytes = msgBuffer.array();
-                int newLength; // Length without trailing zeros
-                for(newLength = msgBytes.length - 1; newLength >= 0 && msgBytes[newLength] == 0; newLength--);
 
-                String message = new String(msgBytes, 0, newLength + 1);
-                System.out.println("Received from Downloader " + downloader_id + " " + message);
+                downloadersBuffer.get(downloader_id).put(bb);
+
+                if(msgs_left == 0){
+                    byte[] msgBytes = downloadersBuffer.get(downloader_id).array();
+                    int newLength; // Length without trailing zeros
+                    for(newLength = msgBytes.length - 1; newLength >= 0 && msgBytes[newLength] == 0; newLength--);
+
+                    String message = new String(msgBytes, 0, newLength + 1);
+                    System.out.println("Received from Downloader " + downloader_id + " " + message);
+                }
             }
         } catch (Exception e) {
             System.out.println("BarrelMulticastWorker " + id + " exception: " + e.getMessage());

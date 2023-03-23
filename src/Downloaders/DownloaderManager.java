@@ -14,6 +14,6 @@ public class DownloaderManager {
     public static int seq_number = 0;
     public static void main(String[] args) {
         Downloader d = new Downloader(Integer.parseInt(args[0]));
-        DownloaderMulticastWorker dm = new DownloaderMulticastWorker(Integer.parseInt(args[0]));
+        DownloaderMulticastWorker dmw = new DownloaderMulticastWorker(Integer.parseInt(args[0]));
     }
 }

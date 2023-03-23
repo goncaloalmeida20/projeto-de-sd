@@ -12,7 +12,7 @@ public class Barrel{
     private static BarrelMulticast bm;
     public int id;
 
-    public static final Map<Integer, Byte[]> bPageQueue = Collections.synchronizedMap(new HashMap<>());;
+    public static final List<byte[]> bPageQueue = Collections.synchronizedList(new ArrayList<>());
 
     //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
@@ -43,7 +43,7 @@ public class Barrel{
         int id = Integer.parseInt(args[0]);
         bm = new BarrelMulticast(id);
         bmw = new BarrelMulticastWorker(id);
-        //ss = new BarrelModule(id);
+        ss = new BarrelModule(id);
         System.out.println("Barrel is ready");
     }
 }
