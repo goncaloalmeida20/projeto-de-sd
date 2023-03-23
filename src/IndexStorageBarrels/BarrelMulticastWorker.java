@@ -17,7 +17,7 @@ public class BarrelMulticastWorker implements Runnable{
     }
 
     public void run(){
-        System.out.println("BarrelMulticast " + id);
+        System.out.println("BarrelMulticastWorker " + id);
         try (MulticastSocket socket = new MulticastSocket(MULTICAST_PORT)) {
             // create socket and bind it
             InetAddress mcastaddr = InetAddress.getByName(MULTICAST_ADDRESS);
@@ -60,11 +60,15 @@ public class BarrelMulticastWorker implements Runnable{
                     msgBuffer.put(bb);
 
                 }
-                String message = new String(msgBuffer.array());
-                System.out.println("Received from DownloaderMulticast " + downloader_id + " " + message);
+                byte[] msgBytes = msgBuffer.array();
+                int newLength; // Length without trailing zeros
+                for(newLength = msgBytes.length - 1; newLength >= 0 && msgBytes[newLength] == 0; newLength--);
+
+                String message = new String(msgBytes, 0, newLength + 1);
+                System.out.println("Received from Downloader " + downloader_id + " " + message);
             }
         } catch (Exception e) {
-            System.out.println("BarrelMulticast " + id + " exception: " + e.getMessage());
+            System.out.println("BarrelMulticastWorker " + id + " exception: " + e.getMessage());
         }
     }
 }

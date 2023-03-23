@@ -1,5 +1,6 @@
 package IndexStorageBarrels;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import classes.Page;
@@ -7,8 +8,13 @@ import classes.Page;
 public class Barrel{
     private static BarrelModule ss;
     private static BarrelMulticastWorker bmw;
+
+    private static BarrelMulticast bm;
     public int id;
 
+    public static final Map<Integer, Byte[]> bPageQueue = Collections.synchronizedMap(new HashMap<>());;
+
+    //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
 
@@ -35,6 +41,7 @@ public class Barrel{
 
     public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
+        bm = new BarrelMulticast(id);
         bmw = new BarrelMulticastWorker(id);
         //ss = new BarrelModule(id);
         System.out.println("Barrel is ready");

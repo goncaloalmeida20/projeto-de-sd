@@ -8,10 +8,10 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class DownloaderMulticast implements Runnable{
+public class DownloaderMulticastWorker implements Runnable{
     public Thread t;
     public int id;
-    public DownloaderMulticast(int id){
+    public DownloaderMulticastWorker(int id){
         this.id = id;
         t = new Thread(this);
         t.start();
@@ -28,15 +28,13 @@ public class DownloaderMulticast implements Runnable{
                         DownloaderManager.pageQueue.wait();
                     }
                     currentPage = DownloaderManager.pageQueue.remove(0);
-                    System.out.println("DownloaderMulticast " + id + " sending page " + currentPage.url);
+                    System.out.println("DownloaderMulticastWorker " + id + " sending page " + currentPage.url);
                     DownloaderManager.pageQueue.notify();
                 }
 
                 //Convert the page to the multicast udp protocol string
-                byte[] pageBytes = currentPage.multicastString().getBytes(),
-                        msgBytes = new byte[MulticastPacket.MSG_BYTES_SIZE],
-                        packet_buffer;
-
+                byte[] pageBytes = currentPage.multicastString().getBytes(), packet_buffer;
+                System.out.println(currentPage.multicastString());
                 //Split the message so that each part doesn't exceed the packet size
                 ByteArrayInputStream bis = new ByteArrayInputStream(pageBytes);
                 DownloaderManager.seq_number++;
@@ -44,6 +42,7 @@ public class DownloaderMulticast implements Runnable{
                 //length - 1 so that if length = MSG_BYTES_SIZE, only 1 packet is sent
                 int initial_msg_seq_number = (pageBytes.length - 1) / MulticastPacket.MSG_BYTES_SIZE;
                 for (int i = initial_msg_seq_number; i >= 0; i--) {
+                    byte[] msgBytes = new byte[MulticastPacket.MSG_BYTES_SIZE];
                     if (bis.read(msgBytes, 0, MulticastPacket.MSG_BYTES_SIZE) < 0) {
                         throw new Exception("MulticastPacket bytes ended");
                     }
@@ -51,7 +50,7 @@ public class DownloaderMulticast implements Runnable{
                             initial_msg_seq_number);
 
                     packet_buffer = mp.toBytes();
-
+                    System.out.println(new String(msgBytes));
                     //Send the packet
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length, group,
@@ -60,7 +59,7 @@ public class DownloaderMulticast implements Runnable{
                 }
             }
         } catch (Exception e) {
-            System.out.println("DownloaderMulticast " + id + " exception: " + e.getMessage());
+            System.out.println("DownloaderMulticastWorker " + id + " exception: " + e.getMessage());
         }
     }
 }

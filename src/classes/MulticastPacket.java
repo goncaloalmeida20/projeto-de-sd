@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public class MulticastPacket{
     public static final int PACKET_SIZE = 1000,
-            HEADER_SIZE = 4 * 4,
+            HEADER_SIZE = 4 * 4, //4 integers
             MSG_BYTES_SIZE = PACKET_SIZE - HEADER_SIZE;
     public int downloader_id, seq_number, msgs_left, first_msg;
     public byte[] msgBytes;
