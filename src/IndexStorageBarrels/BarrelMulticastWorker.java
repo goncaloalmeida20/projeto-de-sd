@@ -5,12 +5,12 @@ import classes.MulticastPacket;
 import java.net.*;
 import java.nio.ByteBuffer;
 
-public class BarrelMulticast implements Runnable{
+public class BarrelMulticastWorker implements Runnable{
     private static final String MULTICAST_ADDRESS = "224.0.1.0";
     private static final int MULTICAST_PORT = 5000;
     public Thread t;
     public int id;
-    public BarrelMulticast(int id){
+    public BarrelMulticastWorker(int id){
         this.id = id;
         t = new Thread(this);
         t.start();
@@ -35,7 +35,8 @@ public class BarrelMulticast implements Runnable{
                 ByteBuffer bb = ByteBuffer.wrap(packet.getData());
 
                 //"Unpack" the bytes
-                int downloader_id = bb.getInt(), seq_number = bb.getInt(), msgs_left = bb.getInt();
+                int downloader_id = bb.getInt(), seq_number = bb.getInt(), msgs_left = bb.getInt(),
+                        first_msg = bb.getInt();
 
                 //Allocate a buffer
                 int msgSize = (msgs_left + 1) * MulticastPacket.MSG_BYTES_SIZE;
@@ -54,6 +55,7 @@ public class BarrelMulticast implements Runnable{
                     downloader_id = bb.getInt();
                     seq_number = bb.getInt();
                     msgs_left = bb.getInt();
+                    first_msg = bb.getInt();
 
                     msgBuffer.put(bb);
 

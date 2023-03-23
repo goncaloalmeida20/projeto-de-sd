@@ -1,13 +1,12 @@
 package IndexStorageBarrels;
 
-import java.io.Serializable;
 import java.util.*;
 
 import classes.Page;
 
 public class Barrel{
     private static BarrelModule ss;
-    private static BarrelMulticast bMult;
+    private static BarrelMulticastWorker bmw;
     public int id;
 
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
@@ -36,8 +35,8 @@ public class Barrel{
 
     public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
-        bMult = new BarrelMulticast(id);
-        ss = new BarrelModule(id);
+        bmw = new BarrelMulticastWorker(id);
+        //ss = new BarrelModule(id);
         System.out.println("Barrel is ready");
     }
 }

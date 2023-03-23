@@ -7,7 +7,6 @@ import java.io.ByteArrayInputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.ByteBuffer;
 
 public class DownloaderMulticast implements Runnable{
     public Thread t;
@@ -43,13 +42,15 @@ public class DownloaderMulticast implements Runnable{
                 DownloaderManager.seq_number++;
 
                 //length - 1 so that if length = MSG_BYTES_SIZE, only 1 packet is sent
-                for (int i = (pageBytes.length - 1) / MulticastPacket.MSG_BYTES_SIZE; i >= 0; i--) {
+                int initial_msg_seq_number = (pageBytes.length - 1) / MulticastPacket.MSG_BYTES_SIZE;
+                for (int i = initial_msg_seq_number; i >= 0; i--) {
                     if (bis.read(msgBytes, 0, MulticastPacket.MSG_BYTES_SIZE) < 0) {
                         throw new Exception("MulticastPacket bytes ended");
                     }
-                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seq_number, i, msgBytes);
+                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seq_number, i, msgBytes,
+                            initial_msg_seq_number);
+
                     packet_buffer = mp.toBytes();
-                    ByteBuffer bb = ByteBuffer.wrap(packet_buffer);
 
                     //Send the packet
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
