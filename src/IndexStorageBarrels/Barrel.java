@@ -51,7 +51,7 @@ public class Barrel{
         int id = Integer.parseInt(args[0]);
         bm = new BarrelMulticast(id);
         bmw = new BarrelMulticastWorker(id);
-        ss = new BarrelModule(id);
+        Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }
