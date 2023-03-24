@@ -1,5 +1,6 @@
 package IndexStorageBarrels;
 
+import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.registry.Registry;
 import java.rmi.server.ServerNotActiveException;
@@ -14,16 +15,11 @@ import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
     public int id;
+    public static SearchModuleB_S_I searchMB;
+    public static BarrelModule bm;
 
     public BarrelModule(int id) throws RemoteException, NotBoundException {
         this.id = id;
-        Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
-        SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
-        BarrelsQueue queue = new BarrelsQueue();
-        queue.addToBarrelsqueue(this);
-        System.out.println("Number of barrels: " + queue.getBarrelsqueueSize());
-
-        System.out.println("Search Server ready.");
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
@@ -110,6 +106,17 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
     }
 
     public void run() {
+        try{
+            Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
+            searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
+            bm = new BarrelModule(this.id);
+            searchMB.connect((BarrelModule_S_I) bm);
+        } catch (NotBoundException | RemoteException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("Search Server ready.");
+
         while(true){
 
         }

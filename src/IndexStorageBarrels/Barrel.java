@@ -47,7 +47,7 @@ public class Barrel{
         t.start();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NotBoundException, RemoteException {
         int id = Integer.parseInt(args[0]);
         bm = new BarrelMulticast(id);
         bmw = new BarrelMulticastWorker(id);
