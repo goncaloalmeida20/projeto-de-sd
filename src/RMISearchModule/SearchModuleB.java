@@ -1,6 +1,8 @@
 package RMISearchModule;
 
+import IndexStorageBarrels.BarrelModule;
 import IndexStorageBarrels.BarrelModule_S_I;
+import IndexStorageBarrels.BarrelsQueue;
 import classes.Page;
 
 import java.io.Serializable;
@@ -9,6 +11,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable {
     // RMI Barrel Info
@@ -18,25 +21,28 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
 
-    public final List<BarrelModule_S_I> barrels;
+    private BarrelsQueue queue;
+
 
     public SearchModuleB(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) {
         super();
         tasks = t;
         result_pages = p;
-        barrels = new ArrayList<>();
+        queue = new BarrelsQueue();
     }
 
-    public void connect(BarrelModule_S_I bm) {
-        synchronized (barrels) {
-            barrels.add(bm);
+    private BarrelModule_S_I getRandomBarrelModule() {
+        synchronized (BarrelsQueue.barrelsqueue) {
+            if (queue.isEmptyBarrelsqueue()) {
+                return null; // No active clients
+            }
+            int randomIndex = (int) (Math.random() * queue.getBarrelsqueueSize());
+            Iterator<BarrelModule_S_I> iter = queue.getBarrelsQueueIterator();
+            for (int i = 0; i < randomIndex; i++) {
+                iter.next();
+            }
+            return iter.next();
         }
-    }
-
-    private BarrelModule_S_I getRandomBarrelModule(){
-        if(barrels.size() == 0) return null;
-        Random rand = new Random();
-        return barrels.get(rand.nextInt(barrels.size()));
     }
 
     public void run() {
@@ -48,9 +54,6 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
 
             HashMap<Object, Integer> task;
             BarrelModule_S_I barrelM;
-            Random rand = new Random();
-            int randomIndex;
-
 
             while (true) {
                 synchronized (tasks) {
@@ -58,6 +61,7 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
                     while (tasks.isEmpty()) {
                         try {
                             tasks.wait();
+                            System.out.println("Number of barrels: " + queue.getBarrelsqueueSize());
                             //System.out.println(8);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -65,7 +69,10 @@ public class SearchModuleB implements Runnable, SearchModuleB_S_I, Serializable 
                     }
                     //System.out.println(9);
                     for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
-                        System.out.println(13);
+                        //System.out.println(13);
+                        synchronized(BarrelsQueue.barrelsqueue) {
+                            //System.out.println(queue.getBarrelsqueueSize() + " size 1");
+                        }
                         barrelM = getRandomBarrelModule();
                         if (barrelM != null) {
                             System.out.println(10);

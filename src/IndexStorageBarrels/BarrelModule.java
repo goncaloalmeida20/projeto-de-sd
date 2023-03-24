@@ -13,13 +13,17 @@ import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
 public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
-    public Thread t;
     public int id;
 
-    public BarrelModule(int id) {
+    public BarrelModule(int id) throws RemoteException, NotBoundException {
         this.id = id;
-        t = new Thread(this);
-        t.start();
+        Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
+        SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
+        BarrelsQueue queue = new BarrelsQueue();
+        queue.addToBarrelsqueue(this);
+        System.out.println("Number of barrels: " + queue.getBarrelsqueueSize());
+
+        System.out.println("Search Server ready.");
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
@@ -106,20 +110,8 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
     }
 
     public void run() {
-        try {
-            Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
-            SearchModuleB_S_I searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
+        while(true){
 
-            BarrelModule_S_I bmSI = new BarrelModule(id);
-            searchMB.connect(bmSI);
-
-            System.out.println("Search Server ready.");
-
-            while (true){
-
-            }
-        } catch (RemoteException | NotBoundException re) {
-            System.out.println("Exception in BarrelModule.main: " + re);
         }
     }
 }

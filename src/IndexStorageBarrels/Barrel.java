@@ -1,11 +1,14 @@
 package IndexStorageBarrels;
 
 import java.io.Serializable;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.*;
 
 import classes.Page;
 
 public class Barrel{
+    Thread t;
     private static BarrelModule ss;
     private static BarrelMulticast bMult;
     public int id;
@@ -14,7 +17,7 @@ public class Barrel{
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
 
 
-    public Barrel(int id) {
+    public Barrel(int id) throws RemoteException, NotBoundException {
         this.id = id;
 
         int id_page = 1;
@@ -32,12 +35,16 @@ public class Barrel{
         invertedIndex.put("is", ids);
         invertedIndex.put("google", ids);
         all_pages.put(id_page, p);
+
+        ss = new BarrelModule(id);
+        t = new Thread(ss);
+        t.start();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NotBoundException, RemoteException {
         int id = Integer.parseInt(args[0]);
         bMult = new BarrelMulticast(id);
-        ss = new BarrelModule(id);
+        Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }
