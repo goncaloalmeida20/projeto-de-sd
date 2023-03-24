@@ -1,5 +1,6 @@
 package IndexStorageBarrels;
 
+import java.nio.ByteBuffer;
 import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -10,9 +11,14 @@ import classes.Page;
 public class Barrel{
     Thread t;
     private static BarrelModule ss;
-    private static BarrelMulticast bMult;
+    private static BarrelMulticastWorker bmw;
+
+    private static BarrelMulticast bm;
     public int id;
 
+    public static final List<byte[]> bPageQueue = Collections.synchronizedList(new ArrayList<>());
+
+    //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
 
@@ -41,10 +47,11 @@ public class Barrel{
         t.start();
     }
 
-    public static void main(String[] args) throws NotBoundException, RemoteException {
+    public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
-        bMult = new BarrelMulticast(id);
-        Barrel b = new Barrel(id);
+        bm = new BarrelMulticast(id);
+        bmw = new BarrelMulticastWorker(id);
+        ss = new BarrelModule(id);
         System.out.println("Barrel is ready");
     }
 }

@@ -45,6 +45,9 @@ public class Downloader implements Runnable{
                         uq.addURLRecursively(link, next_recursion_count);
                     }
                 }
+
+                //Add analyzed page to the current downloader page queue
+                //for it to be sent to the barrels
                 synchronized(DownloaderManager.pageQueue){
                     while(DownloaderManager.pageQueue.size() >= DownloaderManager.MAX_PAGE_LIST_SIZE){
                         DownloaderManager.pageQueue.wait();

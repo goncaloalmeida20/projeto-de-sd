@@ -17,8 +17,8 @@ public class URLQueueStarter {
             System.out.println(uq.addURL("https://www.google.com"));
             System.out.println(uq.addURL("https://www.google.com"));
             //System.out.println(uq.addURL("teste.com"));
-            Thread.sleep(10000);
-            System.out.println(uq.addURL("https://www.google.com"));
+            //Thread.sleep(10000);
+            //System.out.println(uq.addURL("https://www.google.com"));
             //System.out.println(uq.addURL("teste3.com"));
         }
         catch(Exception e){
