@@ -2,6 +2,7 @@ package IndexStorageBarrels;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.*;
 
 import classes.Page;
@@ -21,7 +22,7 @@ public class Barrel{
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
 
 
-    public Barrel(int id) throws RemoteException, NotBoundException {
+    public Barrel(int id) throws RemoteException, NotBoundException, SQLException {
         this.id = id;
 
         int id_page = 1;
@@ -43,9 +44,17 @@ public class Barrel{
         ss = new BarrelModule();
         t = new Thread(ss);
         t.start();
+
+        // Call the main method of DatabaseSetup to create the database
+        String url = "jdbc:postgresql://localhost:5432/";
+        String dbName = "Barrel" + id + "DB";
+        String user = "postgres";
+        String password = "postgres";
+        DatabaseStarter.main(new String[]{url, dbName, user, password});
+        System.out.println("Database created successfully");
     }
 
-    public static void main(String[] args) throws NotBoundException, RemoteException {
+    public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {
         int id = Integer.parseInt(args[0]);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
