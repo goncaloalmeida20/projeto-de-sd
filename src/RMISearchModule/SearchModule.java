@@ -9,7 +9,7 @@ import java.util.*;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModule_S_I, Serializable {
     private Thread t1, t2;
-    private SearchModuleB sb;
+    private SearchModule3 sb;
     private SearchModuleC sc;
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
@@ -19,7 +19,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         super();
         tasks = new LinkedHashMap<>();
         result_pages = new HashMap<>();
-        sb = new SearchModuleB(tasks, result_pages);
+        sb = new SearchModule3(tasks, result_pages);
         t1 = new Thread(sb);
         sc = new SearchModuleC(tasks, result_pages);
         t2 = new Thread(sc);

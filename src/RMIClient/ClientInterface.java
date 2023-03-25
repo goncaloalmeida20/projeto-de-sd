@@ -159,7 +159,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("- Page " + n_page);
 
                     ArrayList<Page> pages = searchM.search(termCount, terms, n_page);
-                    if (pages.size() == 0) System.out.println("There are no pages that corresponds to the request\n");
+                    if (pages == null) System.out.println("There are no pages that corresponds to the request\n");
                     else {
                         for (Page page : pages) {
                             System.out.println("Title of the page" + page.title);
@@ -188,17 +188,14 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             } else {
                 ArrayList<Page> pages = searchM.searchPages(url, n_page, id);
                 if (pages == null) {
-                    System.out.println("Client needs to be logged on to perform this operation!");
+                    System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
                 } else {
-                    if (pages.size() == 0) System.out.println("There are no pages that corresponds to the request\n");
-                    else {
-                        System.out.print("Pages that have a link to " + url);
-                        System.out.println(" - Page " + n_page);
-                        for (int i = 0; i < pages.size(); i++) {
-                            System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
-                        }
-                        System.out.println();
+                    System.out.print("Pages that have a link to " + url);
+                    System.out.println(" - Page " + n_page);
+                    for (int i = 0; i < pages.size(); i++) {
+                        System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
                     }
+                    System.out.println();
                 }
             }
         }

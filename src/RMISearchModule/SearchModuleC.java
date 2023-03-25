@@ -15,7 +15,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     public final Map<Integer, String[]> clients_info;
 
     // RMI Client info
-    public static int PORT0 = 7000;
+    public static int PORT0 = 7004;
     public static String hostname0 = "127.0.0.1";
 
     private int cAllCounter = 0;

@@ -1,9 +1,10 @@
 package classes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Page {
+public class Page implements Serializable {
     public String url, title, citation;
     public List<String> words;
     public final List<String> links;

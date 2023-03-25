@@ -10,7 +10,7 @@ import classes.Page;
 
 public class Barrel{
     Thread t;
-    private static BarrelModule ss;
+    private static BarrelModule3 ss;
     private static BarrelMulticastWorker bmw;
 
     private static BarrelMulticastRecovery bmr;
@@ -42,7 +42,7 @@ public class Barrel{
         invertedIndex.put("google", ids);
         all_pages.put(id_page, p);
 
-        ss = new BarrelModule(id);
+        ss = new BarrelModule3();
         t = new Thread(ss);
         t.start();
     }
