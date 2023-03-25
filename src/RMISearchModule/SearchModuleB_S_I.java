@@ -1,13 +1,12 @@
 package RMISearchModule;
-import IndexStorageBarrels.BarrelModule;
+
 import IndexStorageBarrels.BarrelModule_S_I;
 
-import java.io.Serializable;
-import java.rmi.*;
-import java.rmi.server.ServerNotActiveException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 public interface SearchModuleB_S_I extends Remote {
-    void connect(BarrelModule_S_I bm) throws java.rmi.RemoteException;
+    public void print_on_server(String s , BarrelModule_S_I client) throws java.rmi.RemoteException;
+    public void subscribe(String name, BarrelModule_S_I client) throws RemoteException;
+    public void unsubscribe(String name, BarrelModule_S_I client) throws RemoteException;
 }
-
-

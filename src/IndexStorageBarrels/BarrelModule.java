@@ -1,25 +1,31 @@
 package IndexStorageBarrels;
 
-import java.rmi.AccessException;
-import java.rmi.NotBoundException;
-import java.rmi.registry.Registry;
-import java.rmi.server.ServerNotActiveException;
-import java.util.*;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.io.*;
-
-import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
-public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
-    public int id;
-    public static SearchModuleB_S_I searchMB;
-    public static BarrelModule bm;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Comparator;
 
-    public BarrelModule(int id) throws RemoteException, NotBoundException {
-        this.id = id;
+public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
+    public static SearchModuleB_S_I h;
+    public static BarrelModule c;
+
+    public BarrelModule() throws RemoteException {
+        super();
+    }
+
+    /**
+     * Realiza diferentes operacoes tendo em conta mensagem recevida pelo servidor
+     */
+    public void print_on_client(String s) throws RemoteException {
+
+        //"start_search"
+        System.out.println("recebi o pedido.");
+        h.print_on_server("Esta aqui a mensagem pedida.", c);
+
     }
 
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
@@ -105,20 +111,26 @@ public class BarrelModule implements Runnable, BarrelModule_S_I, Serializable{
         return ten_pages;
     }
 
+    /**
+     * Inicia conexao com servidor e pergunta ao cliente o que ele deseja fazer, realiza diferentes operacoes tendo em conta a escolha do cliente
+     *
+     */
+    @Override
     public void run() {
+
         try{
-            Registry r = LocateRegistry.getRegistry(SearchModuleB.PORT1);
-            searchMB = (SearchModuleB_S_I) r.lookup(SearchModuleB.hostname1);
-            bm = new BarrelModule(this.id);
-            searchMB.connect((BarrelModule_S_I) bm);
-        } catch (NotBoundException | RemoteException e) {
-            throw new RuntimeException(e);
-        }
 
-        System.out.println("Search Server ready.");
+            h = (SearchModuleB_S_I) LocateRegistry.getRegistry(7002).lookup("XPT");
+            c = new BarrelModule();
+            h.subscribe("Storage Barrel", (BarrelModule_S_I) c);
+            System.out.println("Storage Barrel Ready");
 
-        while(true){
+            while (true) {
 
+            }
+
+        } catch (Exception e) {
+            System.out.println("Exception in main: " + e);
         }
     }
 }

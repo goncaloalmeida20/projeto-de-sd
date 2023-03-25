@@ -1,7 +1,5 @@
 package IndexStorageBarrels;
 
-import java.nio.ByteBuffer;
-import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.*;
@@ -10,7 +8,7 @@ import classes.Page;
 
 public class Barrel{
     Thread t;
-    private static BarrelModule3 ss;
+    private static BarrelModule ss;
     private static BarrelMulticastWorker bmw;
 
     private static BarrelMulticastRecovery bmr;
@@ -42,7 +40,7 @@ public class Barrel{
         invertedIndex.put("google", ids);
         all_pages.put(id_page, p);
 
-        ss = new BarrelModule3();
+        ss = new BarrelModule();
         t = new Thread(ss);
         t.start();
     }
@@ -51,7 +49,7 @@ public class Barrel{
         int id = Integer.parseInt(args[0]);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
-        //Barrel b = new Barrel(id);
+        Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }
