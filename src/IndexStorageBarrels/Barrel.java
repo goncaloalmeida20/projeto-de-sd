@@ -13,7 +13,7 @@ public class Barrel{
     private static BarrelModule ss;
     private static BarrelMulticastWorker bmw;
 
-    private static BarrelMulticast bm;
+    private static BarrelMulticastRecovery bmr;
     public int id;
 
     public static final List<byte[]> bPageQueue = Collections.synchronizedList(new ArrayList<>());
@@ -49,9 +49,9 @@ public class Barrel{
 
     public static void main(String[] args) throws NotBoundException, RemoteException {
         int id = Integer.parseInt(args[0]);
-        bm = new BarrelMulticast(id);
+        bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
-        Barrel b = new Barrel(id);
+        //Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }

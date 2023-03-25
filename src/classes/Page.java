@@ -47,10 +47,10 @@ public class Page {
         for(int i = 0; i < words.size(); i++){
             sb.append("item_").append(i).append("|").append(words.get(i)).append(";");
         }
-        sb.append("type|url_list;item_count|").append(links.size()).append(";");
+        /*sb.append("type|url_list;item_count|").append(links.size()).append(";");
         for(int i = 0; i < links.size(); i++){
             sb.append("item_").append(i).append("|").append(links.get(i)).append(";");
-        }
+        }*/
         return sb.toString();
     }
 }
