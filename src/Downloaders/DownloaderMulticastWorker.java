@@ -37,7 +37,7 @@ public class DownloaderMulticastWorker implements Runnable{
                 System.out.println(currentPage.multicastString());
                 //Split the message so that each part doesn't exceed the packet size
                 ByteArrayInputStream bis = new ByteArrayInputStream(pageBytes);
-                DownloaderManager.seq_number++;
+                DownloaderManager.seqNumber++;
 
                 //length - 1 so that if length = MSG_BYTES_SIZE, only 1 packet is sent
                 int initial_msg_seq_number = (pageBytes.length - 1) / MulticastPacket.MSG_BYTES_SIZE;
@@ -46,7 +46,7 @@ public class DownloaderMulticastWorker implements Runnable{
                     if (bis.read(msgBytes, 0, MulticastPacket.MSG_BYTES_SIZE) < 0) {
                         throw new Exception("MulticastPacket bytes ended");
                     }
-                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seq_number, i, msgBytes,
+                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seqNumber, i, msgBytes,
                             initial_msg_seq_number);
 
                     packet_buffer = mp.toBytes();
@@ -55,7 +55,7 @@ public class DownloaderMulticastWorker implements Runnable{
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length, group,
                     DownloaderManager.MULTICAST_PORT);
-                    //if(i % 2 == 0)
+                    //if(DownloaderManager.seqNumber % 2 == 0)
                         socket.send(packet);
                 }
             }
