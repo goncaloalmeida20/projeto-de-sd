@@ -8,14 +8,15 @@ import java.util.*;
 import classes.Page;
 
 public class Barrel{
+    public static final String MULTICAST_ADDRESS = "224.0.1.0";
+    public static final int MULTICAST_PORT = 5000;
     Thread t;
     private static BarrelModule ss;
     private static BarrelMulticastWorker bmw;
 
     private static BarrelMulticastRecovery bmr;
+    private static BarrelMulticastReceiver bmrcv;
     public int id;
-
-    public static final List<byte[]> bPageQueue = Collections.synchronizedList(new ArrayList<>());
 
     //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
@@ -56,6 +57,7 @@ public class Barrel{
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {
         int id = Integer.parseInt(args[0]);
+        bmrcv = new BarrelMulticastReceiver(id);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
         //Barrel b = new Barrel(id);

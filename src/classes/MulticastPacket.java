@@ -9,7 +9,15 @@ public class MulticastPacket{
     public int downloader_id, seq_number, msgs_left, first_msg;
     public byte[] msgBytes;
 
-    public MulticastPacket(int downloader_id, int seq_number, int msgs_left, byte[] msgBytes, int first_msg) {
+    public MulticastPacket(int downloader_id, int seq_number, int msgs_left, int first_msg) {
+        this.downloader_id = downloader_id;
+        this.seq_number = seq_number;
+        this.msgs_left = msgs_left;
+        this.first_msg = first_msg;
+        msgBytes = null;
+    }
+
+    public MulticastPacket(int downloader_id, int seq_number, int msgs_left, int first_msg, byte[] msgBytes) {
         this.downloader_id = downloader_id;
         this.seq_number = seq_number;
         this.msgs_left = msgs_left;

@@ -6,11 +6,13 @@ import java.net.*;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class BarrelMulticastRecovery implements Runnable{
-    private static final String MULTICAST_ADDRESS = "224.0.1.0";
-    private static final int MULTICAST_PORT = 5000;
+    //List of NACK ACKs (acknowledges of the NACK messages)
+    public static final List<byte[]> nackAcksQueue = Collections.synchronizedList(new ArrayList<>());
+
     public int id;
     public Thread t;
 

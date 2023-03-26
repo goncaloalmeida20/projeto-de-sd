@@ -50,11 +50,11 @@ public class DownloaderMulticastWorker implements Runnable{
                     if (bis.read(msgBytes, 0, MulticastPacket.MSG_BYTES_SIZE) < 0) {
                         throw new Exception("MulticastPacket bytes ended");
                     }
-                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seqNumber, i, msgBytes,
-                            initialMsgSeqNumber);
+                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seqNumber, i, initialMsgSeqNumber,
+                            msgBytes);
 
                     packetBuffer = mp.toBytes();
-                    System.out.println(new String(msgBytes));
+                    //System.out.println(new String(msgBytes));
                     //Send the packet
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,

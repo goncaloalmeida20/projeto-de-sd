@@ -5,13 +5,10 @@ import classes.TimedByteBuffer;
 
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BarrelMulticastWorker implements Runnable{
-    private static final String MULTICAST_ADDRESS = "224.0.1.0";
-    private static final int MULTICAST_PORT = 5000;
+    public static final List<byte[]> msgPacketQueue = Collections.synchronizedList(new ArrayList<>());
     public static final Map<Integer, Map<Integer, TimedByteBuffer>> downloadersByteBuffers = Collections.synchronizedMap(new HashMap<>());
     public static final Map<Integer, Integer> lastSeqNumber = Collections.synchronizedMap(new HashMap<>());
     public static final Map<Integer, Map<Integer, Integer>> lastMsgsLeft = Collections.synchronizedMap(new HashMap<>());
@@ -31,23 +28,19 @@ public class BarrelMulticastWorker implements Runnable{
     public void run(){
         System.out.println("BarrelMulticastWorker " + id);
 
-        try (MulticastSocket socket = new MulticastSocket(MULTICAST_PORT))  {
-            // create socket and bind it
-            InetAddress mcastaddr = InetAddress.getByName(MULTICAST_ADDRESS);
-            InetSocketAddress group = new InetSocketAddress(mcastaddr, MULTICAST_PORT);
-            NetworkInterface netIf = NetworkInterface.getByName("bge0");
-
-            // join group
-            socket.joinGroup(group, netIf);
-
+        try {
             while (true) {
-                //receive multicast packet
-                byte[] packet_buffer = new byte[MulticastPacket.PACKET_SIZE];
-                DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length);
-                socket.receive(packet);
+                byte[] packet;
+
+                //wait for packets to arrive
+                synchronized (msgPacketQueue){
+                    while(msgPacketQueue.size() == 0)
+                        msgPacketQueue.wait();
+                    packet = msgPacketQueue.remove(0);
+                }
 
                 //get packet bytes
-                ByteBuffer bb = ByteBuffer.wrap(packet.getData());
+                ByteBuffer bb = ByteBuffer.wrap(packet);
 
                 //get the header bytes
                 int downloaderId = bb.getInt(), seqNumber = bb.getInt(), msgsLeft = bb.getInt(),
