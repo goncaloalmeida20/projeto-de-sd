@@ -50,7 +50,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         return false;
     }
 
-    public int register(String username, String password) throws RemoteException {
+    public synchronized int register(String username, String password) throws RemoteException {
         boolean exist = findClient(username);
         if (exist){
             return 0; // "Client already exists!"

@@ -11,21 +11,18 @@ public class Barrel{
     public static final String MULTICAST_ADDRESS = "224.0.1.0";
     public static final int MULTICAST_PORT = 5000;
     Thread t;
-    private static BarrelModule ss;
+    private static BarrelModule barrelModule;
     private static BarrelMulticastWorker bmw;
 
     private static BarrelMulticastRecovery bmr;
     private static BarrelMulticastReceiver bmrcv;
-    public int id;
 
     //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
 
 
-    public Barrel(int id) throws RemoteException, NotBoundException, SQLException {
-        this.id = id;
-
+    public Barrel() throws RemoteException, NotBoundException, SQLException {
         int id_page = 1;
         List<String> s = new ArrayList<>();
         s.add("this");
@@ -42,13 +39,13 @@ public class Barrel{
         invertedIndex.put("google", ids);
         all_pages.put(id_page, p);
 
-        ss = new BarrelModule();
-        t = new Thread(ss);
+        barrelModule = new BarrelModule();
+        t = new Thread(barrelModule);
         t.start();
 
         // Call the main method of DatabaseSetup to create the database
         String url = "jdbc:postgresql://localhost:5432/";
-        String dbName = "Barrel" + id + "DB";
+        String dbName = "Barrel" + barrelModule.getId() + "DB";
         String user = "postgres";
         String password = "postgres";
         DatabaseStarter.main(new String[]{url, dbName, user, password});
@@ -56,11 +53,12 @@ public class Barrel{
     }
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {
-        int id = Integer.parseInt(args[0]);
+        //int id = Integer.parseInt(args[0]);
+        Barrel b = new Barrel();
+        int id = barrelModule.getId();
         bmrcv = new BarrelMulticastReceiver(id);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
-        Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }

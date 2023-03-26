@@ -13,23 +13,20 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     public static SearchModuleB_S_I h;
     public static BarrelModule c;
 
-    private int id;
+    public int id;
 
     public BarrelModule() throws RemoteException {
         super();
     }
 
     /**
-     * Realiza diferentes operacoes tendo em conta mensagem recevida pelo servidor
+     Searches for pages that contain all the specified search terms, order them
+     and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     @param terms Array of terms to match in the pages
+     @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
+     @return ArrayList of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     @throws RemoteException If there is an error with the remote connection
      */
-    public void print_on_client(String s) throws RemoteException {
-
-        //"start_search"
-        System.out.println("recebi o pedido.");
-        h.print_on_server("Esta aqui a mensagem pedida.", c);
-
-    }
-
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
         boolean get_pages = true;
         ArrayList<ArrayList<Integer>> pagesIds = new ArrayList<>();
@@ -78,6 +75,11 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         return order_pages(ten_pages);
     }
 
+    /**
+     Orders the specified list of Page objects by number of links (decreasing)
+     @param pages ArrayList of Page objects to order
+     @return ArrayList of Pages sorted by number of links
+     */
     private ArrayList<Page> order_pages(ArrayList<Page> pages){
         ArrayList<Page> pages_ordered = new ArrayList<>(pages);
 
@@ -86,6 +88,14 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         return pages_ordered;
     }
 
+    /**
+     Searches for pages that contain a specific URL in their links
+     and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     @param url URL to search for in the links of all the pages with their url indexed
+     @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
+     @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
+     @throws RemoteException If there is an error in the remote connection
+     */
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
         ArrayList<Page> ten_pages = new ArrayList<>();
         int count = 0;
@@ -114,23 +124,25 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     }
 
     /**
-     * Inicia conexao com servidor e pergunta ao cliente o que ele deseja fazer, realiza diferentes operacoes tendo em conta a escolha do cliente
-     *
+     Returns the id of this Barrel
+     @return the id of the Barrel
+     @throws RemoteException If there is an error in the remote connection
      */
+    public int getId() throws RemoteException {
+        return id;
+    }
+
     @Override
     public void run() {
-
         try{
-
             h = (SearchModuleB_S_I) LocateRegistry.getRegistry(7002).lookup("XPT");
             c = new BarrelModule();
-            id = h.subscribe((BarrelModule_S_I) c);
+            id = h.connect((BarrelModule_S_I) c);
             System.out.println("Storage Barrel Ready");
 
             while (true) {
 
             }
-
         } catch (Exception e) {
             System.out.println("Exception in main: " + e);
         }

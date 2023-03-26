@@ -27,53 +27,38 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         barrels = new ArrayList<>();
     }
 
-    public void print_on_server(String s , BarrelModule_S_I c) throws RemoteException {
-
-        System.out.println("> " + s);
-
-        /**
-         * Inicia conexao entre search module e storage barrel
-         */
-        if(s.equals("search")){
-            try{
-                SearchModuleB_S_I server = (SearchModuleB_S_I) LocateRegistry.getRegistry(7002).lookup("XPTO");
-                server.subscribe((BarrelModule_S_I) h);
-                synchronized (barrels) {
-                    Random rand = new Random();
-                    int rand_int = rand.nextInt(barrels.size() - 1);
-
-                    System.out.println(barrels.size() + " |||| " + rand_int);
-
-                    BarrelModule_S_I client = barrels.get(rand_int);
-                    client.print_on_client("search_start");
-
-                    server.print_on_server("Enviei uma mensagem|", (BarrelModule_S_I) h);
-                    server.unsubscribe("Barrels Server", (BarrelModule_S_I) h);
-                }
-            }catch(Exception re){
-                System.out.println("Error");
-            }
-        }
-    }
-
-    public int subscribe(BarrelModule_S_I c) throws RemoteException {
+    /**
+     Connects a Barrel to the Search Module and returns the id of the barrel
+     @param b Barrel to connect to the Search Module
+     @return Integer representing the id assigned to the connected barrel
+     @throws RemoteException If there is an error with the remote connection
+     */
+    public synchronized int connect(BarrelModule_S_I b) throws RemoteException {
         bAllCounter++;
-        System.out.println("Coonecting Barrel " + bAllCounter);
-        System.out.print("> ");
+        System.out.println("Connecting Barrel " + bAllCounter);
         synchronized (barrels) {
-            barrels.add(c);
+            barrels.add(b);
         }
         return bAllCounter;
     }
 
-    public void unsubscribe(String name, BarrelModule_S_I c) throws RemoteException {
-        System.out.println("Unsubscribing " + name);
-        System.out.print("> ");
+    /**
+     Disconnects a Barrel from the SearchModule by removing it from the barrels list
+     Note that this function can be called if a Barrel breakdown
+     @param b b Barrel to disconnect from the Search Module
+     @throws RemoteException If there is an error with the remote connection
+     */
+    public void disconnect(BarrelModule_S_I b) throws RemoteException {
+        System.out.println("Barrel " + b.getId() + " disconnected");
         synchronized (barrels) {
-            barrels.remove(c);
+            barrels.remove(b);
         }
     }
 
+    /**
+     Returns a random Barrel from the Search Module's list of connected barrels
+     @return a random Barrel or null if there are no active clients
+     */
     private BarrelModule_S_I getRandomBarrelModule() {
         synchronized (h.barrels) {
             if (h.barrels.isEmpty()) {
@@ -91,16 +76,10 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
     // =======================================================
     @Override
     public void run() {
-        String a;
-
-        try (Scanner sc = new Scanner(System.in)) {
-
+        try {
             h = new SearchModuleB(tasks, result_pages);
-
             Registry r = LocateRegistry.createRegistry(7002);
             r.rebind("XPT", h);
-
-            System.out.println("Hello Barrel_Server ready.");
 
             System.out.println("Search Module - Barrel connection ready.");
 
@@ -109,19 +88,15 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
 
             while (true) {
                 synchronized (tasks) {
-                    //System.out.println(7);
                     while (tasks.isEmpty()) {
                         try {
                             tasks.wait();
-                            System.out.println("Number of barrels: " + h.barrels.size());
-                            //System.out.println(8);
+                            //System.out.println("Number of barrels: " + h.barrels.size());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-                    //System.out.println(9);
                     for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
-                        //System.out.println(13);
                         barrelM = getRandomBarrelModule();
                         if (barrelM != null) {
                             int type = key.values().iterator().next();
