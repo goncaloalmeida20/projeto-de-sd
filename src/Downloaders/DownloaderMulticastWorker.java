@@ -55,7 +55,7 @@ public class DownloaderMulticastWorker implements Runnable{
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length, group,
                     DownloaderManager.MULTICAST_PORT);
-                    //if(DownloaderManager.seqNumber % 2 == 0)
+                    if(i % 2 != 0)
                         socket.send(packet);
                 }
             }

@@ -57,7 +57,7 @@ public class BarrelMulticastWorker implements Runnable{
 
                 boolean aheadSeqNumber = false, aheadMsgsLeft = false;
 
-                //check if the order of the sequence number is right
+                //check if the sequence number is the expected one
                 synchronized (lastSeqNumber){
                     if(lastSeqNumber.containsKey(downloaderId)){
                         int expectedSeqNumber = lastSeqNumber.get(downloaderId) + 1;
@@ -69,6 +69,7 @@ public class BarrelMulticastWorker implements Runnable{
                         }
                     }
                     else if(seqNumber != 1){
+                        //if it's the first msg from the downloader, create the hashmap
                         synchronized (downloadersByteBuffers){
                             if(!downloadersByteBuffers.containsKey(downloaderId)){
                                 downloadersByteBuffers.put(downloaderId, new HashMap<>());
@@ -106,7 +107,7 @@ public class BarrelMulticastWorker implements Runnable{
                 }
                 //System.out.println("HELLO2");
 
-                //if it's the first msg from the downloader, create a hashmap
+                //if it's the first msg from the downloader, create the hashmap
                 synchronized (downloadersByteBuffers){
                     if(!downloadersByteBuffers.containsKey(downloaderId)){
                         downloadersByteBuffers.put(downloaderId, new HashMap<>());
@@ -146,6 +147,16 @@ public class BarrelMulticastWorker implements Runnable{
                     }
                     //append the bytes to the current sequence number buffer
                     downloadersByteBuffers.get(downloaderId).get(seqNumber).byteBuffer.put(bb);
+                    synchronized (aheadBuffer){
+                        if(aheadBuffer.containsKey(downloaderId)
+                                && aheadBuffer.get(downloaderId).containsKey(seqNumber)){
+                            while(aheadBuffer.get(downloaderId).get(seqNumber).containsKey(msgsLeft-1)){
+                                msgsLeft--;
+                                downloadersByteBuffers.get(downloaderId).get(seqNumber).byteBuffer.put(
+                                        aheadBuffer.get(downloaderId).get(seqNumber).remove(msgsLeft).byteBuffer);
+                            }
+                        }
+                    }
                 }
 
                 synchronized (lastMsgsLeft){

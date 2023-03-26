@@ -27,7 +27,7 @@ public class BarrelMulticastRecovery implements Runnable{
     private long searchOutOfOrderPackets(){
         //check if there are buffered packets
         //System.out.println("BMR SOOOP");
-        long minWaitTime = 0;
+        long minWaitTime = -1;
         synchronized (BarrelMulticastWorker.aheadBuffer){
             List<List<Integer>> removeFromAheadBuffer = new ArrayList<>();
             for(var downloaderSet: BarrelMulticastWorker.aheadBuffer.entrySet()){
@@ -37,8 +37,9 @@ public class BarrelMulticastRecovery implements Runnable{
                     for(var msgsLeftSet: BarrelMulticastWorker.aheadBuffer.get(downloader).get(seqNumber)
                             .entrySet()){
                         long timeTemp = TimedByteBuffer.TIMEOUT_MS - msgsLeftSet.getValue().timeSinceCreation();
-                        if(timeTemp > 0 && (minWaitTime == 0 || timeTemp < minWaitTime)){
-                            minWaitTime = timeTemp;
+                        if(minWaitTime == -1 || timeTemp < minWaitTime){
+                            if(timeTemp < 0) minWaitTime = 0;
+                            else minWaitTime = timeTemp;
                         }
                     }
                 }
@@ -53,8 +54,13 @@ public class BarrelMulticastRecovery implements Runnable{
                     for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
                         if(seqNumberSet.getKey() > lastSeqNumber){
                             long timeTemp = TimedByteBuffer.TIMEOUT_MS - seqNumberSet.getValue().timeSinceCreation();
-                            if(timeTemp > 0 && (minWaitTime == 0 || timeTemp < minWaitTime)){
-                                minWaitTime = timeTemp;
+                            if(minWaitTime == -1 || timeTemp < minWaitTime){
+                                //System.out.println("SOOOP " + downloader + " " + seqNumberSet.getKey() + " "
+                                //        + timeTemp + " " + seqNumberSet.getValue().timeSinceCreation()
+                                //+ " " + System.currentTimeMillis());
+
+                                if(timeTemp < 0) minWaitTime = 0;
+                                else minWaitTime = timeTemp;
                             }
                         }
                     }
@@ -73,7 +79,7 @@ public class BarrelMulticastRecovery implements Runnable{
                 synchronized (BarrelMulticastWorker.aheadBuffer){
                     //System.out.println("BMR2");
                     minWaitTime = searchOutOfOrderPackets();
-                    while(minWaitTime == 0){
+                    while(minWaitTime < 0){
                         BarrelMulticastWorker.aheadBuffer.wait();
                         minWaitTime = searchOutOfOrderPackets();
                         //System.out.println("BMR " + aheadError);
@@ -96,7 +102,7 @@ public class BarrelMulticastRecovery implements Runnable{
                                 if(currentSeqNumber > lastSeqNumber){
                                     TimedByteBuffer tbb = seqNumberSet.getValue();
                                     List<Integer> currentPossibleNack = Arrays.asList(downloader, lastSeqNumber+1);
-                                    if(tbb.timeSinceCreation() > TimedByteBuffer.TIMEOUT_MS &&
+                                    if(tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS &&
                                         !nacks.contains(currentPossibleNack)){
                                         if(newLastSeqNumber == 0 || currentSeqNumber < newLastSeqNumber){
                                             newLastSeqNumber = currentSeqNumber;
@@ -139,7 +145,7 @@ public class BarrelMulticastRecovery implements Runnable{
                                         System.out.println(currentPossibleNack.equals(nack));
                                     }*/
                                     if (msgsLeft < BarrelMulticastWorker.lastMsgsLeft.get(downloader).get(seqNumber)
-                                        - 1 && tbb.timeSinceCreation() > TimedByteBuffer.TIMEOUT_MS &&
+                                        - 1 && tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS &&
                                         !nacks.contains(currentPossibleNack)) {
 
                                         removeFromAheadBuffer.add(currentPossibleNack);
