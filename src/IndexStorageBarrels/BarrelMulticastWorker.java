@@ -69,6 +69,11 @@ public class BarrelMulticastWorker implements Runnable{
                         }
                     }
                     else if(seqNumber != 1){
+                        synchronized (downloadersByteBuffers){
+                            if(!downloadersByteBuffers.containsKey(downloaderId)){
+                                downloadersByteBuffers.put(downloaderId, new HashMap<>());
+                            }
+                        }
                         lastSeqNumber.put(downloaderId, 0);
                         aheadSeqNumber = true;
                     }

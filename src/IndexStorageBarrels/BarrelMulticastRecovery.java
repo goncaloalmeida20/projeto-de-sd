@@ -22,61 +22,95 @@ public class BarrelMulticastRecovery implements Runnable{
 
     /**
      * @return 0 if no out of order packets were found,
-     * 1 if a sequence number was found out of order (wrong seqNumber),
-     * 2 if a packet within a message was found out of order (wrong msgsLeft)
+     * otherwise the time left for the next timeout
      */
-    private int searchOutOfOrderPackets(){
+    private long searchOutOfOrderPackets(){
         //check if there are buffered packets
         //System.out.println("BMR SOOOP");
-        if(!BarrelMulticastWorker.aheadBuffer.isEmpty()) return 2;
+        long minWaitTime = 0;
+        synchronized (BarrelMulticastWorker.aheadBuffer){
+            List<List<Integer>> removeFromAheadBuffer = new ArrayList<>();
+            for(var downloaderSet: BarrelMulticastWorker.aheadBuffer.entrySet()){
+                int downloader = downloaderSet.getKey();
+                for(var seqNumberSet: BarrelMulticastWorker.aheadBuffer.get(downloader).entrySet()){
+                    int seqNumber = seqNumberSet.getKey();
+                    for(var msgsLeftSet: BarrelMulticastWorker.aheadBuffer.get(downloader).get(seqNumber)
+                            .entrySet()){
+                        long timeTemp = TimedByteBuffer.TIMEOUT_MS - msgsLeftSet.getValue().timeSinceCreation();
+                        if(timeTemp > 0 && (minWaitTime == 0 || timeTemp < minWaitTime)){
+                            minWaitTime = timeTemp;
+                        }
+                    }
+                }
+            }
+        }
 
         //check if there are any seqNumbers ahead of the counter (lastSeqNumber)
         synchronized (BarrelMulticastWorker.lastSeqNumber){
             for(var downloaderSet: BarrelMulticastWorker.lastSeqNumber.entrySet()){
                 int downloader = downloaderSet.getKey(), lastSeqNumber = downloaderSet.getValue();
-                for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
-                    if(seqNumberSet.getKey() > lastSeqNumber) return 1;
+                synchronized (BarrelMulticastWorker.downloadersByteBuffers){
+                    for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
+                        if(seqNumberSet.getKey() > lastSeqNumber){
+                            long timeTemp = TimedByteBuffer.TIMEOUT_MS - seqNumberSet.getValue().timeSinceCreation();
+                            if(timeTemp > 0 && (minWaitTime == 0 || timeTemp < minWaitTime)){
+                                minWaitTime = timeTemp;
+                            }
+                        }
+                    }
                 }
             }
         }
-        return 0;
+        return minWaitTime;
     }
 
     public void run(){
         System.out.println("BarrelMulticastRecovery " + id);
         try (MulticastSocket socket = new MulticastSocket()) {
-            int aheadError = 0;
+            long minWaitTime = 0; //time to wait for next out of order packet timeout
             while(true){
                 //System.out.println("BMR1");
                 synchronized (BarrelMulticastWorker.aheadBuffer){
                     //System.out.println("BMR2");
-                    aheadError = searchOutOfOrderPackets();
-                    while(aheadError == 0){
+                    minWaitTime = searchOutOfOrderPackets();
+                    while(minWaitTime == 0){
                         BarrelMulticastWorker.aheadBuffer.wait();
-                        aheadError = searchOutOfOrderPackets();
+                        minWaitTime = searchOutOfOrderPackets();
                         //System.out.println("BMR " + aheadError);
                     }
                 }
+                //Wait for the next out of order packet timeout
+                Thread.sleep(minWaitTime);
 
                 List<List<Integer>> nacks = new ArrayList<>();
 
                 //get seqNumbers ahead of the counter (lastSeqNumber)
                 synchronized (BarrelMulticastWorker.lastSeqNumber){
                     for(var downloaderSet: BarrelMulticastWorker.lastSeqNumber.entrySet()){
-                        int downloader = downloaderSet.getKey(), lastSeqNumber = downloaderSet.getValue();
+                        int downloader = downloaderSet.getKey(), lastSeqNumber = downloaderSet.getValue(),
+                            newLastSeqNumber = 0;
                         synchronized (BarrelMulticastWorker.downloadersByteBuffers){
+                            //System.out.println("BMR " + downloader);
                             for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
-                                if(seqNumberSet.getKey() > lastSeqNumber + 1){
+                                int currentSeqNumber = seqNumberSet.getKey();
+                                if(currentSeqNumber > lastSeqNumber){
                                     TimedByteBuffer tbb = seqNumberSet.getValue();
-                                    List<Integer> currentPossibleNack = Arrays.asList(downloader, lastSeqNumber);
+                                    List<Integer> currentPossibleNack = Arrays.asList(downloader, lastSeqNumber+1);
                                     if(tbb.timeSinceCreation() > TimedByteBuffer.TIMEOUT_MS &&
                                         !nacks.contains(currentPossibleNack)){
-
+                                        if(newLastSeqNumber == 0 || currentSeqNumber < newLastSeqNumber){
+                                            newLastSeqNumber = currentSeqNumber;
+                                        }
+                                        //System.out.println("PUT " + downloader + " " + newLastSeqNumber);
                                         nacks.add(currentPossibleNack);
                                     }
                                 }
                             }
                         }
+                        //System.out.println("PUT " + downloader + " " + newLastSeqNumber
+                        //        + " " + BarrelMulticastWorker.lastSeqNumber.get(downloader));
+                        if(newLastSeqNumber != 0)
+                            BarrelMulticastWorker.lastSeqNumber.put(downloader, newLastSeqNumber);
                     }
                 }
 
