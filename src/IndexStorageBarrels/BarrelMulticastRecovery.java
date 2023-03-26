@@ -99,16 +99,19 @@ public class BarrelMulticastRecovery implements Runnable{
                             //System.out.println("BMR " + downloader);
                             for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
                                 int currentSeqNumber = seqNumberSet.getKey();
+                                //if(downloader == 2) System.out.println(currentSeqNumber + " " + lastSeqNumber);
                                 if(currentSeqNumber > lastSeqNumber){
                                     TimedByteBuffer tbb = seqNumberSet.getValue();
-                                    List<Integer> currentPossibleNack = Arrays.asList(downloader, lastSeqNumber+1);
-                                    if(tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS &&
-                                        !nacks.contains(currentPossibleNack)){
+                                    if(tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS){
                                         if(newLastSeqNumber == 0 || currentSeqNumber < newLastSeqNumber){
                                             newLastSeqNumber = currentSeqNumber;
                                         }
+                                        for(int i = lastSeqNumber + 1; i < currentSeqNumber; i++){
+                                            List<Integer> currentPossibleNack = Arrays.asList(downloader, i);
+                                            if(!nacks.contains(currentPossibleNack)) nacks.add(currentPossibleNack);
+                                        }
                                         //System.out.println("PUT " + downloader + " " + newLastSeqNumber);
-                                        nacks.add(currentPossibleNack);
+
                                     }
                                 }
                             }

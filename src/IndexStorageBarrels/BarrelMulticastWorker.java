@@ -69,12 +69,6 @@ public class BarrelMulticastWorker implements Runnable{
                         }
                     }
                     else if(seqNumber != 1){
-                        //if it's the first msg from the downloader, create the hashmap
-                        synchronized (downloadersByteBuffers){
-                            if(!downloadersByteBuffers.containsKey(downloaderId)){
-                                downloadersByteBuffers.put(downloaderId, new HashMap<>());
-                            }
-                        }
                         lastSeqNumber.put(downloaderId, 0);
                         aheadSeqNumber = true;
                     }
@@ -112,6 +106,9 @@ public class BarrelMulticastWorker implements Runnable{
                     if(!downloadersByteBuffers.containsKey(downloaderId)){
                         downloadersByteBuffers.put(downloaderId, new HashMap<>());
                     }
+                    if(!downloadersByteBuffers.get(downloaderId).containsKey(seqNumber)){
+                        downloadersByteBuffers.get(downloaderId).put(seqNumber, new TimedByteBuffer());
+                    }
                 }
 
                 //System.out.println("HELLO3 " + aheadSeqNumber);
@@ -131,7 +128,7 @@ public class BarrelMulticastWorker implements Runnable{
                             if(!aheadBuffer.get(downloaderId).containsKey(seqNumber))
                                 aheadBuffer.get(downloaderId).put(seqNumber, new HashMap<>());
                             aheadBuffer.get(downloaderId).get(seqNumber)
-                                    .put(msgsLeft, new TimedByteBuffer(bb, System.currentTimeMillis()));
+                                    .put(msgsLeft, new TimedByteBuffer(bb));
                             aheadBuffer.notify();
                         }
                         continue;
@@ -142,8 +139,7 @@ public class BarrelMulticastWorker implements Runnable{
                     //if it's the first packet of the current message, allocate a buffer
                     if(msgsLeft == firstMsg){
                         downloadersByteBuffers.get(downloaderId).put(seqNumber, new TimedByteBuffer(
-                                ByteBuffer.allocate((msgsLeft + 1) * MulticastPacket.MSG_BYTES_SIZE),
-                                System.currentTimeMillis()));
+                                ByteBuffer.allocate((msgsLeft + 1) * MulticastPacket.MSG_BYTES_SIZE)));
                     }
                     //append the bytes to the current sequence number buffer
                     downloadersByteBuffers.get(downloaderId).get(seqNumber).byteBuffer.put(bb);
