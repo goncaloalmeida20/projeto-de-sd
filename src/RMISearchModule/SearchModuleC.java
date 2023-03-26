@@ -9,10 +9,12 @@ import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
 import java.rmi.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I, Serializable {
-    public final Map<Integer, Integer> clients_log; // 0 - off 1 - on (login)
-    public final Map<Integer, String[]> clients_info;
+
+    public static final Map<Integer, Integer> clients_log = Collections.synchronizedMap(new HashMap<>()); // 0 - off 1 - on (login)
+    public static final Map<Integer, String[]> clients_info = Collections.synchronizedMap(new HashMap<>()); // 0 - off 1 - on (login)
 
     // RMI Client info
     public static int PORT0 = 7004;
@@ -25,15 +27,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public SearchModuleC(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) throws RemoteException {
         super();
-        clients_log = Collections.synchronizedMap(new HashMap<>());
-        clients_info = Collections.synchronizedMap(new HashMap<>());
         tasks = t;
         result_pages = p;
-    }
-
-    public synchronized int connectSM() throws RemoteException {
-        cAllCounter++;
-        return cAllCounter;
     }
 
     private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
@@ -45,37 +40,63 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    public String register(String username, String password, int id) throws RemoteException {
-        boolean exist;
+    private boolean findClient(String username){
         synchronized (clients_info){
-            exist = clients_info.get(id) != null;
-        }
-        if (exist){
-            return "Client already exists!";
-        } else {
-            synchronized (clients_info){
-                clients_info.put(id, new String[]{username, password});
+            for (Map.Entry<Integer, String[]> set :
+                    clients_info.entrySet()) {
+                if(set.getValue()[0].equals(username)) return true;
             }
-            return "Client is now registered!";
         }
+        return false;
     }
 
-    public String login(String username, String password, int id) throws RemoteException {
-        boolean logged;
-        synchronized (clients_log){
-            logged = clients_log.get(id) != null;
-        }
-        if (logged){
-            return "Client already logged on!";
+    public int register(String username, String password) throws RemoteException {
+        boolean exist = findClient(username);
+        if (exist){
+            return 0; // "Client already exists!"
         } else {
-            synchronized (clients_log){
-                synchronized (clients_info){
-                    String[] info = clients_info.get(id);
-                    if(!info[0].equals(username) || !info[1].equals(password)) return "Invalid credentials!";
-                }
-                clients_log.put(id, 1);
+            cAllCounter++;
+            synchronized (clients_info){
+                clients_info.put(cAllCounter , new String[]{username, password});
             }
-            return "Client is now logged on!";
+            synchronized (clients_log){
+                clients_log.put(cAllCounter , 0);
+            }
+            return cAllCounter; // "Client is now registered!"
+        }
+
+    }
+
+    private int verifyLoggedClient(String username, String password, int id){
+        int login = 2; // 0 - Already logged in -- 1 - Logged in -- 2 - Invalid credentials
+        synchronized (clients_info){
+            for (Map.Entry<Integer, String[]> set :
+                    clients_info.entrySet()) {
+                if (set.getValue()[0].equals(username) && set.getValue()[1].equals(password)) {
+                    login = 1;
+                    break;
+                }
+            }
+        }
+        if(login == 2) return 2;
+        synchronized (clients_log){
+            boolean info = clients_log.get(id) == null;
+            if(!info) return 0;
+        }
+        return 1;
+    }
+
+    public int login(String username, String password, int id) throws RemoteException {
+        int logged = verifyLoggedClient(username, password, id);
+        if (logged == 0){
+            return 0; // "Client already logged on!"
+        } else if(logged == 1) {
+            synchronized (clients_log){
+                clients_log.put(cAllCounter, 1);
+            }
+            return 1; // "Client is now logged on!"
+        } else{
+            return 2; // "Invalid credentials"
         }
     }
 
@@ -129,18 +150,18 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     }
 
-    public String logout(int id) throws RemoteException {
+    public int logout(int id) throws RemoteException {
         int logged;
         synchronized (clients_log){
             logged = clients_log.get(id) == null ? 0 : 1;
         }
         if (logged == 0){
-            return "Client is not logged on, so it cannot loggout!";
+            return 0; // "Client is not logged on, so it cannot log out!"
         } else {
             synchronized (clients_log){
                 clients_log.remove(id);
             }
-            return "Client is now logged off!";
+            return 1; // "Client is now logged off!"
         }
     }
 

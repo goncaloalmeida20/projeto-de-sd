@@ -17,6 +17,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static SearchModuleC_S_I searchM;
     private static int id;
+    private static boolean logged;
 
     public String username, password;
 
@@ -24,6 +25,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         super();
         this.username = username;
         this.password = password;
+        this.logged = false;
     }
 
     private static String readString() {
@@ -48,32 +50,43 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         try {
             Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
             searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
-            id = searchM.connectSM();
-            int op;
+            int op, count;
             do {
+                count = 1;
                 System.out.println("Client Menu:");
-                System.out.println("1 - Registar");
-                System.out.println("2 - Fazer login");
-                System.out.println("3 - Indexar novo URL");
-                System.out.println("4 - Pesquisar páginas que contenham um conjunto de termos");
-                System.out.println("5 - Consultar lista de páginas com ligação para uma página específica");
-                System.out.println("6 - Consultar página de administração");
-                System.out.println("7 - Fazer logout");
-                System.out.println("8 - Sair do programa");
+                if(!logged) System.out.println(count++ + " - Registar");
+                if(!logged) System.out.println(count++ + " - Fazer login");
+                System.out.println(count++ + " - Indexar novo URL");
+                System.out.println(count++ + " - Pesquisar páginas que contenham um conjunto de termos");
+                System.out.println(count++ + " - Consultar lista de páginas com ligação para uma página específica");
+                System.out.println(count++ + " - Consultar página de administração");
+                if(logged) System.out.println(count++ + " - Fazer logout");
+                System.out.println(count++ + " - Sair do programa");
                 System.out.print("Option: ");
                 op = readInt();
-                switch (op) {
-                    case 1 -> register();
-                    case 2 -> login();
-                    case 3 -> indexUrl();
-                    case 4 -> search();
-                    case 5 -> searchPages();
-                    case 6 -> admin();
-                    case 7 -> logout();
-                    case 8 -> searchM.logout(id);
-                    default -> System.out.println("Invalid option!");
+                if(!logged){
+                    switch (op) {
+                        case 1 -> register();
+                        case 2 -> login();
+                        case 3 -> indexUrl();
+                        case 4 -> search();
+                        case 5 -> searchPages();
+                        case 6 -> admin();
+                        case 7 -> exit();
+                        default -> System.out.println("Invalid option!");
+                    }
+                } else{
+                    switch (op) {
+                        case 1 -> indexUrl();
+                        case 2 -> search();
+                        case 3 -> searchPages();
+                        case 4 -> admin();
+                        case 5 -> logout();
+                        case 6 -> exit();
+                        default -> System.out.println("Invalid option!");
+                    }
                 }
-            } while (op != 8);
+            } while (op != 7 && !logged || op != 6 && logged);
         } catch (IOException e) {
             System.out.println("IO_1: " + e.getMessage());
         } catch (NotBoundException | ServerNotActiveException | InterruptedException e) {
@@ -93,8 +106,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             if (password == null) {
                 System.out.println("Invalid password!");
             } else {
-                String msg = searchM.register(username, password, id);
-                System.out.println("Server message: " + msg + '\n');
+                int reg = searchM.register(username, password);
+                String msg;
+                if (reg == 0) msg = "Client already exists!";
+                else {msg = "Client is now registered!"; id = reg;}
+                System.out.println("\nServer message: " + msg + '\n');
             }
         }
     }
@@ -111,8 +127,12 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             if (password == null) {
                 System.out.println("Invalid password!");
             } else {
-                String msg = searchM.login(username, password, id);
-                System.out.println("Server message: " + msg + '\n');
+                int login = searchM.login(username, password, id);
+                String msg;
+                if (login == 1) msg = "Client already logged on!";
+                else if (login == 0) {msg = "Client is now logged on!"; logged = true;}
+                else msg = "Invalid credentials!";
+                System.out.println("\nServer message: " + msg + '\n');
             }
         }
     }
@@ -206,7 +226,16 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void logout() throws IOException, ServerNotActiveException {
-        String msg = searchM.logout(id);
+        int logout = searchM.logout(id);
+        String msg;
+        if(logout == 0) msg = "Client is not logged on, so it cannot logout!"; // Nunca acontece
+        else msg = "Client is now logged off!";
+        logged = false;
         System.out.println("Server message: " + msg);
+    }
+
+    private static void exit() throws ServerNotActiveException, RemoteException {
+        searchM.logout(id);
+        System.out.println("Close client menu...");
     }
 }
