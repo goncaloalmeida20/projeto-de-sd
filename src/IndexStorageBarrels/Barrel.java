@@ -60,7 +60,7 @@ public class Barrel{
         bmrcv = new BarrelMulticastReceiver(id);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
-        //Barrel b = new Barrel(id);
+        Barrel b = new Barrel(id);
         System.out.println("Barrel is ready");
     }
 }
