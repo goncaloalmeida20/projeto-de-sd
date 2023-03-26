@@ -13,6 +13,8 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     public static SearchModuleB_S_I h;
     public static BarrelModule c;
 
+    private int id;
+
     public BarrelModule() throws RemoteException {
         super();
     }
@@ -122,7 +124,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             h = (SearchModuleB_S_I) LocateRegistry.getRegistry(7002).lookup("XPT");
             c = new BarrelModule();
-            h.subscribe("Storage Barrel", (BarrelModule_S_I) c);
+            id = h.subscribe((BarrelModule_S_I) c);
             System.out.println("Storage Barrel Ready");
 
             while (true) {
