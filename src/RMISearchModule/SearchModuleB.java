@@ -51,9 +51,8 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      * Disconnects a Barrel from the SearchModule by removing it from the barrels list
      * Note that this function is called if a Barrel breakdown
      * @param index Index of the Barrel to be disconnected (Removed from the barrels list)
-     * @throws RemoteException If there is an error with the remote connection
      */
-    private void disconnect(int index) throws RemoteException {
+    private void disconnect(int index) {
         synchronized (searchModuleB.barrels){
             System.out.println("A barrel disconnected");
             searchModuleB.barrels.remove(index);
@@ -137,11 +136,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                     }
                 }
             } catch (ConnectException e ) {
-                try {
-                    disconnect(randomIndex);
-                } catch (RemoteException ex) {
-                    throw new RuntimeException(ex);
-                }
+                disconnect(randomIndex);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
