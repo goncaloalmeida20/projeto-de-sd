@@ -1,5 +1,6 @@
 package RMISearchModule;
 
+import RMIClient.ClientInterface_C_I;
 import classes.Page;
 
 import java.rmi.*;
@@ -7,7 +8,8 @@ import java.rmi.server.ServerNotActiveException;
 import java.util.ArrayList;
 
 public interface SearchModuleC_S_I extends Remote{
-    int register(String username, String password) throws java.rmi.RemoteException;
+    //void printOnServer(ClientInterface_C_I c) throws RemoteException;
+    int register(String username, String password, SearchModuleC_S_I s) throws java.rmi.RemoteException;
     int login(String username, String password, int id) throws java.rmi.RemoteException, ServerNotActiveException;
     void indexUrl(String url) throws java.rmi.RemoteException, NotBoundException;
     ArrayList<Page> search(int termCount, String[] terms, int n_page) throws java.rmi.RemoteException, NotBoundException, InterruptedException;

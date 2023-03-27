@@ -3,6 +3,10 @@ package RMISearchModule;
 import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
+
+import IndexStorageBarrels.BarrelModule_S_I;
+import RMIClient.ClientInterface;
+import RMIClient.ClientInterface_C_I;
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
 import classes.Page;
@@ -14,7 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I, Serializable {
 
     public static final Map<Integer, Integer> clients_log = Collections.synchronizedMap(new HashMap<>()); // 0 - off 1 - on (login)
-    public static final Map<Integer, String[]> clients_info = Collections.synchronizedMap(new HashMap<>()); // 0 - off 1 - on (login)
+    public static final Map<Integer, String[]> clients_info = Collections.synchronizedMap(new HashMap<>());
+    public static final List<SearchModuleC_S_I> clientSThreads = Collections.synchronizedList(new ArrayList<>());
 
     // RMI Client info
     public static int PORT0 = 7004;
@@ -50,7 +55,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         return false;
     }
 
-    public synchronized int register(String username, String password) throws RemoteException {
+    public synchronized int register(String username, String password, SearchModuleC_S_I s) throws RemoteException {
         boolean exist = findClient(username);
         if (exist){
             return 0; // "Client already exists!"
@@ -62,6 +67,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             synchronized (clients_log){
                 clients_log.put(cAllCounter , 0);
             }
+            clientSThreads.add(s);
             return cAllCounter; // "Client is now registered!"
         }
 
@@ -169,6 +175,10 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             rC.rebind(hostname0, this);
 
             System.out.println("Search Module - Client connection ready.");
+
+            for (SearchModuleC_S_I clientSThread : clientSThreads) {
+                clientSThread.notifyAll();
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }
