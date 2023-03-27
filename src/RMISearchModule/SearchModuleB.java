@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.sql.SQLException;
 import java.util.*;
 
 public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_S_I, Runnable {
@@ -137,7 +138,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                 }
             } catch (ConnectException e ) {
                 disconnect(randomIndex);
-            } catch (RemoteException e) {
+            } catch (RemoteException | SQLException e) {
                 e.printStackTrace();
             }
         }
