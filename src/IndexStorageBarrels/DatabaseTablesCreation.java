@@ -5,14 +5,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
-public class DatabaseStarter {
-
-    public static void main(String[] args) throws SQLException {
+public class DatabaseTablesCreation {
+    public static void main(String[] args) {
         String url = args[0];
-        String name = args[1];
-        String user = args[2];
-        String password = args[3];
+        String user = args[1];
+        String password = args[2];
         Connection connect = null;
         Statement stm = null;
 
@@ -20,46 +17,8 @@ public class DatabaseStarter {
             Class.forName("org.postgresql.Driver");
 
             System.out.println("Connecting to Database...");
+            System.out.println(1 + " " + url + "/");
             connect = DriverManager.getConnection(url, user, password);
-
-            stm = connect.createStatement();
-
-            // Drop database if exists
-            stm.executeUpdate("DROP DATABASE IF EXISTS " + name);
-
-            stm.executeUpdate("CREATE DATABASE " + name);
-
-            // Use the new database
-            //connect = DriverManager.getConnection(url + name, user, password);
-            //connect.setCatalog(name);
-        } catch (SQLException e) {
-            System.out.println("Database creation failed. Error message: " + e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (stm != null) {
-                    stm.close();
-                }
-                if (connect != null) {
-                    connect.close();
-                }
-            } catch (SQLException e) {
-                System.out.println("Error while closing connection with database. Error message: " + e.getMessage());
-            }
-        }
-        //createTables(url, name, user, password);
-    }
-    void createTables(String url, String name, String user, String password){
-        Connection connect = null;
-        Statement stm = null;
-
-        try {
-            Class.forName("org.postgresql.Driver");
-
-            System.out.println("Connecting to Database...");
-            System.out.println(1 + " " + url + name);
-            connect = DriverManager.getConnection(url + name, user, password);
             System.out.println(2);
 
             stm = connect.createStatement();

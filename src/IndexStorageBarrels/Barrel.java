@@ -44,11 +44,12 @@ public class Barrel{
         t.start();
 
         String url = "jdbc:postgresql://localhost:5432/";
-        String dbName = "Barrel" + barrelModule.getId() + "DB";
+        String dbName = "barrel" + barrelModule.getId() + "DB";
         String user = "postgres";
         String password = "postgres";
-        //DatabaseStarter.main(new String[]{url, dbName, user, password});
+        DatabaseStarter.main(new String[]{url, dbName, user, password});
         System.out.println("Database created successfully");
+        DatabaseTablesCreation.main(new String[]{url + dbName, user, password});
     }
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {

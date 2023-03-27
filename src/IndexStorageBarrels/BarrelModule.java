@@ -7,7 +7,9 @@ import classes.Page;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
@@ -29,51 +31,59 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      @throws RemoteException If there is an error with the remote connection
      */
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
-        boolean get_pages = true;
-        ArrayList<ArrayList<Integer>> pagesIds = new ArrayList<>();
+        ArrayList<Page> pages = new ArrayList<>();
 
-        // Verify if the inverted index have all the terms
-        ArrayList<Integer> p;
-        for (String term : terms) {
-            synchronized (Barrel.invertedIndex){
-                p = Barrel.invertedIndex.get(term);
+        //TODO: Mudar localhost
+        try (Connection conn = DriverManager.getConnection("localhost");
+             PreparedStatement stm = conn.prepareStatement(
+                     "SELECT p.*, COUNT(l.Id) as LinksCount " +
+                             "FROM Page p " +
+                             "JOIN inverted_index ii ON p.Id = ii.UrlId " +
+                             "LEFT JOIN Links l ON p.Id = l.PageId " +
+                             "WHERE ii.Term IN (" + String.join(",", Collections.nCopies(terms.length, "?")) + ") " +
+                             "GROUP BY p.Id " +
+                             "HAVING COUNT(DISTINCT ii.Term) = ? " +
+                             "ORDER BY LinksCount DESC"
+             )) {
+            for (int i = 0; i < terms.length; i++) {
+                stm.setString(i + 1, terms[i]);
             }
-            if (p == null) {
-                get_pages = false;
-                break;
+            stm.setInt(terms.length + 1, terms.length);
+
+            ResultSet resultSet = stm.executeQuery();
+            ResultSet copyResultSet = resultSet;
+
+            // Get total number of pages that have a hyperlink to the given url
+            int lenPages = 0;
+            while (copyResultSet.next()) {
+                lenPages++;
             }
-            pagesIds.add(p);
-        }
 
-        if(!get_pages) return null;
+            // Calculate the index range
+            int startIndex = (lenPages / 10) * n_page;
+            int endIndex = startIndex + 10;
 
-        ArrayList<Integer> common = new ArrayList<>(pagesIds.get(0));
-        int commonSize, allPagesSize;
-
-        synchronized (Barrel.all_pages){
-            allPagesSize = Barrel.all_pages.size();
-        }
-
-        for(int i = 1; i < allPagesSize; i++){
-            common.retainAll(pagesIds.get(i));
-            commonSize = common.size();
-            if(commonSize == 0) break;
-            if(commonSize > n_page * 10) break;
-        }
-
-        commonSize = common.size();
-        if(commonSize == 0) return null;
-
-        ArrayList<Page> ten_pages = new ArrayList<>();
-        Page page;
-        for (int i = 0; i < commonSize && i < 10; i++) {
-            synchronized (Barrel.all_pages){
-                page = Barrel.all_pages.get(common.get(i));
+            // Set the result iterator in the startIndex
+            int counter = 0;
+            while (resultSet.next()) {
+                if(counter == startIndex - 1) break;
+                counter++;
             }
-            ten_pages.add(page);
+
+            // Add the pages to a list
+            while (resultSet.next() && counter < endIndex) {
+                String urlP = resultSet.getString("Url");
+                String title = resultSet.getString("Title");
+                String citation = resultSet.getString("Citation");
+                Page page = new Page(urlP, title, citation, null, null);
+                pages.add(page);
+                counter++;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
 
-        return order_pages(ten_pages);
+        return pages;
     }
 
     /**
@@ -97,31 +107,69 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
      @throws RemoteException If there is an error in the remote connection
      */
-    public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
-        ArrayList<Page> ten_pages = new ArrayList<>();
-        int count = 0;
+    public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException, SQLException {
+        Connection connect = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        //TODO: Mudar o localhost
+        try {
+            connect = DriverManager.getConnection("localhost", "postgres", "postgres");
 
-        int allPagesSize;
-        Page p;
-        boolean contains;
-        synchronized (Barrel.all_pages){
-            allPagesSize = Barrel.all_pages.size();
-        }
-        for (int i = 0; i < allPagesSize; i++) {
-            synchronized (Barrel.all_pages){
-                p = Barrel.all_pages.get(i);
-            }
-            synchronized (p.links){
-                contains = p.links.contains(url);
-            }
-            if(contains){
-                ten_pages.add(p);
-                count++;
-            }
-            if(count == 10) break;
-        }
+            // Execute the query to get all Pages that have a hyperlink to the given url
+            statement = connect.prepareStatement(
+                    "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?"
+            );
+            statement.setString(1, url);
+            resultSet = statement.executeQuery();
+            ResultSet copyResultSet = resultSet;
 
-        return ten_pages;
+            // Get total number of pages that have a hyperlink to the given url
+            int lenPages = 0;
+            while (copyResultSet.next()) {
+                lenPages++;
+            }
+
+            // Calculate the index range
+            int startIndex = (lenPages / 10) * n_page;
+            int endIndex = startIndex + 10;
+
+            // Set the result iterator in the startIndex
+            int counter = 0;
+            while (resultSet.next()) {
+                if(counter == startIndex - 1) break;
+                counter++;
+            }
+
+            // Add the pages to a list
+            ArrayList<Page> pages = new ArrayList<>();
+            while (resultSet.next() && counter < endIndex) {
+                String urlP = resultSet.getString("Url");
+                String title = resultSet.getString("Title");
+                String citation = resultSet.getString("Citation");
+                Page page = new Page(urlP, title, citation, null, null);
+                pages.add(page);
+                counter++;
+            }
+            return pages;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Close the result set, statement, and connection
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connect != null) {
+                    connect.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     /**
