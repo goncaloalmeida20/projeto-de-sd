@@ -43,10 +43,11 @@ public class BarrelMulticastWorker implements Runnable{
                 ByteBuffer bb = ByteBuffer.wrap(packet);
 
                 //get the header bytes
-                int downloaderId = bb.getInt(), seqNumber = bb.getInt(), msgsLeft = bb.getInt(),
+                int barrelId = bb.getInt(), downloaderId = bb.getInt(), seqNumber = bb.getInt(), msgsLeft = bb.getInt(),
                         firstMsg = bb.getInt();
 
-                System.out.println("Analyzing " + downloaderId + " " + seqNumber + " " + msgsLeft + " " + firstMsg);
+                System.out.println("Analyzing " + barrelId + " " + downloaderId + " " + seqNumber + " " + msgsLeft +
+                        " " + firstMsg);
 
                 boolean aheadSeqNumber = false, aheadMsgsLeft = false;
 

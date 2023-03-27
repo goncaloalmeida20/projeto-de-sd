@@ -39,8 +39,10 @@ public class BarrelMulticastReceiver implements Runnable{
                 ByteBuffer headerBytes = ByteBuffer.wrap(packetBytes, 0, MulticastPacket.HEADER_SIZE);
 
                 //get the header bytes
-                int downloaderId = headerBytes.getInt(), seqNumber = headerBytes.getInt(),
-                        messageType = headerBytes.getInt();
+                int barrelId = headerBytes.getInt(), downloaderId = headerBytes.getInt(),
+                        seqNumber = headerBytes.getInt(), messageType = headerBytes.getInt();
+
+                if(barrelId > 0 && barrelId != id) continue;
 
                 //check if it's a NACK ACK (acknowledge of the NACK message) or a regular message
                 if(messageType < 0){

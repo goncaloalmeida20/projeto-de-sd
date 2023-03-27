@@ -28,7 +28,7 @@ public class Page implements Serializable {
     public void addWord(String word){
         if(citation == null) citation = word;
         else citation += " " + word;
-        words.add(word);
+        words.add(word.toLowerCase());
     }
 
     public void addLink(String link){
@@ -48,10 +48,10 @@ public class Page implements Serializable {
         for(int i = 0; i < words.size(); i++){
             sb.append("item_").append(i).append("|").append(words.get(i)).append(";");
         }
-        /*sb.append("type|url_list;item_count|").append(links.size()).append(";");
+        sb.append("type|url_list;item_count|").append(links.size()).append(";");
         for(int i = 0; i < links.size(); i++){
             sb.append("item_").append(i).append("|").append(links.get(i)).append(";");
-        }*/
+        }
         return sb.toString();
     }
 }

@@ -3,7 +3,7 @@ package classes;
 import java.nio.ByteBuffer;
 
 public class TimedByteBuffer {
-    public static final long TIMEOUT_MS = 2000;
+    public static final long TIMEOUT_MS = 1000;
     public ByteBuffer byteBuffer;
     public long creationTime;
 

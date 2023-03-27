@@ -4,35 +4,39 @@ import java.nio.ByteBuffer;
 
 public class MulticastPacket{
     public static final int PACKET_SIZE = 1000,
-            HEADER_SIZE = 4 * 4, //4 integers
+            HEADER_SIZE = 5 * 4, //5 integers
             MSG_BYTES_SIZE = PACKET_SIZE - HEADER_SIZE;
-    public int downloader_id, seq_number, msgs_left, first_msg;
+    public int barrelId, downloaderId, seqNumber, msgsLeft, firstMsg;
     public byte[] msgBytes;
 
-    public MulticastPacket(int downloader_id, int seq_number, int msgs_left, int first_msg) {
-        this.downloader_id = downloader_id;
-        this.seq_number = seq_number;
-        this.msgs_left = msgs_left;
-        this.first_msg = first_msg;
+    public MulticastPacket(int barrelId, int downloaderId, int seqNumber, int msgsLeft, int firstMsg) {
+        this.barrelId = barrelId;
+        this.downloaderId = downloaderId;
+        this.seqNumber = seqNumber;
+        this.msgsLeft = msgsLeft;
+        this.firstMsg = firstMsg;
         msgBytes = null;
     }
 
-    public MulticastPacket(int downloader_id, int seq_number, int msgs_left, int first_msg, byte[] msgBytes) {
-        this.downloader_id = downloader_id;
-        this.seq_number = seq_number;
-        this.msgs_left = msgs_left;
-        this.first_msg = first_msg;
+    public MulticastPacket(int barrelId, int downloaderId, int seqNumber, int msgsLeft, int firstMsg, byte[] msgBytes) {
+        this.barrelId = barrelId;
+        this.downloaderId = downloaderId;
+        this.seqNumber = seqNumber;
+        this.msgsLeft = msgsLeft;
+        this.firstMsg = firstMsg;
         this.msgBytes = msgBytes.clone();
     }
 
     public byte[] toBytes(){
         try{
             ByteBuffer bb = ByteBuffer.allocate(PACKET_SIZE);
-            bb.putInt(downloader_id);
-            bb.putInt(seq_number);
-            bb.putInt(msgs_left);
-            bb.putInt(first_msg);
-            bb.put(msgBytes);
+            bb.putInt(barrelId);
+            bb.putInt(downloaderId);
+            bb.putInt(seqNumber);
+            bb.putInt(msgsLeft);
+            bb.putInt(firstMsg);
+            if(msgBytes != null)
+                bb.put(msgBytes);
             return bb.array();
         }
         catch(Exception e){

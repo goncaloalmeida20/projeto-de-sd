@@ -1,8 +1,11 @@
 package IndexStorageBarrels;
 
+import Downloaders.DownloaderManager;
+import classes.MulticastPacket;
 import classes.TimedByteBuffer;
 
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,6 +73,18 @@ public class BarrelMulticastRecovery implements Runnable{
             }
         }
         return minWaitTime;
+    }
+
+    public boolean containsNack(int nack0, int nack1){
+        for(int i = 0; i < nackAcksQueue.size(); i++){
+            ByteBuffer bb = ByteBuffer.wrap(nackAcksQueue.get(i));
+            int barrelId = bb.getInt(), downloaderId = bb.getInt(), seqNumber = bb.getInt();
+            if(nack0 == downloaderId && nack1 == seqNumber){
+                nackAcksQueue.remove(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void run(){
@@ -174,19 +189,37 @@ public class BarrelMulticastRecovery implements Runnable{
                 }
                 for(var nack: nacks){
                     System.out.println("NACK " + nack.get(0) + " " + nack.get(1));
+                    byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -1, -1).toBytes();
+                    //Send the packet
+                    InetAddress group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
+                    DatagramPacket packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
+                        DownloaderManager.MULTICAST_PORT);
+                    socket.send(packet);
+
+                    long sendTime = System.currentTimeMillis();
+                    boolean foundNack;
+                    synchronized (nackAcksQueue){
+                        do{
+                            nackAcksQueue.wait(TimedByteBuffer.TIMEOUT_MS);
+                            foundNack = containsNack(nack.get(0), nack.get(1));
+                        }while(!foundNack && System.currentTimeMillis() - sendTime < TimedByteBuffer.TIMEOUT_MS);
+                    }
+                    if(!foundNack){
+                        System.out.println("NOT FOUND NACK " + nack.get(0) + " " + nack.get(1));
+                    }
+
+                    nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -4, -1).toBytes();
+                    //Send the packet
+                    group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
+                    packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
+                            DownloaderManager.MULTICAST_PORT);
+                    socket.send(packet);
+
+                    System.out.println("Sending NACK ACK ACK " +  id + " " + nack.get(0) + " " + nack.get(1) + " -4");
                 }
 
                 //System.out.println("BMR HELLO5");
             }
-
-
-            /*
-            //Send the packet
-            InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
-            DatagramPacket packet = new DatagramPacket(packet_buffer, packet_buffer.length, group,
-            DownloaderManager.MULTICAST_PORT);
-            socket.send(packet);
-            */
         } catch (Exception e) {
             System.out.println("BarrelMulticastRecovery " + id + " exception: " + e + " - " + e.getMessage());
         }

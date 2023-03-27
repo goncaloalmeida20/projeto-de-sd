@@ -31,7 +31,7 @@ public class DownloaderMulticastWorker implements Runnable{
                     }
                     currentPage = DownloaderManager.pageQueue.remove(0);
                     System.out.println("DownloaderMulticastWorker " + id + " sending page " + currentPage.url);
-                    DownloaderManager.pageQueue.notify();
+                    //DownloaderManager.pageQueue.notify();
                 }
 
                 //Convert the page to the multicast udp protocol string
@@ -50,7 +50,7 @@ public class DownloaderMulticastWorker implements Runnable{
                     if (bis.read(msgBytes, 0, MulticastPacket.MSG_BYTES_SIZE) < 0) {
                         throw new Exception("MulticastPacket bytes ended");
                     }
-                    MulticastPacket mp = new MulticastPacket(id, DownloaderManager.seqNumber, i, initialMsgSeqNumber,
+                    MulticastPacket mp = new MulticastPacket(-1, id, DownloaderManager.seqNumber, i, initialMsgSeqNumber,
                             msgBytes);
 
                     packetBuffer = mp.toBytes();
@@ -59,8 +59,11 @@ public class DownloaderMulticastWorker implements Runnable{
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                     DownloaderManager.MULTICAST_PORT);
-                    //if(i % 2 == 0)
-                    socket.send(packet);
+                    System.out.println("############################# " + currentPage.url);
+                    //if(DownloaderManager.seqNumber % 2 != 0 && i % 2 != 0)
+                        socket.send(packet);
+                    //else if(DownloaderManager.seqNumber % 2 == 0)
+                    //    socket.send(packet);
                     //else
                     //    testBuffers.add(packetBuffer);
                 }
@@ -70,6 +73,10 @@ public class DownloaderMulticastWorker implements Runnable{
                             DownloaderManager.MULTICAST_PORT);
                     socket.send(packet);
                 }*/
+                synchronized (DownloaderManager.pageBuffer){
+                    DownloaderManager.pageBuffer.put(DownloaderManager.seqNumber, currentPage);
+                }
+
             }
         } catch (Exception e) {
             System.out.println("DownloaderMulticastWorker " + id + " exception: " + e.getMessage());
