@@ -43,12 +43,11 @@ public class Barrel{
         t = new Thread(barrelModule);
         t.start();
 
-        // Call the main method of DatabaseSetup to create the database
         String url = "jdbc:postgresql://localhost:5432/";
         String dbName = "Barrel" + barrelModule.getId() + "DB";
         String user = "postgres";
         String password = "postgres";
-        DatabaseStarter.main(new String[]{url, dbName, user, password});
+        //DatabaseStarter.main(new String[]{url, dbName, user, password});
         System.out.println("Database created successfully");
     }
 

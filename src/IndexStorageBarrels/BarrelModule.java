@@ -1,5 +1,6 @@
 package IndexStorageBarrels;
 
+import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
@@ -10,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
-    public static SearchModuleB_S_I h;
-    public static BarrelModule c;
+    public static SearchModuleB_S_I searchModuleB;
+    public static BarrelModule b;
 
     public int id;
 
@@ -135,16 +136,16 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     @Override
     public void run() {
         try{
-            h = (SearchModuleB_S_I) LocateRegistry.getRegistry(7002).lookup("XPT");
-            c = new BarrelModule();
-            id = h.connect((BarrelModule_S_I) c);
+            searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
+            b = new BarrelModule();
+            id = searchModuleB.connect((BarrelModule_S_I) b);
             System.out.println("Storage Barrel Ready");
 
             while (true) {
 
             }
         } catch (Exception e) {
-            System.out.println("Exception in main: " + e);
+            System.out.println("Exception in run: " + e);
         }
     }
 }

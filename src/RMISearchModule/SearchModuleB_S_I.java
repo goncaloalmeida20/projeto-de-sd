@@ -7,5 +7,4 @@ import java.rmi.RemoteException;
 
 public interface SearchModuleB_S_I extends Remote {
     public int connect(BarrelModule_S_I barrel) throws RemoteException;
-    public void disconnect(BarrelModule_S_I barrel) throws RemoteException;
 }
