@@ -1,6 +1,6 @@
 package RMISearchModule;
 
-import java.io.Serializable;
+import java.io.*;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 
@@ -12,16 +12,11 @@ import java.rmi.server.*;
 import java.rmi.*;
 
 public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I, Serializable {
-
-    public static final Map<Integer, Integer> clients_log = Collections.synchronizedMap(new HashMap<>()); // 0 - off 1 - on (login)
-    public static final Map<Integer, String[]> clients_info = Collections.synchronizedMap(new HashMap<>());
-    public static final List<SearchModuleC_S_I> clientSThreads = Collections.synchronizedList(new ArrayList<>());
-
     // RMI Client info
     public static int PORT0 = 7004;
     public static String hostname0 = "127.0.0.1";
 
-    private int cAllCounter = 0;
+    public static ServerInfo sI;
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
@@ -30,6 +25,19 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         super();
         tasks = t;
         result_pages = p;
+        File file = new File("src/databases/serverInfo.ser");
+        if (file.exists()) {
+            try {
+                FileInputStream fileIn = new FileInputStream(file);
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+                sI = (ServerInfo) in.readObject();
+                System.out.println("Server info has been recovered\n");
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            sI = new ServerInfo();
+        }
     }
 
     private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
@@ -41,11 +49,25 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
+    private void saveServer() {
+        try {
+            FileOutputStream fileOut = new FileOutputStream("src/databases/serverInfo.ser");
+            ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
+            Objout.writeObject(sI);
+
+            Objout.close();
+            fileOut.close();
+
+            System.out.println("ServerInfo object saved in serverInfo.ser");
+        } catch (IOException e) {
+            System.out.println("Server save: " + e.getMessage());
+        }
+    }
+
     private boolean findClient(String username){
-        synchronized (clients_info){
-            for (Map.Entry<Integer, String[]> set :
-                    clients_info.entrySet()) {
-                if(set.getValue()[0].equals(username)) return true;
+        synchronized (sI.cIList){
+            for(ClientInfo cI: sI.cIList){
+                if(cI.username.equals(username)) return true;
             }
         }
         return false;
@@ -56,36 +78,27 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (exist){
             return 0; // "Client already exists!"
         } else {
-            cAllCounter++;
-            synchronized (clients_info){
-                clients_info.put(cAllCounter , new String[]{username, password});
+            sI.cAllCounter++;
+            synchronized (sI.cIList){
+                sI.cIList.add(new ClientInfo(sI.cAllCounter, 0, username, password));
             }
-            synchronized (clients_log){
-                clients_log.put(cAllCounter , 0);
-            }
-            clientSThreads.add(s);
-            return cAllCounter; // "Client is now registered!"
+            saveServer();
+            return sI.cAllCounter; // "Client is now registered!"
         }
 
     }
 
     private int verifyLoggedClient(String username, String password, int id){
         int login = 2; // 0 - Already logged in -- 1 - Logged in -- 2 - Invalid credentials
-        synchronized (clients_info){
-            for (Map.Entry<Integer, String[]> set :
-                    clients_info.entrySet()) {
-                if (set.getValue()[0].equals(username) && set.getValue()[1].equals(password)) {
-                    login = 1;
+        synchronized (sI.cIList){
+            for(ClientInfo cI: sI.cIList){
+                if(cI.username.equals(username) && cI.password.equals(password)) {
+                    login = cI.logged;
                     break;
                 }
             }
         }
-        if(login == 2) return 2;
-        synchronized (clients_log){
-            boolean info = clients_log.get(id) == null;
-            if(!info) return 0;
-        }
-        return 1;
+        return login;
     }
 
     public int login(String username, String password, int id) throws RemoteException {
@@ -93,9 +106,10 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (logged == 0){
             return 0; // "Client already logged on!"
         } else if(logged == 1) {
-            synchronized (clients_log){
-                clients_log.put(cAllCounter, 1);
+            synchronized (sI.cIList){
+                sI.clientInfoById(id).logged = 1;
             }
+            saveServer();
             return 1; // "Client is now logged on!"
         } else{
             return 2; // "Invalid credentials"
@@ -123,8 +137,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, InterruptedException {
         int logged;
-        synchronized (clients_log){
-            logged = clients_log.get(id) == null ? 0 : 1;
+        synchronized (sI.cIList){
+            logged = sI.cIList.get(id).logged;
         }
         if (logged == 0){
             return null;
@@ -150,14 +164,16 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public int logout(int id) throws RemoteException {
         int logged;
-        synchronized (clients_log){
-            logged = clients_log.get(id) == null ? 0 : 1;
+        synchronized (sI.cIList){
+            logged = sI.clientInfoById(id).logged;
         }
+        System.out.println(logged);
         if (logged == 0){
             return 0; // "Client is not logged on, so it cannot log out!"
         } else {
-            synchronized (clients_log){
-                clients_log.remove(id);
+            synchronized (sI.cIList){
+                sI.clientInfoById(id).logged = 0;
+                saveServer();
             }
             return 1; // "Client is now logged off!"
         }
@@ -171,10 +187,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
             rC.rebind(hostname0, this);
 
             System.out.println("Search Module - Client connection ready.");
-
-            for (SearchModuleC_S_I clientSThread : clientSThreads) {
-                clientSThread.notifyAll();
-            }
         } catch (RemoteException e) {
             e.printStackTrace();
         }

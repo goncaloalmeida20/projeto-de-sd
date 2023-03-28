@@ -67,14 +67,12 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static void registerRecover() throws RemoteException {
         int reg = searchM.register(cAI.username, cAI.password, (SearchModuleC_S_I) searchM);
+        serverActive = true;
         String msg;
-        if (reg == 0) {
-            msg = "Client already exists!";
-            serverActive = true;
-        } else {
+        if (reg == 0) msg = "Client already exists!";
+        else {
             msg = "Client is now registered!";
             id = reg;
-            serverActive = true;
         }
         System.out.println("\nServer message: " + msg + '\n');
     }
@@ -99,15 +97,14 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     public static void loginRecover() throws ServerNotActiveException, RemoteException {
+        System.out.println(cAI.username + " " + cAI.password + " " + id);
         int login = searchM.login(cAI.username, cAI.password, id);
+        serverActive = true;
         String msg;
-        if (login == 1) {
-            msg = "Client already logged on!";
-            serverActive = true;
-        } else if (login == 0) {
+        if (login == 1) msg = "Client already logged on!";
+        else if (login == 0) {
             msg = "Client is now logged on!";
             logged = true;
-            serverActive = true;
         } else msg = "Invalid credentials!";
         System.out.println("\nServer message: " + msg + '\n');
     }
@@ -164,6 +161,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static void searchRecover() throws NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.search(cAI.termCount, cAI.terms, cAI.n_page);
+        serverActive = true;
         if (pages == null) System.out.println("There are no pages that corresponds to the request\n");
         else {
             if (pages.size() == 0) {
@@ -180,7 +178,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Short citation: " + page.citation + '\n');
                 }
             }
-            serverActive = true;
         }
     }
 
@@ -206,6 +203,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id);
+        serverActive = true;
         if (pages == null) {
             System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
         } else {
@@ -218,7 +216,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
                 }
             }
-            serverActive = true;
         }
     }
 
@@ -228,15 +225,17 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static void logout() throws IOException, ServerNotActiveException {
         int logout = searchM.logout(id);
+        serverActive = true;
         String msg;
-        if (logout == 0) msg = "Client is not logged on, so it cannot logout!"; // Nunca acontece
+        if (logout == 1) msg = "Client is not logged on, so it cannot logout!"; // Nunca acontece
         else msg = "Client is now logged off!";
         logged = false;
-        System.out.println("Server message: " + msg);
+        System.out.println("Server message: " + msg + "\n");
     }
 
     private static void exit() throws ServerNotActiveException, RemoteException {
         searchM.logout(id);
+        serverActive = true;
         System.out.println("Close client menu...");
     }
 
