@@ -15,7 +15,6 @@ import java.util.Comparator;
 
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
     public static SearchModuleB_S_I searchModuleB;
-    public static BarrelModule b;
 
     public int id;
 
@@ -50,15 +49,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                      ResultSet.TYPE_SCROLL_INSENSITIVE,
                      ResultSet.CONCUR_READ_ONLY
              )) {
-            /*Statement stmt = conn.createStatement();
-            String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (2, 'bing.pt', 'Bing', 'this is bing');";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO Links (Id, PageId, Link) VALUES (3, 2, 'google.pt'), (4, 2, 'yahoo.pt');";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO All_Pages (Id, PageId) VALUES (2, 2);";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO inverted_index (Term, UrlId) VALUES ('this', 2), ('is', 2), ('bing', 2);";
-            stmt.executeUpdate(query);*/
 
             for (int i = 0; i < terms.length; i++) {
                 stm.setString(i + 1, terms[i]);
@@ -68,23 +58,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             ResultSet resultSet = stm.executeQuery();
 
-            /*ResultSetMetaData rsmd = resultSet.getMetaData();
-            System.out.println("querying SELECT * FROM XXX");
-            int columnsNumber = rsmd.getColumnCount();
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnsNumber; i++) {
-                    if (i > 1) System.out.print(",  ");
-                    String columnValue = resultSet.getString(i);
-                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
-                }
-                System.out.println("");
-            }*/
-
-            ResultSet copyResultSet = resultSet;
-
             // Get total number of pages that have a hyperlink to the given url
             int lenPages = 0;
-            while (copyResultSet.next()) {
+            while (resultSet.next()) {
                 lenPages++;
             }
 
@@ -94,7 +70,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             // Set the result iterator in the startIndex
             int counter = 0;
-            copyResultSet = resultSet;
+            resultSet.beforeFirst();
             while (resultSet.next()) {
                 if(counter == startIndex - 1) break;
                 counter++;
@@ -118,19 +94,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     }
 
     /**
-     Orders the specified list of Page objects by number of links (decreasing)
-     @param pages ArrayList of Page objects to order
-     @return ArrayList of Pages sorted by number of links
-     */
-    private ArrayList<Page> order_pages(ArrayList<Page> pages){
-        ArrayList<Page> pages_ordered = new ArrayList<>(pages);
-
-        pages_ordered.sort(Comparator.comparing(Page::n_links));
-
-        return pages_ordered;
-    }
-
-    /**
      Searches for pages that contain a specific URL in their links
      and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
      @param url URL to search for in the links of all the pages with their url indexed
@@ -138,7 +101,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
      @throws RemoteException If there is an error in the remote connection
      */
-    public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException, SQLException {
+    public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
         System.out.println("0 + search");
         Connection connect = null;
         PreparedStatement statement = null;
@@ -147,15 +110,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         //TODO: Mudar o localhost
         try {
             connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
-            /*Statement stmt = connect.createStatement();
-            String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (3, 'yahoo.pt', 'Yahoo', 'this is yahoo');";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO Links (Id, PageId, Link) VALUES (5, 3, 'google.pt'), (6, 3, 'bing.pt'), (7, 3, 'opera.pt');";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO All_Pages (Id, PageId) VALUES (3, 3);";
-            stmt.executeUpdate(query);
-            query = "INSERT INTO inverted_index (Term, UrlId) VALUES ('this', 3), ('is', 3), ('yahoo', 3);";
-            stmt.executeUpdate(query);*/
 
             // Execute the query to get all Pages that have a hyperlink to the given url
             System.out.println(2 + " search");
@@ -168,20 +122,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             resultSet = statement.executeQuery();
             ResultSet copyResultSet = resultSet;
 
-            /*System.out.println(3+ " search");
-            ResultSetMetaData rsmd = resultSet.getMetaData();
-            System.out.println("querying SELECT * FROM XXX");
-            int columnsNumber = rsmd.getColumnCount();
-            System.out.println(resultSet.next());
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnsNumber; i++) {
-                    if (i > 1) System.out.print(",  ");
-                    String columnValue = resultSet.getString(i);
-                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
-                }
-                System.out.println("");
-            }*/
-
             // Get total number of pages that have a hyperlink to the given url
             int lenPages = 0;
             while (copyResultSet.next()) {
@@ -193,9 +133,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             int endIndex = startIndex + 10;
 
             // Set the result iterator in the startIndex
-            copyResultSet = resultSet;
             int counter = 0;
-            while (copyResultSet.next()) {
+            resultSet.beforeFirst();
+            while (resultSet.next()) {
                 if(counter == startIndex - 1) break;
                 counter++;
             }

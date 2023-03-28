@@ -106,11 +106,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                             synchronized (searchModuleB.barrels){
                                 randomIndex = (int) (Math.random() * searchModuleB.barrels.size());
                             }
-                            // System.out.println("Size: " + searchModuleB.barrels.size());
                             barrelM = getRandomBarrelModule(randomIndex);
-                            // System.out.println("Random index: " + randomIndex);
-                            // System.out.println("a");
-                            // System.out.println(barrelM != null);
                             if (barrelM != null) {
                                 // System.out.println("Type error");
                                 int type = key.values().iterator().next();
@@ -128,9 +124,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                                         }
                                     }
                                 } else if (type == 2) {
-                                    System.out.println("idk idk idk");
                                     ArrayList<Page> res = barrelM.search_pages((String) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
-                                    System.out.println("hello");
                                     synchronized (result_pages) {
                                         for (SearchModuleC client : key.keySet()) {
                                             result_pages.put(client, res);

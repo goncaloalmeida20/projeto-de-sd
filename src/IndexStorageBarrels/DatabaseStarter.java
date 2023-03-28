@@ -8,7 +8,7 @@ import java.sql.Statement;
 
 public class DatabaseStarter {
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
         String url = args[0];
         String name = args[1];
         String user = args[2];
@@ -31,9 +31,6 @@ public class DatabaseStarter {
                 System.out.println("Database already exists");
                 System.out.println("Error message: " + e.getMessage());
             }
-            // Use the new database
-            //connect = DriverManager.getConnection(url + name, user, password);
-            //connect.setCatalog(name);
         } catch (SQLException e) {
             System.out.println("Database creation failed. Error message: " + e);
         } catch (ClassNotFoundException e) {

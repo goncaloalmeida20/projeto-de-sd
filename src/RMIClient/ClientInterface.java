@@ -19,7 +19,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static SearchModuleC_S_I searchM;
     private static ClientAskedInfo cAI;
 
-    private static int id;
+    private static int id, op = 0;
     private static boolean logged;
     private static boolean serverActive;
 
@@ -46,10 +46,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         return -1;
     }
 
-    public void printOnClient(String s) throws RemoteException {
-        System.out.println(s);
-    }
-
     private static void register() throws IOException, ServerNotActiveException {
         String username, password;
         System.out.print("Username: ");
@@ -72,10 +68,13 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void registerRecover() throws RemoteException {
         int reg = searchM.register(cAI.username, cAI.password, (SearchModuleC_S_I) searchM);
         String msg;
-        if (reg == 0) msg = "Client already exists!";
-        else {
+        if (reg == 0) {
+            msg = "Client already exists!";
+            serverActive = true;
+        } else {
             msg = "Client is now registered!";
             id = reg;
+            serverActive = true;
         }
         System.out.println("\nServer message: " + msg + '\n');
     }
@@ -102,10 +101,13 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     public static void loginRecover() throws ServerNotActiveException, RemoteException {
         int login = searchM.login(cAI.username, cAI.password, id);
         String msg;
-        if (login == 1) msg = "Client already logged on!";
-        else if (login == 0) {
+        if (login == 1) {
+            msg = "Client already logged on!";
+            serverActive = true;
+        } else if (login == 0) {
             msg = "Client is now logged on!";
             logged = true;
+            serverActive = true;
         } else msg = "Invalid credentials!";
         System.out.println("\nServer message: " + msg + '\n');
     }
@@ -123,7 +125,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
-        searchM.indexUrl(cAI.url);
+        searchM.indexUrl(cAI.url.toLowerCase());
+        serverActive = true;
     }
 
     private static void search() throws IOException, NotBoundException, InterruptedException {
@@ -143,7 +146,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Invalid term!");
                     n_page = -1;
                     break;
-                }
+                } else terms[i] = terms[i].toLowerCase();
             }
             if (n_page == 0) {
                 cAI.terms = terms;
@@ -163,17 +166,21 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         ArrayList<Page> pages = searchM.search(cAI.termCount, cAI.terms, cAI.n_page);
         if (pages == null) System.out.println("There are no pages that corresponds to the request\n");
         else {
-            System.out.print("Pages that contain the terms ");
-            for (int i = 0; i < cAI.termCount; i++) {
-                System.out.print(cAI.terms[i] + ' ');
+            if (pages.size() == 0) {
+                System.out.println("There are no pages that corresponds to the request\n");
+            } else {
+                System.out.print("Pages that contain the terms ");
+                for (int i = 0; i < cAI.termCount; i++) {
+                    System.out.print(cAI.terms[i] + ' ');
+                }
+                System.out.println("- Page " + cAI.n_page);
+                for (Page page : pages) {
+                    System.out.println("Title of the page" + page.title);
+                    System.out.println("Complete Url: " + page.url);
+                    System.out.println("Short citation: " + page.citation + '\n');
+                }
             }
-            System.out.println("- Page " + cAI.n_page);
-            for (Page page : pages) {
-                System.out.println("Title of the page" + page.title);
-                System.out.println("Complete Url: " + page.url);
-                System.out.println("Short citation: " + page.citation + '\n');
-            }
-            System.out.println();
+            serverActive = true;
         }
     }
 
@@ -198,18 +205,20 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
-        System.out.println("idk why");
-        ArrayList<Page> pages = searchM.searchPages(cAI.url, cAI.n_page, id);
-        System.out.println("idk");
+        ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id);
         if (pages == null) {
             System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
         } else {
-            System.out.print("Pages that have a link to " + cAI.url);
-            System.out.println(" - Page " + cAI.n_page);
-            for (int i = 0; i < pages.size(); i++) {
-                System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
+            if (pages.size() == 0) {
+                System.out.println("There are no pages that corresponds to the request\n");
+            } else {
+                System.out.print("Pages that have a link to " + cAI.url);
+                System.out.println(" - Page " + cAI.n_page);
+                for (int i = 0; i < pages.size(); i++) {
+                    System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
+                }
             }
-            System.out.println();
+            serverActive = true;
         }
     }
 
@@ -231,13 +240,15 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         System.out.println("Close client menu...");
     }
 
-    public static void main(String[] args) throws InterruptedException, ServerNotActiveException, IOException, NotBoundException {
-        int op = 0;
+    private static void connectToServer() throws RemoteException, NotBoundException {
+        Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
+        searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
+        serverActive = true;
+        cAI = new ClientAskedInfo();
+    }
+
+    private static void showMenu() {
         try {
-            Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
-            searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
-            serverActive = true;
-            cAI = new ClientAskedInfo();
             int count;
             do {
                 count = 1;
@@ -246,10 +257,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                 if (!logged) System.out.println(count++ + " - Fazer login");
                 System.out.println(count++ + " - Indexar novo URL");
                 System.out.println(count++ + " - Pesquisar páginas que contenham um conjunto de termos");
-                System.out.println(count++ + " - Consultar lista de páginas com ligação para uma página específica");
+                if (logged)
+                    System.out.println(count++ + " - Consultar lista de páginas com ligação para uma página específica");
                 System.out.println(count++ + " - Consultar página de administração");
                 if (logged) System.out.println(count++ + " - Fazer logout");
-                System.out.println(count++ + " - Sair do programa");
+                System.out.println(count + " - Sair do programa");
                 System.out.print("Option: ");
                 op = readInt();
                 if (!logged) {
@@ -258,9 +270,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                         case 2 -> login();
                         case 3 -> indexUrl();
                         case 4 -> search();
-                        case 5 -> searchPages();
-                        case 6 -> admin();
-                        case 7 -> exit();
+                        case 5 -> admin();
+                        case 6 -> exit();
                         default -> System.out.println("Invalid option!");
                     }
                 } else {
@@ -274,47 +285,63 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                         default -> System.out.println("Invalid option!");
                     }
                 }
-            } while (op != 7 && !logged || op != 6 && logged);
-        } catch (IOException e) {
-            if(cAI != null) {
-                System.out.println("Server went down! Retrying the last action for 10sec, after that client will be shutdown.");
-                serverActive = false;
-                long finish = System.currentTimeMillis() + 10000; // End time
-                while (System.currentTimeMillis() < finish) {
-                    try{
-                        if (!logged) {
-                            switch (op) {
-                                case 1 -> registerRecover();
-                                case 2 -> loginRecover();
-                                case 3 -> indexUrlRecover();
-                                case 4 -> searchRecover();
-                                case 5 -> searchPagesRecover();
-                                case 6 -> admin();
-                                case 7 -> exit();
-                                default -> System.out.println("Invalid option!");
-                            }
-                        } else {
-                            switch (op) {
-                                case 1 -> indexUrlRecover();
-                                case 2 -> searchRecover();
-                                case 3 -> searchPagesRecover();
-                                case 4 -> admin();
-                                case 5 -> logout();
-                                case 6 -> exit();
-                                default -> System.out.println("Invalid option!");
-                            }
-                        }
-                    } catch(ConnectException ex){
-                        System.out.println("The server continues shutdown!");
-                    }
-                }
-                System.out.println("Connection closed.");
-            } else{
-                System.out.println("Server went down but there wasn't performed any action so the connection will be shutdown.");
-            }
-        } catch (NotBoundException | ServerNotActiveException | InterruptedException e) {
-            e.printStackTrace();
+            } while (op != 6);
+        } catch (ServerNotActiveException | NotBoundException | IOException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    public static void main(String[] args) throws InterruptedException, ServerNotActiveException, IOException, NotBoundException {
+        while (op != 6) {
+            try {
+                connectToServer();
+                showMenu();
+                break;
+            } catch (Exception e) {
+                if (cAI != null) {
+                    System.out.println("Server went down! Retrying the last action for 10sec, after that client will be shutdown.");
+                    serverActive = false;
+                    long finish = System.currentTimeMillis() + 10000; // End time
+                    while (System.currentTimeMillis() < finish && !serverActive) {
+                        try {
+                            Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
+                            searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
+                            if (!logged) {
+                                switch (op) {
+                                    case 1 -> registerRecover();
+                                    case 2 -> loginRecover();
+                                    case 3 -> indexUrlRecover();
+                                    case 4 -> searchRecover();
+                                    case 5 -> searchPagesRecover();
+                                    case 6 -> admin();
+                                    case 7 -> exit();
+                                    default -> System.out.println("Invalid option!");
+                                }
+                            } else {
+                                switch (op) {
+                                    case 1 -> indexUrlRecover();
+                                    case 2 -> searchRecover();
+                                    case 3 -> searchPagesRecover();
+                                    case 4 -> admin();
+                                    case 5 -> logout();
+                                    case 6 -> exit();
+                                    default -> System.out.println("Invalid option!");
+                                }
+                            }
+                        } catch (ConnectException ex) {
+                            System.out.println("The server continues shutdown!");
+                        }
+                        if (serverActive) System.out.println("Connection to server was recovered!");
+                    }
+                    if (!serverActive) {
+                        System.out.println("Connection closed.");
+                        break;
+                    }
+                } else {
+                    System.out.println("Server went down but there wasn't performed any action so the connection will be shutdown.");
+                    break;
+                }
+            }
+        }
+    }
 }

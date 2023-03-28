@@ -53,7 +53,7 @@ public class Barrel{
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {
         //int id = Integer.parseInt(args[0]);
-        Barrel b = new Barrel();
+        new Barrel();
         int id = barrelModule.getId();
         bmrcv = new BarrelMulticastReceiver(id);
         bmr = new BarrelMulticastRecovery(id);
