@@ -46,10 +46,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         return -1;
     }
 
-    public void printOnClient(String s) throws RemoteException {
-        System.out.println(s);
-    }
-
     private static void register() throws IOException, ServerNotActiveException {
         String username, password;
         System.out.print("Username: ");

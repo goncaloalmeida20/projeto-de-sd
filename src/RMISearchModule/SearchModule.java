@@ -8,9 +8,6 @@ import java.rmi.*;
 import java.util.*;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModule_S_I, Serializable {
-    private Thread t1, t2;
-    private SearchModuleB sb;
-    private SearchModuleC sc;
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
@@ -19,10 +16,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         super();
         tasks = new LinkedHashMap<>();
         result_pages = new HashMap<>();
-        sb = new SearchModuleB(tasks, result_pages);
-        t1 = new Thread(sb);
-        sc = new SearchModuleC(tasks, result_pages);
-        t2 = new Thread(sc);
+        SearchModuleB sb = new SearchModuleB(tasks, result_pages);
+        Thread t1 = new Thread(sb);
+        SearchModuleC sc = new SearchModuleC(tasks, result_pages);
+        Thread t2 = new Thread(sc);
         t1.start();
         t2.start();
     }
@@ -30,7 +27,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
     // =======================================================
 
     public static void main(String[] args) throws RemoteException {
-        SearchModule sm = new SearchModule();
+        new SearchModule();
         System.out.println("Search Module connections ready.");
     }
 }

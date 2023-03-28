@@ -4,16 +4,12 @@ import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 
-import IndexStorageBarrels.BarrelModule_S_I;
-import RMIClient.ClientInterface;
-import RMIClient.ClientInterface_C_I;
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
 import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
 import java.rmi.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SearchModuleC extends UnicastRemoteObject implements Runnable, SearchModuleC_S_I, Serializable {
 
@@ -111,7 +107,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         uqi.addURL(url);
     }
 
-    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, NotBoundException, InterruptedException {
+    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, InterruptedException {
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
         addTask(1, task);
@@ -125,7 +121,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, InterruptedException {
+    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, InterruptedException {
         int logged;
         synchronized (clients_log){
             logged = clients_log.get(id) == null ? 0 : 1;

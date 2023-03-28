@@ -1,6 +1,5 @@
 package RMISearchModule;
 
-import RMIClient.ClientInterface_C_I;
 import classes.Page;
 
 import java.rmi.*;

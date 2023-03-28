@@ -106,11 +106,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                             synchronized (searchModuleB.barrels){
                                 randomIndex = (int) (Math.random() * searchModuleB.barrels.size());
                             }
-                            // System.out.println("Size: " + searchModuleB.barrels.size());
                             barrelM = getRandomBarrelModule(randomIndex);
-                            // System.out.println("Random index: " + randomIndex);
-                            // System.out.println("a");
-                            // System.out.println(barrelM != null);
                             if (barrelM != null) {
                                 // System.out.println("Type error");
                                 int type = key.values().iterator().next();
