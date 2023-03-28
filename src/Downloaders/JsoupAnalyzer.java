@@ -23,7 +23,7 @@ public class JsoupAnalyzer{
             int wordCount = 0;
             while(tokens.hasMoreElements() && wordCount++ < WORD_LIMIT)
             {
-                p.addWord(tokens.nextToken().toLowerCase());
+                p.addWord(tokens.nextToken());
             }
             Elements links = doc.select("a[href]");
             for(Element link: links){

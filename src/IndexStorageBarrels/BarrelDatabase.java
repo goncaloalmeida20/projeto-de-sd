@@ -5,6 +5,7 @@ import classes.Page;
 import java.sql.*;
 
 public class BarrelDatabase {
+    public static final int VARCHAR_SIZE = 255;
     public int barrelId;
     public String url, dbName, user, password, urldb;
 
@@ -44,8 +45,8 @@ public class BarrelDatabase {
                 stm.executeUpdate("CREATE DATABASE " + dbName);
             }
             catch(SQLException e){
-                System.out.println("Database " + dbName + " exists");
-                System.out.println("Error message: " + e.getMessage());
+                System.out.println("Database " + dbName + " already exists");
+                //System.out.println("Error message: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database creation failed. Error message: " + e);
@@ -80,28 +81,34 @@ public class BarrelDatabase {
             // Create Page table
             query = "CREATE TABLE IF NOT EXISTS page (" +
                     "id SERIAL, " +
-                    "url VARCHAR(255) NOT NULL, " +
-                    "title VARCHAR(255) NOT NULL, " +
-                    "citation VARCHAR(255) NOT NULL, " +
+                    "url VARCHAR(" + VARCHAR_SIZE + ") NOT NULL, " +
+                    "title VARCHAR(" + VARCHAR_SIZE + ") NOT NULL, " +
+                    "citation VARCHAR("+ VARCHAR_SIZE + ") NOT NULL, " +
                     "PRIMARY KEY (id) " +
                     ")";
             stm.executeUpdate(query);
 
             // Create InvertedIndex table
             query = "CREATE TABLE IF NOT EXISTS invertedindex (" +
-                    "term VARCHAR(255) NOT NULL, " +
+                    "term VARCHAR(" + VARCHAR_SIZE + ") NOT NULL, " +
                     "pageid INT REFERENCES page(id) NOT NULL, " +
                     "PRIMARY KEY (term, pageid)" +
                     ")";
             stm.executeUpdate(query);
 
+            /*query = "CREATE UNIQUE INDEX IF NOT EXISTS invertedindex ON invertedindex (term, pageid)";
+            stm.executeUpdate(query);*/
+
             // Create Links table
             query = "CREATE TABLE IF NOT EXISTS links (" +
                     "pageid INT REFERENCES page(id) NOT NULL, " +
-                    "link VARCHAR(255) NOT NULL, " +
+                    "link VARCHAR(" + VARCHAR_SIZE + ") NOT NULL, " +
                     "PRIMARY KEY (pageid, link)" +
                     ")";
             stm.executeUpdate(query);
+
+            /*query = "CREATE UNIQUE INDEX IF NOT EXISTS links ON links (pageid, link)";
+            stm.executeUpdate(query);*/
             
             System.out.println("Tables loaded with success!");
         } catch (SQLException e) {
@@ -137,9 +144,9 @@ public class BarrelDatabase {
                     "VALUES (?, ?, ?);";
 
             stm = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-            stm.setString(1, p.url);
-            stm.setString(2, p.title);
-            stm.setString(3, p.citation);
+            stm.setString(1, p.url.substring(0, Math.min(p.url.length(), VARCHAR_SIZE-1)));
+            stm.setString(2, p.title.substring(0, Math.min(p.title.length(), VARCHAR_SIZE-1)));
+            stm.setString(3, p.citation.substring(0, Math.min(p.citation.length(), VARCHAR_SIZE-1)));
             stm.executeUpdate();
             ResultSet rs = stm.getGeneratedKeys();
             long insertId = -1;
@@ -155,10 +162,15 @@ public class BarrelDatabase {
                 sb.append("(?, ").append(insertId).append(")");
             }
             sb.append(";");
+            /*sb.append(" ON CONFLICT (term, pageid) DO UPDATE " +
+                    "SET term = excluded.term, " +
+                    "pageid = excluded.pageid;");*/
+
             query = sb.toString();
             stm = connect.prepareStatement(query);
             for(int i = 0; i < p.words.size(); i++){
-                stm.setString(i + 1, p.words.get(i));
+                stm.setString(i + 1, p.words.get(i).substring(0, Math.min(p.words.get(i).length(),
+                        VARCHAR_SIZE-1)));
             }
             stm.executeUpdate();
 
@@ -170,10 +182,14 @@ public class BarrelDatabase {
                 sb.append("(").append(insertId).append(", ?)");
             }
             sb.append(";");
+            /*sb.append(" ON CONFLICT (pageid, link) DO UPDATE " +
+                    "SET pageid = excluded.pageid, " +
+                    "link = excluded.link;");*/
             query = sb.toString();
             stm = connect.prepareStatement(query);
             for(int i = 0; i < p.links.size(); i++){
-                stm.setString(i + 1, p.links.get(i));
+                stm.setString(i + 1, p.links.get(i).substring(0, Math.min(p.links.get(i).length(),
+                        VARCHAR_SIZE-1)));
             }
             stm.executeUpdate();
 
