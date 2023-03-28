@@ -4,6 +4,7 @@ import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -18,8 +19,10 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
     public int id;
 
-    public BarrelModule() throws RemoteException {
+    public BarrelModule() throws RemoteException, NotBoundException {
         super();
+        searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
+        id = searchModuleB.connect((BarrelModule_S_I) b);
     }
 
     /**
@@ -184,9 +187,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     @Override
     public void run() {
         try{
-            searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
-            b = new BarrelModule();
-            id = searchModuleB.connect((BarrelModule_S_I) b);
             System.out.println("Storage Barrel Ready");
 
             while (true) {

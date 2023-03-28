@@ -39,7 +39,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      * @throws RemoteException If there is an error with the remote connection
      */
     public int connect(BarrelModule_S_I b) throws RemoteException {
-        bAllCounter++;
+        ++bAllCounter;
         System.out.println("Connecting Barrel " + bAllCounter);
         synchronized (barrels) {
             barrels.add(b);

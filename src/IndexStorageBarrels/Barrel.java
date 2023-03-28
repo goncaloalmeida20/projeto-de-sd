@@ -44,7 +44,7 @@ public class Barrel{
         t.start();
 
         String url = "jdbc:postgresql://localhost:5432/";
-        String dbName = "barrel" + barrelModule.getId() + "DB";
+        String dbName = "barrel" + barrelModule.getId() + "db";
         String user = "postgres";
         String password = "postgres";
         DatabaseStarter.main(new String[]{url, dbName, user, password});
