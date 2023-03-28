@@ -125,7 +125,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
-        searchM.indexUrl(cAI.url);
+        searchM.indexUrl(cAI.url.toLowerCase());
         serverActive = true;
     }
 
@@ -146,7 +146,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Invalid term!");
                     n_page = -1;
                     break;
-                }
+                } else terms[i] = terms[i].toLowerCase();
             }
             if (n_page == 0) {
                 cAI.terms = terms;
@@ -206,7 +206,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
 
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
         System.out.println("idk why");
-        ArrayList<Page> pages = searchM.searchPages(cAI.url, cAI.n_page, id);
+        ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id);
         System.out.println("idk");
         if (pages == null) {
             System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
