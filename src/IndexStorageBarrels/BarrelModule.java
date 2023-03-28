@@ -37,16 +37,18 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         ArrayList<Page> pages = new ArrayList<>();
 
         //TODO: Mudar localhost
-        try (Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/", "postgres", "postgres");
+        try (Connection conn = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
              PreparedStatement stm = conn.prepareStatement(
-                     "SELECT p.*, COUNT(l.PageId) AS LinkCount" +
-                             "FROM Page p" +
-                             "JOIN inverted_index ii ON p.Id = ii.UrlId " +
-                             "LEFT JOIN Links l ON p.Id = l.PageId " +
-                             "WHERE ii.Term IN (" + String.join(",", Collections.nCopies(terms.length, "?")) + ") " +
-                             "GROUP BY p.Id " +
-                             "HAVING COUNT(DISTINCT ii.Term) = ? " +
-                             "ORDER BY LinkCount DESC;"
+                     "SELECT p.*, COUNT(l.pageid) AS linkcount " +
+                             "FROM page p " +
+                             "JOIN invertedindex ii ON p.id = ii.pageid " +
+                             "LEFT JOIN links l ON p.id = l.pageid " +
+                             "WHERE ii.term IN (" + String.join(",", Collections.nCopies(terms.length, "?")) + ") " +
+                             "GROUP BY p.id " +
+                             "HAVING COUNT(DISTINCT ii.term) = ? " +
+                             "ORDER BY linkcount DESC;",
+                     ResultSet.TYPE_SCROLL_INSENSITIVE,
+                     ResultSet.CONCUR_READ_ONLY
              )) {
             /*Statement stmt = conn.createStatement();
             String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (2, 'bing.pt', 'Bing', 'this is bing');";
@@ -102,9 +104,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             resultSet.beforeFirst();
             while (resultSet.next() && counter < endIndex) {
                 Page page = new Page();
-                page.url = resultSet.getString("Url");
-                page.title = resultSet.getString("Title");
-                page.citation = resultSet.getString("Citation");
+                page.url = resultSet.getString("url");
+                page.title = resultSet.getString("title");
+                page.citation = resultSet.getString("citation");
                 pages.add(page);
                 counter++;
             }
@@ -144,7 +146,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         System.out.println(1+ " search");
         //TODO: Mudar o localhost
         try {
-            connect = DriverManager.getConnection("jdbc:postgresql://localhost:5432/", "postgres", "postgres");
+            connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
             /*Statement stmt = connect.createStatement();
             String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (3, 'yahoo.pt', 'Yahoo', 'this is yahoo');";
             stmt.executeUpdate(query);
@@ -203,9 +205,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             resultSet.beforeFirst();
             while (resultSet.next() && counter < endIndex) {
                 Page page = new Page();
-                page.url = resultSet.getString("Url");
-                page.title = resultSet.getString("Title");
-                page.citation = resultSet.getString("Citation");
+                page.url = resultSet.getString("url");
+                page.title = resultSet.getString("title");
+                page.citation = resultSet.getString("citation");
                 pages.add(page);
                 counter++;
             }

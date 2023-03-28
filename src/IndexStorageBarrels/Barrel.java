@@ -17,6 +17,8 @@ public class Barrel{
     private static BarrelMulticastRecovery bmr;
     private static BarrelMulticastReceiver bmrcv;
 
+    public static BarrelDatabase bdb;
+
     //TODO: apagar isto para fazer os ficheiros de objetos
     public static final HashMap<String, ArrayList<Integer>> invertedIndex = new HashMap<>();
     public static final HashMap<Integer, Page> all_pages = new HashMap<>();
@@ -44,12 +46,9 @@ public class Barrel{
         t.start();
 
         String url = "jdbc:postgresql://localhost:5432/";
-        String dbName = "barrel" + barrelModule.getId() + "db";
         String user = "postgres";
         String password = "postgres";
-        DatabaseStarter.main(new String[]{url, dbName, user, password});
-        System.out.println("Database created successfully");
-        DatabaseTablesCreation.main(new String[]{url + dbName, user, password});
+        bdb = new BarrelDatabase(url, barrelModule.getId(), user, password);
     }
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {

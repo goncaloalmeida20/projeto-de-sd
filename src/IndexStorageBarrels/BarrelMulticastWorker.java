@@ -1,6 +1,7 @@
 package IndexStorageBarrels;
 
 import classes.MulticastPacket;
+import classes.Page;
 import classes.TimedByteBuffer;
 
 import java.net.*;
@@ -168,6 +169,8 @@ public class BarrelMulticastWorker implements Runnable{
                     String message = new String(msgBytes, 0, newLength + 1);
                     System.out.println("Received from Downloader " + downloaderId + " seqNumber " + seqNumber
                             + " " + message);
+
+                    Page receivedPage = new Page(message);
                 }
 
                 if(aheadSeqNumber) synchronized(aheadBuffer){ aheadBuffer.notify();}

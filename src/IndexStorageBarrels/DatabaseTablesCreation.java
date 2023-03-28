@@ -23,14 +23,8 @@ public class DatabaseTablesCreation {
 
             stm = connect.createStatement();
 
-            // Drop tables if they already exist
-            stm.executeUpdate("DROP TABLE IF EXISTS inverted_index CASCADE");
-            stm.executeUpdate("DROP TABLE IF EXISTS Page CASCADE");
-            stm.executeUpdate("DROP TABLE IF EXISTS Links CASCADE");
-            stm.executeUpdate("DROP TABLE IF EXISTS All_Pages CASCADE");
-
             // Create InvertedIndex table
-            String query = "CREATE TABLE inverted_index (" +
+            String query = "CREATE TABLE IF NOT EXISTS inverted_index (" +
                     "Term VARCHAR(255) NOT NULL, " +
                     "UrlId INT NOT NULL, " +
                     "PRIMARY KEY (Term, UrlId)" +
@@ -38,7 +32,7 @@ public class DatabaseTablesCreation {
             stm.executeUpdate(query);
 
             // Create Page table
-            query = "CREATE TABLE Page (" +
+            query = "CREATE TABLE IF NOT EXISTS Page (" +
                     "Id INT NOT NULL, " +
                     "Url VARCHAR(255) NOT NULL, " +
                     "Title VARCHAR(255) NOT NULL, " +
@@ -48,20 +42,10 @@ public class DatabaseTablesCreation {
             stm.executeUpdate(query);
 
             // Create Links table
-            query = "CREATE TABLE Links (" +
-                    "Id INT NOT NULL, " +
+            query = "CREATE TABLE IF NOT EXISTS Links (" +
                     "PageId INT NOT NULL, " +
                     "Link VARCHAR(255) NOT NULL, " +
-                    "PRIMARY KEY (Id), " +
-                    "FOREIGN KEY (PageId) REFERENCES Page(Id)" +
-                    ")";
-            stm.executeUpdate(query);
-
-            // Create AllPages table
-            query = "CREATE TABLE All_Pages (" +
-                    "Id INT NOT NULL, " +
-                    "PageId INT NOT NULL, " +
-                    "PRIMARY KEY (Id), " +
+                    "PRIMARY KEY (PageId, Link), " +
                     "FOREIGN KEY (PageId) REFERENCES Page(Id)" +
                     ")";
             stm.executeUpdate(query);
