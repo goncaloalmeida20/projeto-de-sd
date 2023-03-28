@@ -22,7 +22,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     public BarrelModule() throws RemoteException, NotBoundException {
         super();
         searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
-        id = searchModuleB.connect((BarrelModule_S_I) b);
+        id = searchModuleB.connect((BarrelModule_S_I) this);
     }
 
     /**
@@ -138,17 +138,41 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         Connection connect = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
+        System.out.println(1+ " search");
         //TODO: Mudar o localhost
         try {
-            connect = DriverManager.getConnection("localhost", "postgres", "postgres");
+            connect = DriverManager.getConnection("jdbc:postgresql://localhost:5432/", "postgres", "postgres");
+            /*Statement stmt = connect.createStatement();
+            String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (3, 'yahoo.pt', 'Yahoo', 'this is yahoo');";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO Links (Id, PageId, Link) VALUES (5, 3, 'google.pt'), (6, 3, 'bing.pt'), (7, 3, 'opera.pt');";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO All_Pages (Id, PageId) VALUES (3, 3);";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO inverted_index (Term, UrlId) VALUES ('this', 3), ('is', 3), ('yahoo', 3);";
+            stmt.executeUpdate(query);*/
 
             // Execute the query to get all Pages that have a hyperlink to the given url
+            System.out.println(2 + " search");
             statement = connect.prepareStatement(
                     "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?"
             );
             statement.setString(1, url);
             resultSet = statement.executeQuery();
             ResultSet copyResultSet = resultSet;
+
+            System.out.println(3+ " search");
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            System.out.println("querying SELECT * FROM XXX");
+            int columnsNumber = rsmd.getColumnCount();
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) System.out.print(",  ");
+                    String columnValue = resultSet.getString(i);
+                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
+                }
+                System.out.println("");
+            }
 
             // Get total number of pages that have a hyperlink to the given url
             int lenPages = 0;

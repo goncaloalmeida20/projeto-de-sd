@@ -198,7 +198,9 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
+        System.out.println("idk why");
         ArrayList<Page> pages = searchM.searchPages(cAI.url, cAI.n_page, id);
+        System.out.println("idk");
         if (pages == null) {
             System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
         } else {
