@@ -92,17 +92,19 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             // Set the result iterator in the startIndex
             int counter = 0;
+            copyResultSet = resultSet;
             while (resultSet.next()) {
                 if(counter == startIndex - 1) break;
                 counter++;
             }
 
             // Add the pages to a list
+            resultSet.beforeFirst();
             while (resultSet.next() && counter < endIndex) {
-                String urlP = resultSet.getString("Url");
-                String title = resultSet.getString("Title");
-                String citation = resultSet.getString("Citation");
-                Page page = new Page(urlP, title, citation, null, null);
+                Page page = new Page();
+                page.url = resultSet.getString("Url");
+                page.title = resultSet.getString("Title");
+                page.citation = resultSet.getString("Citation");
                 pages.add(page);
                 counter++;
             }
@@ -135,6 +137,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      @throws RemoteException If there is an error in the remote connection
      */
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException, SQLException {
+        System.out.println("0 + search");
         Connection connect = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -155,16 +158,19 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             // Execute the query to get all Pages that have a hyperlink to the given url
             System.out.println(2 + " search");
             statement = connect.prepareStatement(
-                    "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?"
+                    "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY
             );
             statement.setString(1, url);
             resultSet = statement.executeQuery();
             ResultSet copyResultSet = resultSet;
 
-            System.out.println(3+ " search");
+            /*System.out.println(3+ " search");
             ResultSetMetaData rsmd = resultSet.getMetaData();
             System.out.println("querying SELECT * FROM XXX");
             int columnsNumber = rsmd.getColumnCount();
+            System.out.println(resultSet.next());
             while (resultSet.next()) {
                 for (int i = 1; i <= columnsNumber; i++) {
                     if (i > 1) System.out.print(",  ");
@@ -172,7 +178,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                     System.out.print(columnValue + " " + rsmd.getColumnName(i));
                 }
                 System.out.println("");
-            }
+            }*/
 
             // Get total number of pages that have a hyperlink to the given url
             int lenPages = 0;
@@ -185,22 +191,25 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             int endIndex = startIndex + 10;
 
             // Set the result iterator in the startIndex
+            copyResultSet = resultSet;
             int counter = 0;
-            while (resultSet.next()) {
+            while (copyResultSet.next()) {
                 if(counter == startIndex - 1) break;
                 counter++;
             }
 
             // Add the pages to a list
             ArrayList<Page> pages = new ArrayList<>();
+            resultSet.beforeFirst();
             while (resultSet.next() && counter < endIndex) {
-                String urlP = resultSet.getString("Url");
-                String title = resultSet.getString("Title");
-                String citation = resultSet.getString("Citation");
-                Page page = new Page(urlP, title, citation, null, null);
+                Page page = new Page();
+                page.url = resultSet.getString("Url");
+                page.title = resultSet.getString("Title");
+                page.citation = resultSet.getString("Citation");
                 pages.add(page);
                 counter++;
             }
+            System.out.println(pages.size());
             return pages;
         } catch (SQLException e) {
             e.printStackTrace();

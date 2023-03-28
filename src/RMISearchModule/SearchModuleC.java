@@ -126,7 +126,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, NotBoundException, InterruptedException {
-        System.out.println("idk why why");
         int logged;
         synchronized (clients_log){
             logged = clients_log.get(id) == null ? 0 : 1;
@@ -134,11 +133,9 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (logged == 0){
             return null;
         } else {
-            System.out.println("idk why why why");
             HashMap<Object, Integer> task = new HashMap<>();
             task.put(url, n_page);
             addTask(2, task);
-            System.out.println("idk why why why why");
             synchronized(result_pages) {
                 while (!result_pages.containsKey(this)) {
                     result_pages.wait();
