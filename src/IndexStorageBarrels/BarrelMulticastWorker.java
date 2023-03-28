@@ -173,6 +173,7 @@ public class BarrelMulticastWorker implements Runnable{
                             + " " + message);
 
                     Page receivedPage = new Page(message);
+                    Barrel.bdb.insertPage(receivedPage);
                 }
 
                 if(aheadSeqNumber) synchronized(aheadBuffer){ aheadBuffer.notify();}

@@ -37,11 +37,14 @@ public class Page implements Serializable {
     public void addWord(String word){
         if(citation == null) citation = word;
         else citation += " " + word;
-        words.add(word.toLowerCase());
+        String lowerCase = word.toLowerCase();
+        if(!words.contains(lowerCase))
+            words.add(lowerCase);
     }
 
     public void addLink(String link){
-        links.add(link);
+        if(!links.contains(link))
+            links.add(link);
     }
 
     public int n_links(){
