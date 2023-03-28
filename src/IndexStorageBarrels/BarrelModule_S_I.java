@@ -1,7 +1,9 @@
 package IndexStorageBarrels;
 
+import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.sql.SQLException;
 import java.util.ArrayList;

@@ -16,7 +16,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     public static int PORT0 = 7004;
     public static String hostname0 = "127.0.0.1";
 
-    public static ServerInfo sI;
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
@@ -25,19 +24,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         super();
         tasks = t;
         result_pages = p;
-        File file = new File("src/databases/serverInfo.ser");
-        if (file.exists()) {
-            try {
-                FileInputStream fileIn = new FileInputStream(file);
-                ObjectInputStream in = new ObjectInputStream(fileIn);
-                sI = (ServerInfo) in.readObject();
-                System.out.println("Server info has been recovered\n");
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        } else {
-            sI = new ServerInfo();
-        }
     }
 
     private void addTask(int type, HashMap<Object, Integer> task) throws RemoteException {
@@ -53,7 +39,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         try {
             FileOutputStream fileOut = new FileOutputStream("src/databases/serverInfo.ser");
             ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
-            Objout.writeObject(sI);
+            Objout.writeObject(SearchModule.sI);
 
             Objout.close();
             fileOut.close();
@@ -65,8 +51,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     private boolean findClient(String username){
-        synchronized (sI.cIList){
-            for(ClientInfo cI: sI.cIList){
+        synchronized (SearchModule.sI.cIList){
+            for(ClientInfo cI: SearchModule.sI.cIList){
                 if(cI.username.equals(username)) return true;
             }
         }
@@ -78,20 +64,20 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (exist){
             return 0; // "Client already exists!"
         } else {
-            sI.cAllCounter++;
-            synchronized (sI.cIList){
-                sI.cIList.add(new ClientInfo(sI.cAllCounter, 0, username, password));
+            SearchModule.sI.cAllCounter++;
+            synchronized (SearchModule.sI.cIList){
+                SearchModule.sI.cIList.add(new ClientInfo(SearchModule.sI.cAllCounter, 0, username, password));
             }
             saveServer();
-            return sI.cAllCounter; // "Client is now registered!"
+            return SearchModule.sI.cAllCounter; // "Client is now registered!"
         }
 
     }
 
     private int verifyLoggedClient(String username, String password, int id){
         int login = 2; // 0 - Already logged in -- 1 - Logged in -- 2 - Invalid credentials
-        synchronized (sI.cIList){
-            for(ClientInfo cI: sI.cIList){
+        synchronized (SearchModule.sI.cIList){
+            for(ClientInfo cI: SearchModule.sI.cIList){
                 if(cI.username.equals(username) && cI.password.equals(password)) {
                     login = cI.logged;
                     break;
@@ -106,8 +92,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         if (logged == 0){
             return 0; // "Client already logged on!"
         } else if(logged == 1) {
-            synchronized (sI.cIList){
-                sI.clientInfoById(id).logged = 1;
+            synchronized (SearchModule.sI.cIList){
+                SearchModule.sI.clientInfoById(id).logged = 1;
             }
             saveServer();
             return 1; // "Client is now logged on!"
@@ -135,12 +121,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    public ArrayList<Page> searchPages(String url, int n_page, int id) throws RemoteException, InterruptedException {
-        int logged;
-        synchronized (sI.cIList){
-            logged = sI.cIList.get(id).logged;
-        }
-        if (logged == 0){
+    public ArrayList<Page> searchPages(String url, int n_page, int id, boolean logged) throws RemoteException, InterruptedException {
+        if (!logged){
             return null;
         } else {
             HashMap<Object, Integer> task = new HashMap<>();
@@ -164,15 +146,15 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public int logout(int id) throws RemoteException {
         int logged;
-        synchronized (sI.cIList){
-            logged = sI.clientInfoById(id).logged;
+        synchronized (SearchModule.sI.cIList){
+            logged = SearchModule.sI.clientInfoById(id).logged;
         }
         System.out.println(logged);
         if (logged == 0){
             return 0; // "Client is not logged on, so it cannot log out!"
         } else {
-            synchronized (sI.cIList){
-                sI.clientInfoById(id).logged = 0;
+            synchronized (SearchModule.sI.cIList){
+                SearchModule.sI.clientInfoById(id).logged = 0;
                 saveServer();
             }
             return 1; // "Client is now logged off!"

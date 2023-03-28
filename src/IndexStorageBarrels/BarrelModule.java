@@ -4,6 +4,8 @@ import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
+import java.io.File;
+import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -20,8 +22,24 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
     public BarrelModule() throws RemoteException, NotBoundException {
         super();
-        searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
-        id = searchModuleB.connect((BarrelModule_S_I) this);
+        File file = new File("src/databases/serverInfo.ser");
+        boolean serverActive = false;
+        if (file.exists()) {
+            long finish = System.currentTimeMillis() + 15000; // End time
+            while (System.currentTimeMillis() < finish && !serverActive) {
+                try {
+                    searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
+                    serverActive = true;
+                } catch (ConnectException | NotBoundException ex) {
+                    System.out.println("The server continues shutdown!");
+                }
+                if (serverActive) System.out.println("Connection to server was recovered!");
+            }
+            if (!serverActive) System.out.println("Connection closed.");
+        } else{
+            searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
+            id = searchModuleB.connect((BarrelModule_S_I) this);
+        }
     }
 
     /**

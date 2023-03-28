@@ -3,7 +3,12 @@ package RMISearchModule;
 import IndexStorageBarrels.BarrelModule_S_I;
 import classes.Page;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.rmi.ConnectException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -12,14 +17,10 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_S_I, Runnable {
-    private int bAllCounter = 0;
-
     public SearchModuleB searchModuleB;
     // RMI Barrel info
     public static int PORT = 7002;
     public static String hostname = "this";
-
-    public final ArrayList<BarrelModule_S_I> barrels;
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
@@ -29,23 +30,23 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         super();
         tasks = t;
         result_pages = p;
-        barrels = new ArrayList<>();
+
     }
 
     /**
      * Connects a Barrel to the Search Module and returns the id of the barrel
-     * @param b Barrel to connect to the Search Module
+     * @param barrel Barrel to connect to the Search Module
      * @return Integer representing the id assigned to the connected barrel
      * @throws RemoteException If there is an error with the remote connection
      */
-    public int connect(BarrelModule_S_I b) throws RemoteException {
-        ++bAllCounter;
-        System.out.println("Connecting Barrel " + bAllCounter);
-        synchronized (barrels) {
-            barrels.add(b);
-            System.out.println("Number of barrels: " + barrels.size());
+    public int connect(BarrelModule_S_I barrel) throws RemoteException {
+        ++SearchModule.sI.bAllCounter;
+        System.out.println("Connecting Barrel " + SearchModule.sI.bAllCounter);
+        synchronized (SearchModule.sI.barrels) {
+            SearchModule.sI.barrels.add(barrel);
+            System.out.println("Number of barrels: " + SearchModule.sI.barrels.size());
         }
-        return bAllCounter;
+        return SearchModule.sI.bAllCounter;
     }
     
     /**
@@ -54,9 +55,9 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      * @param index Index of the Barrel to be disconnected (Removed from the barrels list)
      */
     private void disconnect(int index) {
-        synchronized (searchModuleB.barrels){
+        synchronized (SearchModule.sI.barrels){
             System.out.println("A barrel disconnected");
-            searchModuleB.barrels.remove(index);
+            SearchModule.sI.barrels.remove(index);
         }
     }
 
@@ -66,12 +67,12 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      * @return a random Barrel or null if there are no active clients
      */
     private BarrelModule_S_I getRandomBarrelModule(int index) {
-        synchronized (searchModuleB.barrels) {
-            if (searchModuleB.barrels.isEmpty()) {
+        synchronized (SearchModule.sI.barrels) {
+            if (SearchModule.sI.barrels.isEmpty()) {
                 return null; // No active clients
             }
-            System.out.println("Index: " + index + " Size: " + searchModuleB.barrels.size());
-            return searchModuleB.barrels.get(index);
+            System.out.println("Index: " + index + " Size: " + SearchModule.sI.barrels.size());
+            return SearchModule.sI.barrels.get(index);
         }
     }
 
@@ -103,8 +104,8 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                             }
                         }
                         for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
-                            synchronized (searchModuleB.barrels){
-                                randomIndex = (int) (Math.random() * searchModuleB.barrels.size());
+                            synchronized (SearchModule.sI.barrels){
+                                randomIndex = (int) (Math.random() * SearchModule.sI.barrels.size());
                             }
                             barrelM = getRandomBarrelModule(randomIndex);
                             if (barrelM != null) {

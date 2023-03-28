@@ -12,7 +12,7 @@ public interface SearchModuleC_S_I extends Remote{
     int login(String username, String password, int id) throws java.rmi.RemoteException, ServerNotActiveException;
     void indexUrl(String url) throws java.rmi.RemoteException, NotBoundException;
     ArrayList<Page> search(int termCount, String[] terms, int n_page) throws java.rmi.RemoteException, NotBoundException, InterruptedException;
-    ArrayList<Page> searchPages(String url, int n_page, int id) throws java.rmi.RemoteException, NotBoundException, ServerNotActiveException, InterruptedException;
+    ArrayList<Page> searchPages(String url, int n_page, int id, boolean logged) throws java.rmi.RemoteException, NotBoundException, ServerNotActiveException, InterruptedException;
     void admin() throws java.rmi.RemoteException;
     int logout(int id) throws java.rmi.RemoteException, ServerNotActiveException;
 }
