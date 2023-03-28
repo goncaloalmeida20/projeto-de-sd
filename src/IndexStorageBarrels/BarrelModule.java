@@ -37,23 +37,47 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         ArrayList<Page> pages = new ArrayList<>();
 
         //TODO: Mudar localhost
-        try (Connection conn = DriverManager.getConnection("localhost");
+        try (Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/", "postgres", "postgres");
              PreparedStatement stm = conn.prepareStatement(
-                     "SELECT p.*, COUNT(l.Id) as LinksCount " +
-                             "FROM Page p " +
+                     "SELECT p.*, COUNT(l.PageId) AS LinkCount" +
+                             "FROM Page p" +
                              "JOIN inverted_index ii ON p.Id = ii.UrlId " +
                              "LEFT JOIN Links l ON p.Id = l.PageId " +
                              "WHERE ii.Term IN (" + String.join(",", Collections.nCopies(terms.length, "?")) + ") " +
                              "GROUP BY p.Id " +
                              "HAVING COUNT(DISTINCT ii.Term) = ? " +
-                             "ORDER BY LinksCount DESC"
+                             "ORDER BY LinkCount DESC;"
              )) {
+            /*Statement stmt = conn.createStatement();
+            String query = "INSERT INTO Page (Id, Url, Title, Citation) VALUES (2, 'bing.pt', 'Bing', 'this is bing');";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO Links (Id, PageId, Link) VALUES (3, 2, 'google.pt'), (4, 2, 'yahoo.pt');";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO All_Pages (Id, PageId) VALUES (2, 2);";
+            stmt.executeUpdate(query);
+            query = "INSERT INTO inverted_index (Term, UrlId) VALUES ('this', 2), ('is', 2), ('bing', 2);";
+            stmt.executeUpdate(query);*/
+
             for (int i = 0; i < terms.length; i++) {
                 stm.setString(i + 1, terms[i]);
             }
             stm.setInt(terms.length + 1, terms.length);
+            //System.out.println(stm.toString());
 
             ResultSet resultSet = stm.executeQuery();
+
+            /*ResultSetMetaData rsmd = resultSet.getMetaData();
+            System.out.println("querying SELECT * FROM XXX");
+            int columnsNumber = rsmd.getColumnCount();
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) System.out.print(",  ");
+                    String columnValue = resultSet.getString(i);
+                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
+                }
+                System.out.println("");
+            }*/
+
             ResultSet copyResultSet = resultSet;
 
             // Get total number of pages that have a hyperlink to the given url
