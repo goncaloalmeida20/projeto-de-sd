@@ -124,9 +124,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                                         }
                                     }
                                 } else if (type == 2) {
-                                    System.out.println("idk idk idk");
                                     ArrayList<Page> res = barrelM.search_pages((String) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
-                                    System.out.println("hello");
                                     synchronized (result_pages) {
                                         for (SearchModuleC client : key.keySet()) {
                                             result_pages.put(client, res);

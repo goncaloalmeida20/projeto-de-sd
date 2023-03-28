@@ -19,7 +19,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static SearchModuleC_S_I searchM;
     private static ClientAskedInfo cAI;
 
-    private static int id;
+    private static int id, op = 0;
     private static boolean logged;
     private static boolean serverActive;
 
@@ -205,9 +205,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
-        System.out.println("idk why");
         ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id);
-        System.out.println("idk");
         if (pages == null) {
             System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
         } else {
@@ -250,7 +248,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void showMenu() {
-        int op = 0;
         try {
             int count;
             do {
@@ -295,7 +292,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     public static void main(String[] args) throws InterruptedException, ServerNotActiveException, IOException, NotBoundException {
-        int op = 0;
         while (op != 6) {
             try {
                 connectToServer();
@@ -306,24 +302,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Server went down! Retrying the last action for 10sec, after that client will be shutdown.");
                     serverActive = false;
                     long finish = System.currentTimeMillis() + 10000; // End time
-                    while (System.currentTimeMillis() < finish && op != 6) {
+                    while (System.currentTimeMillis() < finish && !serverActive) {
                         try {
                             Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
                             searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
-                            int count = 1;
-                            op = 0;
-                            System.out.println("Client Menu:");
-                            if (!logged) System.out.println(count++ + " - Registar");
-                            if (!logged) System.out.println(count++ + " - Fazer login");
-                            System.out.println(count++ + " - Indexar novo URL");
-                            System.out.println(count++ + " - Pesquisar páginas que contenham um conjunto de termos");
-                            if (logged)
-                                System.out.println(count++ + " - Consultar lista de páginas com ligação para uma página específica");
-                            System.out.println(count++ + " - Consultar página de administração");
-                            if (logged) System.out.println(count++ + " - Fazer logout");
-                            System.out.println(count + " - Sair do programa");
-                            System.out.print("Option: ");
-                            op = readInt();
                             if (!logged) {
                                 switch (op) {
                                     case 1 -> registerRecover();
@@ -349,7 +331,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                         } catch (ConnectException ex) {
                             System.out.println("The server continues shutdown!");
                         }
-                        if (serverActive) break;
+                        if (serverActive) System.out.println("Connection to server was recovered!");
                     }
                     if (!serverActive) {
                         System.out.println("Connection closed.");
