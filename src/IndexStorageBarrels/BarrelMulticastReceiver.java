@@ -42,6 +42,8 @@ public class BarrelMulticastReceiver implements Runnable{
                 int barrelId = headerBytes.getInt(), downloaderId = headerBytes.getInt(),
                         seqNumber = headerBytes.getInt(), messageType = headerBytes.getInt();
 
+                //System.out.println("Received " + barrelId + " " + downloaderId + " " + seqNumber + " " + messageType);
+
                 if(barrelId > 0 && barrelId != id) continue;
 
                 //check if it's a NACK ACK (acknowledge of the NACK message) or a regular message

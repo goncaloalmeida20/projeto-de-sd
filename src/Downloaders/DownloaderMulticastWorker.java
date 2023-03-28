@@ -59,7 +59,6 @@ public class DownloaderMulticastWorker implements Runnable{
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                     DownloaderManager.MULTICAST_PORT);
-                    System.out.println("############################# " + currentPage.url);
                     //if(DownloaderManager.seqNumber % 2 != 0 && i % 2 != 0)
                         socket.send(packet);
                     //else if(DownloaderManager.seqNumber % 2 == 0)
@@ -73,6 +72,8 @@ public class DownloaderMulticastWorker implements Runnable{
                             DownloaderManager.MULTICAST_PORT);
                     socket.send(packet);
                 }*/
+                System.out.println("############################# " + " " + DownloaderManager.seqNumber + " " +
+                        currentPage.url);
                 synchronized (DownloaderManager.pageBuffer){
                     DownloaderManager.pageBuffer.put(DownloaderManager.seqNumber, currentPage);
                 }

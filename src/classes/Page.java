@@ -50,47 +50,51 @@ public class Page implements Serializable {
 
     public String multicastString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("type|url;url_item|").append(url).append(";");
-        sb.append("type|title;title_item|").append(title).append(";");
-        sb.append("type|citation;citation_item|").append(citation).append(";");
-        sb.append("type|word_list;item_count|").append(words.size()).append(";");
+        sb.append("url;").append(url.replace("|", "||").replace(";","|0")).append(";");
+        sb.append("title;").append(title.replace("|", "||").replace(";","|0")).append(";");
+        sb.append("citation;").append(citation.replace("|", "||").replace(";","|0")).append(";");
+        sb.append("word_list;").append(words.size()).append(";");
+
         for(int i = 0; i < words.size(); i++){
-            sb.append("item_").append(i).append("|").append(words.get(i)).append(";");
+            sb.append(words.get(i).replace("|", "||").replace(";","|0")).append(";");
         }
-        sb.append("type|url_list;item_count|").append(links.size()).append(";");
-        for(int i = 0; i < links.size(); i++){
-            sb.append("item_").append(i).append("|").append(links.get(i)).append(";");
+
+        sb.append("url_list;").append(links.size()).append(";");
+
+        for(int i = 0, j = 0; i < links.size(); i++){
+            sb.append(links.get(i).replace("|", "||").replace(";","|0")).append(";");
         }
         return sb.toString();
     }
 
     public void decodeMulticastString(String multicastString){
         String[] splitString = multicastString.split(";");
+        String type;
         for (int i = 0; i < splitString.length; i++) {
-            String type = splitString[i].split("\\|")[1];
+            type = splitString[i];
             i++;
             int count;
             switch (type){
                 case "url":
-                    this.url = splitString[i].split("\\|")[1];
+                    this.url = splitString[i].replace("||","|").replace("|0",";");
                     break;
                 case "title":
-                    this.title = splitString[i].split("\\|")[1];
+                    this.title = splitString[i].replace("||","|").replace("|0",";");
                     break;
                 case "citation":
-                    this.citation = splitString[i].split("\\|")[1];
+                    this.citation = splitString[i].replace("||","|").replace("|0",";");
                     break;
                 case "word_list":
-                    count = Integer.parseInt(splitString[i].split("\\|")[1]);
+                    count = Integer.parseInt(splitString[i]);
                     for(int w = 0; w < count; w++){
-                        this.words.add(splitString[i+w].split("\\|")[1]);
+                        this.words.add(splitString[i+w].replace("||","|").replace("|0",";"));
                     }
                     i += count;
                     break;
                 case "url_list":
-                    count = Integer.parseInt(splitString[i].split("\\|")[1]);
+                    count = Integer.parseInt(splitString[i]);
                     for(int l = 0; l < count; l++){
-                        this.links.add(splitString[i+l].split("\\|")[1]);
+                        this.links.add(splitString[i+l].replace("||","|").replace("|0",";"));
                     }
                     i += count;
                     break;

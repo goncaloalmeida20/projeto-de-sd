@@ -35,8 +35,10 @@ public class BarrelMulticastWorker implements Runnable{
 
                 //wait for packets to arrive
                 synchronized (msgPacketQueue){
-                    while(msgPacketQueue.size() == 0)
+                    while(msgPacketQueue.size() == 0){
                         msgPacketQueue.wait();
+                    }
+
                     packet = msgPacketQueue.remove(0);
                 }
 
