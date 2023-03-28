@@ -180,7 +180,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Short citation: " + page.citation + '\n');
                 }
             }
-            System.out.println();
             serverActive = true;
         }
     }
@@ -221,7 +220,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                     System.out.println("Url " + (i + 1) + ": " + pages.get(i).url);
                 }
             }
-            System.out.println();
             serverActive = true;
         }
     }
