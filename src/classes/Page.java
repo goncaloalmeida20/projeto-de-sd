@@ -90,16 +90,14 @@ public class Page implements Serializable {
                 case "word_list":
                     count = Integer.parseInt(splitString[i]);
                     for(int w = 0; w < count; w++){
-                        this.words.add(splitString[i+w].replace("||","|").replace("|0",";"));
+                        this.words.add(splitString[++i].replace("||","|").replace("|0",";"));
                     }
-                    i += count;
                     break;
                 case "url_list":
                     count = Integer.parseInt(splitString[i]);
                     for(int l = 0; l < count; l++){
-                        this.links.add(splitString[i+l].replace("||","|").replace("|0",";"));
+                        this.links.add(splitString[++i].replace("||","|").replace("|0",";"));
                     }
-                    i += count;
                     break;
                 default:
                     System.out.println("Multicast String parse error");

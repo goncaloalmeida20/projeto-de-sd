@@ -42,6 +42,12 @@ public class BarrelMulticastWorker implements Runnable{
                     packet = msgPacketQueue.remove(0);
                 }
 
+                synchronized (InterBarrelSynchronizerInserter.syncLock){
+                    while(InterBarrelSynchronizerInserter.needSync == 1){
+                        InterBarrelSynchronizerInserter.syncLock.wait();
+                    }
+                }
+
                 //get packet bytes
                 ByteBuffer bb = ByteBuffer.wrap(packet);
 
@@ -59,7 +65,10 @@ public class BarrelMulticastWorker implements Runnable{
                     if(lastSeqNumber.containsKey(downloaderId)){
                         int expectedSeqNumber = lastSeqNumber.get(downloaderId) + 1;
                         //if seqNumber is lower than expected, ignore packet
-                        if(seqNumber < expectedSeqNumber - 1) continue;
+                        if(seqNumber < expectedSeqNumber - 1){
+                            System.out.println("Rejected by seqNumber");
+                            continue;
+                        }
                         //if it is higher than expected, notify recovery thread
                         if(seqNumber > expectedSeqNumber){
                             aheadSeqNumber = true;
@@ -79,7 +88,10 @@ public class BarrelMulticastWorker implements Runnable{
                         if(lastMsgsLeft.get(downloaderId).containsKey(seqNumber)){
                             int expectedMsgsLeft = lastMsgsLeft.get(downloaderId).get(seqNumber) - 1;
                             //if msgsLeft is higher than expected, ignore packet
-                            if(msgsLeft > expectedMsgsLeft) continue;
+                            if(msgsLeft > expectedMsgsLeft){
+                                System.out.println("Rejected by msgsLeft");
+                                continue;
+                            }
                             //if it is lower than expected, notify recovery thread
                             if(msgsLeft < expectedMsgsLeft){
                                 aheadMsgsLeft = true;
@@ -173,7 +185,7 @@ public class BarrelMulticastWorker implements Runnable{
                             + " " + message);
 
                     Page receivedPage = new Page(message);
-                    Barrel.bdb.insertPage(receivedPage);
+                    Barrel.bdb.insertPage(receivedPage, downloaderId, seqNumber);
                 }
 
                 if(aheadSeqNumber) synchronized(aheadBuffer){ aheadBuffer.notify();}

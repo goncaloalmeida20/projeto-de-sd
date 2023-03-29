@@ -63,7 +63,7 @@ public class DownloaderMulticastRecovery implements Runnable{
                         msgType = -2;
                     }
                 }
-                byte[] packetBuffer = new MulticastPacket(barrelId, id, seqNumber, msgType, -1).toBytes();;
+                byte[] packetBuffer = new MulticastPacket(barrelId, id, seqNumber, msgType, -1).toBytes();
                 System.out.println("Sending NACK ACK " + barrelId + " " + id + " " + seqNumber + " " + msgType);
                 InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                 DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,

@@ -75,16 +75,16 @@ public class BarrelMulticastRecovery implements Runnable{
         return minWaitTime;
     }
 
-    public boolean containsNack(int nack0, int nack1){
+    public int containsNack(int nack0, int nack1){
         for(int i = 0; i < nackAcksQueue.size(); i++){
             ByteBuffer bb = ByteBuffer.wrap(nackAcksQueue.get(i));
-            int barrelId = bb.getInt(), downloaderId = bb.getInt(), seqNumber = bb.getInt();
+            int barrelId = bb.getInt(), downloaderId = bb.getInt(), seqNumber = bb.getInt(), msgType = bb.getInt();
             if(nack0 == downloaderId && nack1 == seqNumber){
                 nackAcksQueue.remove(i);
-                return true;
+                return msgType;
             }
         }
-        return false;
+        return 0;
     }
 
     public void run(){
@@ -197,14 +197,14 @@ public class BarrelMulticastRecovery implements Runnable{
                     socket.send(packet);
 
                     long sendTime = System.currentTimeMillis();
-                    boolean foundNack;
+                    int foundNack;
                     synchronized (nackAcksQueue){
                         do{
                             nackAcksQueue.wait(TimedByteBuffer.TIMEOUT_MS);
                             foundNack = containsNack(nack.get(0), nack.get(1));
-                        }while(!foundNack && System.currentTimeMillis() - sendTime < TimedByteBuffer.TIMEOUT_MS);
+                        }while(foundNack == 0 && System.currentTimeMillis() - sendTime < TimedByteBuffer.TIMEOUT_MS);
                     }
-                    if(!foundNack){
+                    if(foundNack == 0){
                         System.out.println("NOT FOUND NACK " + nack.get(0) + " " + nack.get(1));
                     }
 
@@ -216,6 +216,13 @@ public class BarrelMulticastRecovery implements Runnable{
                     socket.send(packet);
 
                     System.out.println("Sending NACK ACK ACK " +  id + " " + nack.get(0) + " " + nack.get(1) + " -4");
+
+                    if(foundNack == -3){
+                        synchronized (InterBarrelSynchronizerInserter.syncLock){
+                            InterBarrelSynchronizerInserter.needSync = 1;
+                            InterBarrelSynchronizerInserter.syncLock.notify();
+                        }
+                    }
                 }
 
                 //System.out.println("BMR HELLO5");

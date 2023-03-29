@@ -6,6 +6,9 @@ public class MulticastPacket{
     public static final int PACKET_SIZE = 1000,
             HEADER_SIZE = 5 * 4, //5 integers
             MSG_BYTES_SIZE = PACKET_SIZE - HEADER_SIZE;
+
+    //Note: This order of the header is the default multicast packet order used in the downloader and barrel
+    //communication. It may differ depending on the circumstances (for example, in the barrel synchronization)
     public int barrelId, downloaderId, seqNumber, msgsLeft, firstMsg;
     public byte[] msgBytes;
 

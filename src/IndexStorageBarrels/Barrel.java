@@ -10,12 +10,21 @@ import classes.Page;
 public class Barrel{
     public static final String MULTICAST_ADDRESS = "224.0.1.0";
     public static final int MULTICAST_PORT = 5000;
+
+    public static final String SYNC_MULTICAST_ADDRESS = "224.0.1.1";
+    public static final int SYNC_MULTICAST_PORT = 5001;
+
+    public static final int SEQ_NUMBER_DIFF_TOLERANCE = 3;
     Thread t;
     private static BarrelModule barrelModule;
-    private static BarrelMulticastWorker bmw;
+    public static BarrelMulticastWorker bmw;
 
-    private static BarrelMulticastRecovery bmr;
-    private static BarrelMulticastReceiver bmrcv;
+    public static BarrelMulticastRecovery bmr;
+    public static BarrelMulticastReceiver bmrcv;
+
+    public static InterBarrelSynchronizerReceiver ibsr;
+    public static InterBarrelSynchronizerHelper ibsh;
+    public static InterBarrelSynchronizerInserter ibsi;
 
     public static BarrelDatabase bdb;
 
@@ -52,12 +61,19 @@ public class Barrel{
     }
 
     public static void main(String[] args) throws NotBoundException, RemoteException, SQLException {
-        //int id = Integer.parseInt(args[0]);
+        /*int id = Integer.parseInt(args[0]);
+        String url = "jdbc:postgresql://localhost:5432/";
+        String user = "postgres";
+        String password = "postgres";
+        bdb = new BarrelDatabase(url, id, user, password);*/
         new Barrel();
         int id = barrelModule.getId();
         bmrcv = new BarrelMulticastReceiver(id);
         bmr = new BarrelMulticastRecovery(id);
         bmw = new BarrelMulticastWorker(id);
+        ibsr = new InterBarrelSynchronizerReceiver(id);
+        ibsh = new InterBarrelSynchronizerHelper(id);
+        ibsi = new InterBarrelSynchronizerInserter(id);
         System.out.println("Barrel is ready");
     }
 }
