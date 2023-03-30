@@ -12,11 +12,20 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ The BarrelModule class is used to connect to the SearchModuleB_S_I remote object to add itself as a Barrel
+ */
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
     public static SearchModuleB_S_I searchModuleB;
 
     public int id;
 
+    /**
+     * Constructor to initialize the BarrelModule object.
+     * @param id The identifier of the BarrelModule object.
+     * @throws RemoteException If there is an error with the remote connection.
+     * @throws NotBoundException If the SearchModuleB object is not bound to the registry.
+     */
     public BarrelModule(int id) throws RemoteException, NotBoundException {
         super();
         /*File file = new File("src/databases/serverInfo.ser");
@@ -219,6 +228,10 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         return id;
     }
 
+    /**
+     * Function just to test the connection between AdminModule and BarrelModule
+     * @throws RemoteException If a RemoteException occurs (BarrelModule cannot be connected by AdminModule)
+     */
     public void ping() throws RemoteException {
 
     }
