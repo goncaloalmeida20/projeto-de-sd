@@ -1,8 +1,8 @@
 package RMIClient;
 
 /**
- The ClientAskedInfo class represents the information required by the RMI client
- to send to the server for requesting information.
+ * The ClientAskedInfo class represents the information required by the RMI client
+ * to send to the server for requesting information.
  */
 public class ClientAskedInfo {
     public String username, password, url;

@@ -4,9 +4,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 /**
- The Barrel class represents an instance of a storage barrel, that saves all the application data.
- It provides multicast communication capabilities to synchronize the barrels and
- recover from failures, as well as database access for persistency.
+ * The Barrel class represents an instance of a storage barrel, that saves all the application data.
+ * It provides multicast communication capabilities to synchronize the barrels and
+ * recover from failures, as well as database access for persistency.
  */
 public class Barrel{
     public static final String MULTICAST_ADDRESS = "224.0.1.0";
