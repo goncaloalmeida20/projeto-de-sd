@@ -3,12 +3,8 @@ package RMISearchModule;
 import IndexStorageBarrels.BarrelModule_S_I;
 import classes.Page;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.rmi.ConnectException;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -45,6 +41,18 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         synchronized (SearchModule.sI.barrels) {
             SearchModule.sI.barrels.add(barrel);
             System.out.println("Number of barrels: " + SearchModule.sI.barrels.size());
+        }
+        try {
+            FileOutputStream fileOut = new FileOutputStream("src/databases/barrelId.ser");
+            ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
+            Objout.writeObject(SearchModule.sI.bAllCounter);
+
+            Objout.close();
+            fileOut.close();
+
+            System.out.println("BarrelId object saved in barrelId.ser");
+        } catch (IOException e) {
+            System.out.println("Barrel id save: " + e.getMessage());
         }
         return SearchModule.sI.bAllCounter;
     }

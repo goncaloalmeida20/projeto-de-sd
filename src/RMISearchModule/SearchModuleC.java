@@ -6,6 +6,7 @@ import java.util.*;
 
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
+import classes.FileAccessor;
 import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
@@ -37,15 +38,28 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     private void saveServer() {
         try {
-            FileOutputStream fileOut = new FileOutputStream("src/databases/serverInfo.ser");
-            ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
-            Objout.writeObject(SearchModule.sI);
+            FileAccessor fileAccessor = new FileAccessor("src/databases/serverInfo.ser");
+            fileAccessor.write(SearchModule.sI);
 
-            Objout.close();
-            fileOut.close();
+            fileAccessor.close();
 
             System.out.println("ServerInfo object saved in serverInfo.ser");
-        } catch (IOException e) {
+            fileAccessor.close();
+        } catch(FileNotFoundException e){
+            File myObj = new File("src/databases/serverInfo.ser");
+            FileAccessor fileAccessor = null;
+            try {
+                fileAccessor = new FileAccessor("src/databases/serverInfo.ser");
+                fileAccessor.write(SearchModule.sI);
+
+                fileAccessor.close();
+
+                System.out.println("ServerInfo object saved in serverInfo.ser");
+                fileAccessor.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }catch (IOException e) {
             System.out.println("Server save: " + e.getMessage());
         }
     }
@@ -59,7 +73,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         return false;
     }
 
-    public synchronized int register(String username, String password, SearchModuleC_S_I s) throws RemoteException {
+    public synchronized int register(String username, String password) throws RemoteException {
         boolean exist = findClient(username);
         if (exist){
             return 0; // "Client already exists!"
@@ -74,7 +88,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     }
 
-    private int verifyLoggedClient(String username, String password, int id){
+    private int verifyLoggedClient(String username, String password){
         int login = 2; // 0 - Already logged in -- 1 - Logged in -- 2 - Invalid credentials
         synchronized (SearchModule.sI.cIList){
             for(ClientInfo cI: SearchModule.sI.cIList){
@@ -88,7 +102,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     public int login(String username, String password, int id) throws RemoteException {
-        int logged = verifyLoggedClient(username, password, id);
+        int logged = verifyLoggedClient(username, password);
         if (logged == 0){
             return 0; // "Client already logged on!"
         } else if(logged == 1) {
@@ -139,9 +153,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
-    //TODO: IT IS NECESSARY TO CREATE A THREAD TO DO THIS
-    public void admin() throws RemoteException {
-
+    public Map<Integer, Integer> admin() throws RemoteException {
+        return AdminModule.getActiveDownloaderAndBarrels();
     }
 
     public int logout(int id) throws RemoteException {

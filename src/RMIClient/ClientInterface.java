@@ -20,12 +20,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static ClientAskedInfo cAI;
 
     private static int id, op = 0;
-    private static boolean logged;
+    private static boolean logged = false;
     private static boolean serverActive;
 
     public ClientInterface() throws RemoteException {
         super();
-        this.logged = false;
     }
 
     private static String readString() {
@@ -66,7 +65,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void registerRecover() throws RemoteException {
-        int reg = searchM.register(cAI.username, cAI.password, (SearchModuleC_S_I) searchM);
+        int reg = searchM.register(cAI.username, cAI.password);
         serverActive = true;
         String msg;
         if (reg == 0) msg = "Client already exists!";
@@ -124,6 +123,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
         searchM.indexUrl(cAI.url.toLowerCase());
         serverActive = true;
+        System.out.println("Url indexed!");
     }
 
     private static void search() throws IOException, NotBoundException, InterruptedException {
@@ -220,7 +220,23 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     private static void admin() throws IOException {
-        searchM.admin();
+        Map<Integer, Integer> info = searchM.admin();
+        int activeBarrels, activeDownloaders;
+        if (!info.isEmpty()) {
+            Map.Entry<Integer, Integer> entry = info.entrySet().iterator().next();
+            activeBarrels = entry.getKey();
+            activeDownloaders = entry.getValue();
+            System.out.println("\n-----------------------Administration panel-----------------------");
+            if(activeBarrels == 0) System.out.println("No barrels are active");
+            else {
+                System.out.println("Number of active barrels: " + activeBarrels);
+            }
+            if(activeDownloaders == 0) System.out.println("No downloaders are active");
+            else {
+                System.out.println("Number of active downloaders: " + activeDownloaders);
+            }
+            System.out.println("------------------------------------------------------------------\n");
+        } else System.out.println("Couldn't get any information about the active downloaders and barrels");
     }
 
     private static void logout() throws IOException, ServerNotActiveException {
@@ -297,8 +313,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                 showMenu();
                 break;
             } catch (Exception e) {
+                //StackTraceElement[] elements = e.getStackTrace();
+                //for (int iterator=elements.length-1; iterator>0; iterator--) System.out.println(elements[iterator-1].getMethodName());
                 if (cAI != null) {
-                    System.out.println("Server went down! Retrying the last action for 10sec, after that client will be shutdown.");
+                    System.out.println("Server went down or no Barrels Available! " +
+                            "Retrying the last action for 10sec, after that client will be shutdown.");
                     serverActive = false;
                     long finish = System.currentTimeMillis() + 10000; // End time
                     while (System.currentTimeMillis() < finish && !serverActive) {

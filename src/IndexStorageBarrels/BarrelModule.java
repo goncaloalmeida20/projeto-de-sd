@@ -5,6 +5,9 @@ import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -13,7 +16,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
     public static SearchModuleB_S_I searchModuleB;
@@ -38,7 +40,19 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             if (!serverActive) System.out.println("Connection closed.");
         } else{
             searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
-            id = searchModuleB.connect((BarrelModule_S_I) this);
+            File barrelId = new File("src/databases/barrelId.ser");
+            if(barrelId.exists()){
+                try {
+                    FileInputStream barrelIn = new FileInputStream(barrelId);
+                    ObjectInputStream bIn = new ObjectInputStream(barrelIn);
+                    id = (Integer) bIn.readObject();
+                    System.out.println("Barrel id has been recovered\n");
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else{
+                id = searchModuleB.connect((BarrelModule_S_I) this);
+            }
         }
     }
 
@@ -53,7 +67,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
         ArrayList<Page> pages = new ArrayList<>();
 
-        //TODO: Mudar localhost
         try (Connection conn = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
              PreparedStatement stm = conn.prepareStatement(
                      "SELECT p.*, COUNT(l.pageid) AS linkcount " +
@@ -199,6 +212,10 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      */
     public int getId() throws RemoteException {
         return id;
+    }
+
+    public void ping() throws RemoteException {
+
     }
 
     @Override
