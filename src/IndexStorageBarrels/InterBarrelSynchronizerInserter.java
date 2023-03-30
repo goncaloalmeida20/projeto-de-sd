@@ -243,6 +243,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                         needSync = 0;
                         syncLock.notifyAll();
                     }
+                    System.out.println("Synchronization finished");
                 }
             }
         } catch (Exception e) {
