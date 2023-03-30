@@ -9,7 +9,7 @@ public class DownloaderManager {
     public static final String MULTICAST_ADDRESS = "224.0.1.0";
     public static final int MAX_PAGE_LIST_SIZE = 100, MULTICAST_PORT = 5000;
     public static final List<Page> pageQueue = Collections.synchronizedList(new ArrayList<>());
-    public static final Map<Integer, Page> pageBuffer = Collections.synchronizedMap(new HashMap<>());
+    public static final Map<Integer, Map<Page, Long>> pageBuffer = Collections.synchronizedMap(new HashMap<>());
     public static final Map<Page, Long> recoveredPages = Collections.synchronizedMap(new HashMap<>());
     public static int seqNumber = 0;
 

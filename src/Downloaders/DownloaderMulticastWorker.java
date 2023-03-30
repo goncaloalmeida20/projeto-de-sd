@@ -8,7 +8,9 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DownloaderMulticastWorker implements Runnable{
     public Thread t;
@@ -58,11 +60,11 @@ public class DownloaderMulticastWorker implements Runnable{
                     //Send the packet
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
-                    DownloaderManager.MULTICAST_PORT);
-                    //if(DownloaderManager.seqNumber % 2 != 0 && i % 2 != 0)
+                        DownloaderManager.MULTICAST_PORT);
+                    /*if(DownloaderManager.seqNumber % 2 != 0 && i % 2 != 0)
                         socket.send(packet);
-                    //else if(DownloaderManager.seqNumber % 2 == 0)
-                    //    socket.send(packet);
+                    else*/ if(DownloaderManager.seqNumber % 2 == 0)
+                        socket.send(packet);
                     //else
                     //    testBuffers.add(packetBuffer);
                 }
@@ -74,8 +76,10 @@ public class DownloaderMulticastWorker implements Runnable{
                 }*/
                 System.out.println("############################# " + " " + DownloaderManager.seqNumber + " " +
                         currentPage.url);
+                Map<Page, Long> mapTemp = new HashMap<>();
+                mapTemp.put(currentPage, System.currentTimeMillis());
                 synchronized (DownloaderManager.pageBuffer){
-                    DownloaderManager.pageBuffer.put(DownloaderManager.seqNumber, currentPage);
+                    DownloaderManager.pageBuffer.put(DownloaderManager.seqNumber, mapTemp);
                 }
 
             }
