@@ -16,8 +16,8 @@ public class DownloaderManager {
     public AdminDownloader adminDownloader;
     Thread t1;
 
-    public DownloaderManager() throws RemoteException {
-        adminDownloader = new AdminDownloader();
+    public DownloaderManager(int id) throws RemoteException {
+        adminDownloader = new AdminDownloader(id);
         t1 = new Thread(adminDownloader);
         t1.start();
     }
@@ -25,7 +25,7 @@ public class DownloaderManager {
     public static void main(String[] args) {
         int id = Integer.parseInt(args[0]);
         try {
-            new DownloaderManager();
+            new DownloaderManager(id);
         } catch (RemoteException e) {
             System.out.println("Error in adminDownloader");
         }

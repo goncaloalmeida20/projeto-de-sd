@@ -28,8 +28,7 @@ public class AdminModule extends UnicastRemoteObject implements AdminModule_S_I,
 
     private static void renovateBarrels(List<Integer> notActiveBarrels){
         synchronized (SearchModule.sI.barrels) {
-            int size = SearchModule.sI.barrels.size();
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < SearchModule.sI.barrels.size(); i++) {
                 if(notActiveBarrels.contains(i)) {
                     SearchModule.sI.barrels.remove(i);
                     i--;
@@ -59,8 +58,7 @@ public class AdminModule extends UnicastRemoteObject implements AdminModule_S_I,
 
     private static void renovateDownloaders(List<Integer> notActiveDownloaders){
         synchronized (SearchModule.sI.adminDownloaders) {
-            int size = SearchModule.sI.adminDownloaders.size();
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < SearchModule.sI.adminDownloaders.size(); i++) {
                 if(notActiveDownloaders.contains(i)) {
                     SearchModule.sI.adminDownloaders.remove(i);
                     i--;
@@ -105,13 +103,13 @@ public class AdminModule extends UnicastRemoteObject implements AdminModule_S_I,
             Registry r = LocateRegistry.createRegistry(7003);
             r.rebind("TPX", h);
 
-            System.out.println("Hello Barrel_Server ready.");
+            System.out.println("Admin Module ready");
 
             while (true) {
 
             }
         } catch (Exception re) {
-            System.out.println("Exception in HelloImpl.main: " + re);
+            System.out.println("Exception in Admin Module: " + re);
         }
     }
 }

@@ -1,6 +1,5 @@
 package RMISearchModule;
 
-import classes.FileAccessor;
 import classes.Page;
 
 import java.io.*;
@@ -22,16 +21,19 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         super();
         tasks = new LinkedHashMap<>();
         result_pages = new HashMap<>();
-        try {
-            FileAccessor fileAccessor = new FileAccessor("src/databases/serverInfo.ser");
-            System.out.println("asdfaasd");
-            sI = fileAccessor.read();
-            System.out.println("Server info has been recovered\n");
-            fileAccessor.close();
-        } catch (FileNotFoundException e) {
+
+        File file = new File("src/databases/serverInfo.ser");
+        if (!file.exists()) {
             sI = new ServerInfo();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        } else{
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+            try {
+                sI = (ServerInfo) ois.readObject();
+                System.out.println("Server info has been recovered\n");
+            } catch (ClassNotFoundException e) {
+                System.out.println("Server save read: " + e.getMessage());
+            }
+            ois.close();
         }
 
         SearchModuleB sb = new SearchModuleB(tasks, result_pages);
@@ -73,13 +75,5 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
     public static void main(String[] args) throws IOException {
         new SearchModule();
         System.out.println("Search Module connections ready.");
-        int exitVar = 0;
-        while(exitVar != 1){
-            System.out.println("To shutdown server, enter \"1\"");
-            exitVar = readInt();
-            if(exitVar != 1) System.out.println("Invalid option!");
-        }
-        deleteServerSave();
-        System.exit(0);
     }
 }

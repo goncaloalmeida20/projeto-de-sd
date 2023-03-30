@@ -96,7 +96,6 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     }
 
     public static void loginRecover() throws ServerNotActiveException, RemoteException {
-        System.out.println(cAI.username + " " + cAI.password + " " + id);
         int login = searchM.login(cAI.username, cAI.password, id);
         serverActive = true;
         String msg;
@@ -173,7 +172,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
                 }
                 System.out.println("- Page " + cAI.n_page);
                 for (Page page : pages) {
-                    System.out.println("Title of the page" + page.title);
+                    System.out.println("Title of the page: " + page.title);
                     System.out.println("Complete Url: " + page.url);
                     System.out.println("Short citation: " + page.citation + '\n');
                 }

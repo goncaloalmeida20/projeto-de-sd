@@ -3,7 +3,6 @@ package RMISearchModule;
 import IndexStorageBarrels.BarrelModule_S_I;
 import classes.Page;
 
-import java.io.*;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -35,24 +34,13 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      * @return Integer representing the id assigned to the connected barrel
      * @throws RemoteException If there is an error with the remote connection
      */
-    public int connect(BarrelModule_S_I barrel) throws RemoteException {
+    public int connect(BarrelModule_S_I barrel, int id) throws RemoteException {
         ++SearchModule.sI.bAllCounter;
-        System.out.println("Connecting Barrel " + SearchModule.sI.bAllCounter);
+        //System.out.println("Connecting Barrel " + SearchModule.sI.bAllCounter);
+        System.out.println("Connecting Barrel " + id);
         synchronized (SearchModule.sI.barrels) {
             SearchModule.sI.barrels.add(barrel);
-            System.out.println("Number of barrels: " + SearchModule.sI.barrels.size());
-        }
-        try {
-            FileOutputStream fileOut = new FileOutputStream("src/databases/barrelId.ser");
-            ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
-            Objout.writeObject(SearchModule.sI.bAllCounter);
-
-            Objout.close();
-            fileOut.close();
-
-            System.out.println("BarrelId object saved in barrelId.ser");
-        } catch (IOException e) {
-            System.out.println("Barrel id save: " + e.getMessage());
+            System.out.println("Number of barrels connected: " + SearchModule.sI.barrels.size());
         }
         return SearchModule.sI.bAllCounter;
     }
@@ -79,7 +67,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
             if (SearchModule.sI.barrels.isEmpty()) {
                 return null; // No active clients
             }
-            System.out.println("Index: " + index + " Size: " + SearchModule.sI.barrels.size());
+            //System.out.println("Index: " + index + " Size: " + SearchModule.sI.barrels.size());
             return SearchModule.sI.barrels.get(index);
         }
     }

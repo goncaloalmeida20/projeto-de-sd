@@ -4,11 +4,6 @@ import RMISearchModule.SearchModuleB;
 import RMISearchModule.SearchModuleB_S_I;
 import classes.Page;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -22,9 +17,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
     public int id;
 
-    public BarrelModule() throws RemoteException, NotBoundException {
+    public BarrelModule(int id) throws RemoteException, NotBoundException {
         super();
-        File file = new File("src/databases/serverInfo.ser");
+        /*File file = new File("src/databases/serverInfo.ser");
         boolean serverActive = false;
         if (file.exists()) {
             long finish = System.currentTimeMillis() + 15000; // End time
@@ -52,8 +47,23 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                 }
             } else{
                 id = searchModuleB.connect((BarrelModule_S_I) this);
+                try {
+                    FileOutputStream fileOut = new FileOutputStream("src/databases/barrelId.ser");
+                    ObjectOutputStream Objout = new ObjectOutputStream(fileOut);
+                    Objout.writeObject(id);
+
+                    Objout.close();
+                    fileOut.close();
+
+                    System.out.println("BarrelId object saved in barrelId.ser");
+                } catch (IOException e) {
+                    System.out.println("Barrel id save: " + e.getMessage());
+                }
             }
-        }
+        }*/
+        this.id = id;
+        searchModuleB = (SearchModuleB_S_I) LocateRegistry.getRegistry(SearchModuleB.PORT).lookup(SearchModuleB.hostname);
+        searchModuleB.connect((BarrelModule_S_I) this, id);
     }
 
     /**
@@ -133,17 +143,13 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      @throws RemoteException If there is an error in the remote connection
      */
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
-        System.out.println("0 + search");
         Connection connect = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        System.out.println(1+ " search");
-        //TODO: Mudar o localhost
         try {
             connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
 
             // Execute the query to get all Pages that have a hyperlink to the given url
-            System.out.println(2 + " search");
             statement = connect.prepareStatement(
                     "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
@@ -182,7 +188,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                 pages.add(page);
                 counter++;
             }
-            System.out.println(pages.size());
             return pages;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -221,7 +226,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     @Override
     public void run() {
         try{
-            System.out.println("Storage Barrel Ready");
+            System.out.println("Barrel Module Ready");
 
             while (true) {
 

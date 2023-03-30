@@ -6,6 +6,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface SearchModuleB_S_I extends Remote {
-    public int connect(BarrelModule_S_I barrel) throws RemoteException;
+    public int connect(BarrelModule_S_I barrel, int id) throws RemoteException;
     // public void reconnectBarrel(BarrelModule_S_I barrel) throws RemoteException;
 }

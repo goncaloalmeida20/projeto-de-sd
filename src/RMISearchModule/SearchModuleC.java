@@ -6,7 +6,6 @@ import java.util.*;
 
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
-import classes.FileAccessor;
 import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
@@ -37,31 +36,20 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     private void saveServer() {
+        // Create the directory if it doesn't exist
+        File directory = new File("src/databases");
+
+        // Save the instance to a file
+        File file = new File(directory, "serverInfo.ser");
+        ObjectOutputStream oos = null;
         try {
-            FileAccessor fileAccessor = new FileAccessor("src/databases/serverInfo.ser");
-            fileAccessor.write(SearchModule.sI);
-
-            fileAccessor.close();
-
-            System.out.println("ServerInfo object saved in serverInfo.ser");
-            fileAccessor.close();
-        } catch(FileNotFoundException e){
-            File myObj = new File("src/databases/serverInfo.ser");
-            FileAccessor fileAccessor = null;
-            try {
-                fileAccessor = new FileAccessor("src/databases/serverInfo.ser");
-                fileAccessor.write(SearchModule.sI);
-
-                fileAccessor.close();
-
-                System.out.println("ServerInfo object saved in serverInfo.ser");
-                fileAccessor.close();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }catch (IOException e) {
+            oos = new ObjectOutputStream(new FileOutputStream(file));
+            oos.writeObject(SearchModule.sI);
+            oos.close();
+        } catch (IOException e) {
             System.out.println("Server save: " + e.getMessage());
         }
+
     }
 
     private boolean findClient(String username){
@@ -162,7 +150,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         synchronized (SearchModule.sI.cIList){
             logged = SearchModule.sI.clientInfoById(id).logged;
         }
-        System.out.println(logged);
         if (logged == 0){
             return 0; // "Client is not logged on, so it cannot log out!"
         } else {
