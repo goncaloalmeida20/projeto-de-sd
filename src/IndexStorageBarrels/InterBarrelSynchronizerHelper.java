@@ -195,13 +195,13 @@ public class InterBarrelSynchronizerHelper implements Runnable{
                 else{
                     ByteBuffer bbTemp = ByteBuffer.wrap(ackPacket);
 
-                    int tempBarrelId = bb.getInt(), tempSenderId = bb.getInt(), tempSeqNumber = bb.getInt(),
-                            tempMsgsLeft = bb.getInt(), tempAck = bb.getInt();
+                    int tempBarrelId = bbTemp.getInt(), tempSenderId = bbTemp.getInt(), tempSeqNumber = bbTemp.getInt(),
+                            tempMsgsLeft = bbTemp.getInt(), tempAck = bbTemp.getInt();
                     System.out.println("RECEIVED ACK " + (tempSeqNumber == currentSeqNumber &&
                             tempMsgsLeft == -1 && tempAck == -1));
                     /*bbTemp.rewind();
                     for (int k = 0; k < 5; k++){
-                        System.out.print(bb.getInt() + " ");
+                        System.out.print(bbTemp.getInt() + " ");
                     }
                     System.out.println();*/
                 }

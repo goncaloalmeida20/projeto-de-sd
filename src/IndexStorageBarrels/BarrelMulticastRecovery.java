@@ -105,6 +105,10 @@ public class BarrelMulticastRecovery implements Runnable{
                 //Wait for the next out of order packet timeout
                 Thread.sleep(minWaitTime);
 
+                synchronized (InterBarrelSynchronizerInserter.syncLock){
+                    while(InterBarrelSynchronizerInserter.needSync == 1)
+                        InterBarrelSynchronizerInserter.syncLock.wait();
+                }
                 List<List<Integer>> nacks = new ArrayList<>();
 
                 //get seqNumbers ahead of the counter (lastSeqNumber)

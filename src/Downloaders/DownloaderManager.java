@@ -26,12 +26,13 @@ public class DownloaderManager {
         int id = Integer.parseInt(args[0]);
         try {
             new DownloaderManager();
-            Downloader d = new Downloader(id);
-            DownloaderMulticastReceiver dmrcv = new DownloaderMulticastReceiver(id);
-            DownloaderMulticastWorker dmw = new DownloaderMulticastWorker(id);
-            DownloaderMulticastRecovery dmr = new DownloaderMulticastRecovery(id);
         } catch (RemoteException e) {
             System.out.println("Error in adminDownloader");
         }
+        Downloader d = new Downloader(id);
+        DownloaderMulticastReceiver dmrcv = new DownloaderMulticastReceiver(id);
+        DownloaderMulticastWorker dmw = new DownloaderMulticastWorker(id);
+        DownloaderMulticastRecovery dmr = new DownloaderMulticastRecovery(id);
+
     }
 }

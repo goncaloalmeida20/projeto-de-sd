@@ -9,6 +9,8 @@ public class URLItem implements Serializable {
     public final int MAX_RECURSION = 2;
 
     public URLItem(String url){
+        if(!url.substring(0, Math.min(url.length(), 4)).equals("http"))
+            url = "https://" + url;
         this.url = url;
         recursion_count = MAX_RECURSION;
     }

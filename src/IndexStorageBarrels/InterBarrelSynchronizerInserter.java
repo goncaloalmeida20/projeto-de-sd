@@ -20,6 +20,8 @@ public class InterBarrelSynchronizerInserter implements Runnable{
     public static final Object syncLock = new Object();
     public static int needSync = 0;
 
+    private static final int MAX_RETRIES = 3;
+
     public InterBarrelSynchronizerInserter(int id){
         this.id = id;
         t = new Thread(this);
@@ -58,60 +60,74 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                 synchronized (inserterQueue){
                     inserterQueue.clear();
                 }
-
-                //Ask the other barrels for the number of downloaders
-                byte[] packetBuffer =
-                        new MulticastPacket(-2, id, -4, -2, -2).toBytes();
-
-                InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
-                DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
-                        Barrel.SYNC_MULTICAST_PORT);
-                socket.send(packet);
-
                 byte[] queuePacket = null;
-                synchronized (inserterQueue){
-                    int packetIndex = packetTypeExists(true, -5);
-                    long initialTime = System.currentTimeMillis();
-                    while(packetIndex == -1 &&
-                            System.currentTimeMillis() - initialTime < TimedByteBuffer.TIMEOUT_MS){
-                        inserterQueue.wait(TimedByteBuffer.TIMEOUT_MS);
-                        packetIndex = packetTypeExists(true, -5);
-                    }
-                    if(packetIndex != -1) queuePacket = inserterQueue.remove(packetIndex);
-                    else{
-                        synchronized (syncLock){
-                            needSync = 0;
-                            syncLock.notifyAll();
-                        }
-                    }
-                }
-                if(queuePacket != null){
-                    //get packet bytes
-                    ByteBuffer bb = ByteBuffer.wrap(queuePacket);
+                //Ask the other barrels for the number of downloaders
+                for(int r = 0; r < MAX_RETRIES; r++){
+                    byte[] packetBuffer =
+                            new MulticastPacket(-2, id, -4, -2, -2).toBytes();
 
-                    //get the header bytes
-                    int barrelId = bb.getInt(), senderId = bb.getInt(), msgType = bb.getInt(),
-                            downloaderCount = bb.getInt();
-                    synchronized (BarrelMulticastWorker.lastSeqNumber){
-                        if(downloaderCount > BarrelMulticastWorker.lastSeqNumber.size()){
-                            for(int i = 0; i < downloaderCount; i++){
-                                if(!BarrelMulticastWorker.lastSeqNumber.containsKey(i + 1)){
-                                    BarrelMulticastWorker.lastSeqNumber.put(i + 1, 0);
-                                }
+                    InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
+                    DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
+                            Barrel.SYNC_MULTICAST_PORT);
+                    socket.send(packet);
+
+                    queuePacket = null;
+                    synchronized (inserterQueue){
+                        int packetIndex = packetTypeExists(true, -5);
+                        long initialTime = System.currentTimeMillis();
+                        while(packetIndex == -1 &&
+                                System.currentTimeMillis() - initialTime < TimedByteBuffer.TIMEOUT_MS){
+                            inserterQueue.wait(TimedByteBuffer.TIMEOUT_MS);
+                            packetIndex = packetTypeExists(true, -5);
+                        }
+                        if(packetIndex != -1) queuePacket = inserterQueue.remove(packetIndex);
+                        else{
+                            synchronized (syncLock){
+                                needSync = 0;
+                                syncLock.notifyAll();
                             }
                         }
                     }
+                    if(queuePacket != null){
+                        //get packet bytes
+                        ByteBuffer bb = ByteBuffer.wrap(queuePacket);
+
+                        //get the header bytes
+                        int barrelId = bb.getInt(), senderId = bb.getInt(), msgType = bb.getInt(),
+                                downloaderCount = bb.getInt();
+                        synchronized (BarrelMulticastWorker.lastSeqNumber){
+                            if(downloaderCount > BarrelMulticastWorker.lastSeqNumber.size()){
+                                for(int i = 0; i < downloaderCount; i++){
+                                    if(!BarrelMulticastWorker.lastSeqNumber.containsKey(i + 1)){
+                                        BarrelMulticastWorker.lastSeqNumber.put(i + 1, 0);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    else{
+                        System.out.println("PACKET NOT RECEIVED, RETRYING... (RETRY NUMBER " + (r+1) + ")");
+                    }
+                }
+                if(queuePacket == null){
+                    System.out.println("No packets received\nAssuming this barrel is the only one running");
+                    synchronized (syncLock){
+                        needSync = 0;
+                        syncLock.notifyAll();
+                    }
+                    continue;
                 }
 
                 boolean errorOcurred = false;
                 for(var entry: BarrelMulticastWorker.lastSeqNumber.entrySet()){
                     int downloaderId = entry.getKey(), currentSeqNumber = entry.getValue();
 
-                    packetBuffer =
+                    byte[] packetBuffer =
                             new MulticastPacket(-1, id, -1, downloaderId, currentSeqNumber).toBytes();
 
-                    group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
-                    packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
+                    InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
+                    DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                             Barrel.SYNC_MULTICAST_PORT);
                     socket.send(packet);
 
@@ -125,8 +141,8 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                         }
                         if(packetIndex != -1) queuePacket = inserterQueue.remove(packetIndex);
                         else{
-                            errorOcurred = true;
-                            System.out.println("Error ocurred");
+                            System.out.println("No synchronization packets received, assuming this barrel " +
+                                    "has the correct packets from downloader " + downloaderId);
                             break;
                         }
                     }
