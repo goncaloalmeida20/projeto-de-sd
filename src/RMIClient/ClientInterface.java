@@ -162,7 +162,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
         searchM.indexUrl(cAI.url.toLowerCase());
         serverActive = true;
-        System.out.println("Url indexed!");
+        System.out.println("Url is going indexed!");
     }
 
     /**
