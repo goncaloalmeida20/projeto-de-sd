@@ -9,7 +9,7 @@ import java.rmi.registry.LocateRegistry;
 
 
 /**
- The AdminDownloader class is used to connect to the AdminModule_S_I remote object to add itself as a downloader
+ * The AdminDownloader class is used to connect to the AdminModule_S_I remote object to add itself as a downloader
  */
 public class AdminDownloader extends UnicastRemoteObject implements AdminDownloader_S_I, Runnable {
     public static AdminModule_S_I h;

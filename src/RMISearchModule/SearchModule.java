@@ -7,7 +7,10 @@ import java.rmi.server.*;
 import java.util.*;
 
 
-
+/**
+ * The SearchModule class represents the core of the search module in the RMI-based search engine application.
+ * It implements the SearchModule_S_I interface which defines the search functionality.
+ */
 public class SearchModule extends UnicastRemoteObject implements SearchModule_S_I, Serializable {
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
@@ -16,7 +19,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     public static ServerInfo sI;
 
-
+    /**
+     * Constructs a new SearchModule object and initializes the tasks and result pages.
+     * If the file containing the server backed up information exists, it loads the information from the file.
+     * If the file does not exist, it creates a new ServerInfo object.
+     * It also initializes the threads to communicate with the clients, the barrels and the downloaders.
+     * @throws IOException if an I/O error occurs while reading the server information file.
+     */
     public SearchModule() throws IOException {
         super();
         tasks = new LinkedHashMap<>();
@@ -47,6 +56,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         t3.start();
     }
 
+    /**
+     * Deletes the server information file.
+     */
     private static void deleteServerSave(){
         File siFile = new File("src/databases/serverInfo.ser");
         if (siFile.exists()) {
@@ -59,6 +71,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
             System.out.println("serverInfo.ser does not exist.");
         }
     }
+
+    /**
+     * Utility method to read an integer from standard input.
+     * If the input is not an integer or is less than or equal to zero, returns -1.
+     * @return the integer read from standard input, or -1 if the input is invalid
+     */
     private static int readInt() {
         Scanner scanner = new Scanner(System.in);
         if (scanner.hasNextInt()) {
@@ -72,6 +90,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     // =======================================================
 
+    /**
+     * Entry point for the Search Module program.
+     * Creates a new instance of SearchModule and starts its threads.
+     * @param args command line arguments (not used)
+     * @throws IOException if an I/O error occurs while initializing the program
+     */
     public static void main(String[] args) throws IOException {
         new SearchModule();
         System.out.println("Search Module connections ready.");

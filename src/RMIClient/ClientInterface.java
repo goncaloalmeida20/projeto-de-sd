@@ -13,6 +13,10 @@ import java.io.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.*;
 
+/**
+ * The ClientInterface class represents the client interface for the RMI search system.
+ * It allows clients to register and login, as well as search for pages using the SearchModuleC_S_I interface.
+ */
 public class ClientInterface extends UnicastRemoteObject implements ClientInterface_C_I {
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -27,6 +31,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         super();
     }
 
+    /**
+     * Reads a string input from the user, handling empty strings.
+     * @return the string input read from the user
+     */
     private static String readString() {
         String str;
         do {
@@ -35,6 +43,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         return str;
     }
 
+    /**
+     * Reads an integer input from the user, handling invalid input.
+     * @return the integer input read from the user, or -1 if the input is invalid
+     */
     private static int readInt() {
         if (scanner.hasNextInt()) {
             int i = scanner.nextInt();
@@ -45,6 +57,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         return -1;
     }
 
+    /**
+     * Registers the client with the server by asking the user for a username and password.
+     * @throws IOException if there is an error reading input from the user
+     * @throws ServerNotActiveException if the client is not active on the server
+     */
     private static void register() throws IOException, ServerNotActiveException {
         String username, password;
         System.out.print("Username: ");
@@ -64,6 +81,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Registers the client with the server and displays a message indicating the result of the registration.
+     * @throws RemoteException if there is a communication-related exception
+     */
     private static void registerRecover() throws RemoteException {
         int reg = searchM.register(cAI.username, cAI.password);
         serverActive = true;
@@ -76,6 +97,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         System.out.println("\nServer message: " + msg + '\n');
     }
 
+    /**
+     * Logins the client with the server by asking the user for a username and password.
+     * @throws IOException If there is an I/O error while reading the input.
+     * @throws ServerNotActiveException If the server is not active.
+     */
     private static void login() throws IOException, ServerNotActiveException {
         String username, password;
         System.out.print("Username: ");
@@ -95,6 +121,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Logins the client with the server and displays a message indicating the result of the registration.
+     * @throws RemoteException if there is a communication-related exception
+     */
     public static void loginRecover() throws ServerNotActiveException, RemoteException {
         int login = searchM.login(cAI.username, cAI.password, id);
         serverActive = true;
@@ -107,6 +137,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         System.out.println("\nServer message: " + msg + '\n');
     }
 
+    /**
+     * Indexes a URL provided by the user after setting the URL to the current active instance's URL.
+     * @throws IOException If there is an I/O error while reading user input.
+     * @throws NotBoundException If the remote object is not bound to the registry.
+     */
     private static void indexUrl() throws IOException, NotBoundException {
         String url;
         System.out.print("\nUrl to index: ");
@@ -119,12 +154,23 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     Calls the remote method "search" to index the URL of the active instance's URL
+     @throws NotBoundException If the remote object is not bound to the registry.
+     @throws RemoteException If a communication error occurs during the remote method invocation.
+     */
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
         searchM.indexUrl(cAI.url.toLowerCase());
         serverActive = true;
         System.out.println("Url indexed!");
     }
 
+    /**
+     * Searches for pages that contain the terms given by the user
+     * @throws IOException If there is an I/O error while reading user input.
+     * @throws NotBoundException If the remote object is not bound to the registry.
+     * @throws InterruptedException If the current thread is interrupted while waiting for the user input.
+     */
     private static void search() throws IOException, NotBoundException, InterruptedException {
         int termCount, n_page = 0;
         String[] terms;
@@ -158,6 +204,12 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Search for pages that contain the specified search terms and page number.
+     * @throws NotBoundException If the remote object is not bound to the registry.
+     * @throws RemoteException If a communication error occurs during the remote method invocation.
+     * @throws InterruptedException If the current thread is interrupted while waiting for the user input.
+     */
     private static void searchRecover() throws NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.search(cAI.termCount, cAI.terms, cAI.n_page);
         serverActive = true;
@@ -180,6 +232,13 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Search pages that have a link to the given URL
+     * @throws IOException if there is an I/O error while reading input
+     * @throws NotBoundException if the remote object is not bound in the registry
+     * @throws ServerNotActiveException if a remote method is called outside a server request
+     * @throws InterruptedException if the current thread is interrupted while waiting
+     */
     private static void searchPages() throws IOException, NotBoundException, ServerNotActiveException, InterruptedException {
         String url;
         int n_page;
@@ -200,6 +259,13 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Search pages that have a link to the given URL, in case of failure recovers the search.
+     * @throws ServerNotActiveException if a remote method is called outside a server request
+     * @throws NotBoundException if the remote object is not bound in the registry
+     * @throws RemoteException if there is a communication-related error while using the remote object
+     * @throws InterruptedException if the current thread is interrupted while waiting
+     */
     private static void searchPagesRecover() throws ServerNotActiveException, NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id, logged);
         serverActive = true;
@@ -218,6 +284,10 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * Access the administration panel.
+     * @throws IOException if there is an I/O error while reading input
+     */
     private static void admin() throws IOException {
         Map<Integer, Integer> info = searchM.admin();
         int activeBarrels, activeDownloaders;
@@ -238,6 +308,11 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         } else System.out.println("Couldn't get any information about the active downloaders and barrels");
     }
 
+    /**
+     * Logs out the user from the remote search module.
+     * @throws IOException if there's an I/O error while communicating with the server
+     * @throws ServerNotActiveException if the server is not active
+     */
     private static void logout() throws IOException, ServerNotActiveException {
         int logout = searchM.logout(id);
         serverActive = true;
@@ -248,12 +323,22 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         System.out.println("Server message: " + msg + "\n");
     }
 
+    /**
+     * Exits the client application.
+     * @throws ServerNotActiveException if the server is not active
+     * @throws RemoteException if there's a remote exception while communicating with the server
+     */
     private static void exit() throws ServerNotActiveException, RemoteException {
         searchM.logout(id);
         serverActive = true;
         System.out.println("Close client menu...");
     }
 
+    /**
+     * Connects the client to the remote search module (Server).
+     * @throws RemoteException if there's a remote exception while communicating with the server
+     * @throws NotBoundException if the remote search module is not bound to the registry
+     */
     private static void connectToServer() throws RemoteException, NotBoundException {
         Registry r = LocateRegistry.getRegistry(SearchModuleC.PORT0);
         searchM = (SearchModuleC_S_I) r.lookup(SearchModuleC.hostname0);
@@ -261,6 +346,9 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         cAI = new ClientAskedInfo();
     }
 
+    /**
+     * Displays the client menu and handles user input.
+     */
     private static void showMenu() {
         try {
             int count;
@@ -305,6 +393,16 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         }
     }
 
+    /**
+     * The main class that runs the client-side program.
+     * It connects to the server, displays a menu with different options, and handles the user's input.
+     * If the server goes down during an action, the program will retry the last action for 10 seconds before shutting down.
+     * @param args the command-line arguments (not used)
+     * @throws InterruptedException if the thread is interrupted while waiting for a response from the server
+     * @throws ServerNotActiveException if the server is not currently active
+     * @throws IOException if there is an I/O error while communicating with the server
+     * @throws NotBoundException if the registry does not contain an entry for the specified name in the specified port
+     */
     public static void main(String[] args) throws InterruptedException, ServerNotActiveException, IOException, NotBoundException {
         while (op != 6) {
             try {

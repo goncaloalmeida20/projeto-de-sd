@@ -11,8 +11,13 @@ import java.rmi.server.UnicastRemoteObject;
 import java.sql.SQLException;
 import java.util.*;
 
+/**
+ * Represents a Search Module Barrel, which is used to connect to other Barrel Modules
+ * and execute search tasks in parallel.
+ */
 public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_S_I, Runnable {
     public SearchModuleB searchModuleB;
+
     // RMI Barrel info
     public static int PORT = 7002;
     public static String hostname = "this";
@@ -20,7 +25,13 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
 
-
+    /**
+     * Creates a new instance of the Search Module Barrel.
+     *
+     * @param t A map of search tasks, where each task is associated with a set of search parameters and a client ID.
+     * @param p A map of search results, where each result is associated with a client ID.
+     * @throws RemoteException If there is an error with the remote connection.
+     */
     public SearchModuleB(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) throws RemoteException {
         super();
         tasks = t;
@@ -29,10 +40,12 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
     }
 
     /**
-     * Connects a Barrel to the Search Module and returns the id of the barrel
-     * @param barrel Barrel to connect to the Search Module
-     * @return Integer representing the id assigned to the connected barrel
-     * @throws RemoteException If there is an error with the remote connection
+     * Connects a Barrel to the Search Module and returns the id of the barrel.
+     *
+     * @param barrel The Barrel to connect to the Search Module.
+     * @param id     The ID of the barrel.
+     * @return Integer representing the ID assigned to the connected barrel.
+     * @throws RemoteException If there is an error with the remote connection.
      */
     public int connect(BarrelModule_S_I barrel, int id) throws RemoteException {
         ++SearchModule.sI.bAllCounter;
@@ -44,23 +57,25 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         }
         return SearchModule.sI.bAllCounter;
     }
-    
+
     /**
-     * Disconnects a Barrel from the SearchModule by removing it from the barrels list
-     * Note that this function is called if a Barrel breakdown
-     * @param index Index of the Barrel to be disconnected (Removed from the barrels list)
+     * Disconnects a Barrel from the SearchModule by removing it from the barrels list.
+     * Note that this function is called if a Barrel breaks down.
+     *
+     * @param index The index of the Barrel to be disconnected (removed from the barrels list).
      */
     private void disconnect(int index) {
-        synchronized (SearchModule.sI.barrels){
+        synchronized (SearchModule.sI.barrels) {
             System.out.println("A barrel disconnected");
             SearchModule.sI.barrels.remove(index);
         }
     }
 
     /**
-     * Returns a random Barrel from the Search Module's list of connected barrels
-     * @param index Index of the Barrel to be returned
-     * @return a random Barrel or null if there are no active clients
+     * Returns a random Barrel from the Search Module's list of connected barrels.
+     *
+     * @param index The index of the Barrel to be returned.
+     * @return A random Barrel or null if there are no active clients.
      */
     private BarrelModule_S_I getRandomBarrelModule(int index) {
         synchronized (SearchModule.sI.barrels) {
@@ -73,6 +88,10 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
     }
 
     // =======================================================
+
+    /**
+     * Starts the Search Module Barrel and executes search tasks in parallel.
+     */
     @Override
     public void run() {
         BarrelModule_S_I barrelM;
@@ -90,6 +109,17 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
             try {
                 HashMap<Object, Integer> task;
 
+                /*
+                 * The code runs in a loop, and within the loop, there is another loop that executes tasks.
+                 * The tasks are stored in a HashMap object, and it synchronizes access to this object
+                using the synchronized keyword. It is used wait and notifyAll methods to coordinate the
+                execution of the tasks between multiple threads.
+                 * Within the task execution loop, it is randomly selected a barrel module from a list,
+                and then executes the task using the randomly selected barrel.
+                 * After the task is executed, the result is stored in another HashMap object
+                called "result_pages", which is also synchronized.
+                 * Finally, the task is removedfrom the "tasks" HashMap.
+                **/
                 while (true) {
                     synchronized (tasks) {
                         while (tasks.isEmpty()) {
@@ -100,7 +130,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                             }
                         }
                         for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
-                            synchronized (SearchModule.sI.barrels){
+                            synchronized (SearchModule.sI.barrels) {
                                 randomIndex = (int) (Math.random() * SearchModule.sI.barrels.size());
                             }
                             barrelM = getRandomBarrelModule(randomIndex);
@@ -108,7 +138,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                                 // System.out.println("Type error");
                                 int type = key.values().iterator().next();
                                 // System.out.println("Type: " + type);
-                                synchronized (tasks){
+                                synchronized (tasks) {
                                     task = tasks.get(key);
                                 }
                                 // System.out.println("Task: " + task + " Type: " + type);
@@ -134,7 +164,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                         }
                     }
                 }
-            } catch (ConnectException e ) {
+            } catch (ConnectException e) {
                 disconnect(randomIndex);
             } catch (RemoteException | SQLException e) {
                 e.printStackTrace();

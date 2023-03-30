@@ -12,11 +12,20 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * The BarrelModule class is used to connect to the SearchModuleB_S_I remote object to add itself as a Barrel
+ */
 public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_I,Runnable {
     public static SearchModuleB_S_I searchModuleB;
 
     public int id;
 
+    /**
+     * Constructor to initialize the BarrelModule object.
+     * @param id The identifier of the BarrelModule object.
+     * @throws RemoteException If there is an error with the remote connection.
+     * @throws NotBoundException If the SearchModuleB object is not bound to the registry.
+     */
     public BarrelModule(int id) throws RemoteException, NotBoundException {
         super();
         /*File file = new File("src/databases/serverInfo.ser");
@@ -67,12 +76,12 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     }
 
     /**
-     Searches for pages that contain all the specified search terms, order them
-     and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
-     @param terms Array of terms to match in the pages
-     @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
-     @return ArrayList of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
-     @throws RemoteException If there is an error with the remote connection
+     * Searches for pages that contain all the specified search terms, order them
+     * and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     * @param terms Array of terms to match in the pages
+     * @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
+     * @return ArrayList of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     * @throws RemoteException If there is an error with the remote connection
      */
     public ArrayList<Page> search(String[] terms, int n_page) throws RemoteException {
         ArrayList<Page> pages = new ArrayList<>();
@@ -135,12 +144,12 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     }
 
     /**
-     Searches for pages that contain a specific URL in their links
-     and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
-     @param url URL to search for in the links of all the pages with their url indexed
-     @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
-     @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
-     @throws RemoteException If there is an error in the remote connection
+     * Searches for pages that contain a specific URL in their links
+     * and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
+     * @param url URL to search for in the links of all the pages with their url indexed
+     * @param n_page Number of the group of ten pages that shoud be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
+     * @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
+     * @throws RemoteException If there is an error in the remote connection
      */
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
         Connection connect = null;
@@ -211,14 +220,18 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     }
 
     /**
-     Returns the id of this Barrel
-     @return the id of the Barrel
-     @throws RemoteException If there is an error in the remote connection
+     * Returns the id of this Barrel
+     * @return the id of the Barrel
+     * @throws RemoteException If there is an error in the remote connection
      */
     public int getId() throws RemoteException {
         return id;
     }
 
+    /**
+     * Function just to test the connection between AdminModule and BarrelModule
+     * @throws RemoteException If a RemoteException occurs (BarrelModule cannot be connected by AdminModule)
+     */
     public void ping() throws RemoteException {
 
     }
