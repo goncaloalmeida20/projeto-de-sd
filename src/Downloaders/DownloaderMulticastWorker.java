@@ -63,7 +63,7 @@ public class DownloaderMulticastWorker implements Runnable{
                         DownloaderManager.MULTICAST_PORT);
                     /*if(DownloaderManager.seqNumber % 2 != 0 && i % 2 != 0)
                         socket.send(packet);
-                    else*/ if(DownloaderManager.seqNumber % 2 == 0)
+                    else if(DownloaderManager.seqNumber % 2 == 0)*/
                         socket.send(packet);
                     //else
                     //    testBuffers.add(packetBuffer);
