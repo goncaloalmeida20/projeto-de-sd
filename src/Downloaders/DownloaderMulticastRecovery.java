@@ -53,9 +53,10 @@ public class DownloaderMulticastRecovery implements Runnable{
                         seqNumber = bb.getInt(), messageType = bb.getInt();
 
                 int msgType;
-                Page recoveredPage;
+                Page recoveredPage = null;
                 synchronized (DownloaderManager.pageBuffer){
-                    recoveredPage = DownloaderManager.pageBuffer.get(seqNumber).keySet().iterator().next();
+                    if(DownloaderManager.pageBuffer.containsKey(seqNumber))
+                        recoveredPage = DownloaderManager.pageBuffer.get(seqNumber).keySet().iterator().next();
                     if(recoveredPage == null){
                         msgType = -3;
                     }

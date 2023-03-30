@@ -164,6 +164,7 @@ public class InterBarrelSynchronizerHelper implements Runnable{
                         }
                     }
                 }
+                if(currentSeqNumber == -6) continue;
                 byte[] packetBuffer =
                         new MulticastPacket(senderId, id, currentSeqNumber, -1, -9999).toBytes();
 

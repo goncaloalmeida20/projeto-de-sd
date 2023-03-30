@@ -33,6 +33,6 @@ public class DownloaderManager {
         DownloaderMulticastReceiver dmrcv = new DownloaderMulticastReceiver(id);
         DownloaderMulticastWorker dmw = new DownloaderMulticastWorker(id);
         DownloaderMulticastRecovery dmr = new DownloaderMulticastRecovery(id);
-
+        DownloaderCleaner dc = new DownloaderCleaner(id);
     }
 }

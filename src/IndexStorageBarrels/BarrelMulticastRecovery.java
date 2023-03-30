@@ -15,6 +15,7 @@ import java.util.List;
 public class BarrelMulticastRecovery implements Runnable{
     //List of NACK ACKs (acknowledges of the NACK messages)
     public static final List<byte[]> nackAcksQueue = Collections.synchronizedList(new ArrayList<>());
+    public static final int MAX_RETRIES = 3;
 
     public int id;
     public Thread t;
@@ -192,30 +193,38 @@ public class BarrelMulticastRecovery implements Runnable{
                     }
                 }
                 for(var nack: nacks){
-                    System.out.println("NACK " + nack.get(0) + " " + nack.get(1));
-                    byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -1, -1).toBytes();
+                    int foundNack = 0;
+                    for(int i = 0; i < MAX_RETRIES; i++){
+                        System.out.println("NACK " + nack.get(0) + " " + nack.get(1));
+                        byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -1, -1).toBytes();
+                        //Send the packet
+                        InetAddress group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
+                        DatagramPacket packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
+                                DownloaderManager.MULTICAST_PORT);
+                        socket.send(packet);
+
+                        long sendTime = System.currentTimeMillis();
+                        synchronized (nackAcksQueue){
+                            do{
+                                nackAcksQueue.wait(TimedByteBuffer.TIMEOUT_MS);
+                                foundNack = containsNack(nack.get(0), nack.get(1));
+                            }
+                            while(foundNack == 0 && System.currentTimeMillis() - sendTime < TimedByteBuffer.TIMEOUT_MS);
+                        }
+                        if(foundNack == 0){
+                            System.out.println("NOT FOUND NACK " + nack.get(0) + " " + nack.get(1)
+                                    + ", RETRYING... RETRY NUMBER " + (i+1));
+                        }
+                        else{
+                            break;
+                        }
+                    }
+
+
+                    byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -4, -1).toBytes();
                     //Send the packet
                     InetAddress group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
-                        DownloaderManager.MULTICAST_PORT);
-                    socket.send(packet);
-
-                    long sendTime = System.currentTimeMillis();
-                    int foundNack;
-                    synchronized (nackAcksQueue){
-                        do{
-                            nackAcksQueue.wait(TimedByteBuffer.TIMEOUT_MS);
-                            foundNack = containsNack(nack.get(0), nack.get(1));
-                        }while(foundNack == 0 && System.currentTimeMillis() - sendTime < TimedByteBuffer.TIMEOUT_MS);
-                    }
-                    if(foundNack == 0){
-                        System.out.println("NOT FOUND NACK " + nack.get(0) + " " + nack.get(1));
-                    }
-
-                    nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -4, -1).toBytes();
-                    //Send the packet
-                    group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
-                    packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
                             DownloaderManager.MULTICAST_PORT);
                     socket.send(packet);
 
