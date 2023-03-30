@@ -81,12 +81,6 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                             packetIndex = packetTypeExists(true, -5);
                         }
                         if(packetIndex != -1) queuePacket = inserterQueue.remove(packetIndex);
-                        else{
-                            synchronized (syncLock){
-                                needSync = 0;
-                                syncLock.notifyAll();
-                            }
-                        }
                     }
                     if(queuePacket != null){
                         //get packet bytes
