@@ -11,6 +11,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * The BarrelModule class is used to connect to the SearchModuleB_S_I remote object to add itself as a Barrel
@@ -139,7 +141,9 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
-
+        for (String term: terms) {
+            Barrel.bdb.addSearch(1, term);
+        }
         return pages;
     }
 
@@ -153,19 +157,19 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      */
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
         Connection connect = null;
-        PreparedStatement statement = null;
+        PreparedStatement stm = null;
         ResultSet resultSet = null;
         try {
             connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
 
             // Execute the query to get all Pages that have a hyperlink to the given url
-            statement = connect.prepareStatement(
+            stm = connect.prepareStatement(
                     "SELECT p.* FROM Page p INNER JOIN Links l ON p.Id = l.PageId WHERE l.Link = ?",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
-            statement.setString(1, url);
-            resultSet = statement.executeQuery();
+            stm.setString(1, url);
+            resultSet = stm.executeQuery();
             ResultSet copyResultSet = resultSet;
 
             // Get total number of pages that have a hyperlink to the given url
@@ -197,6 +201,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                 pages.add(page);
                 counter++;
             }
+            Barrel.bdb.addSearch(2, url);
             return pages;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -206,8 +211,8 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                 if (resultSet != null) {
                     resultSet.close();
                 }
-                if (statement != null) {
-                    statement.close();
+                if (stm != null) {
+                    stm.close();
                 }
                 if (connect != null) {
                     connect.close();
@@ -234,6 +239,57 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
      */
     public void ping() throws RemoteException {
 
+    }
+
+    /**
+     * Retrieves the top ten searched terms/urls from the searches table.
+     * @return A list of hashmaps with the top ten searched terms/urls, where each hashmap contains an integer representing the type
+     * of the search and a string representing the search term/url itself.
+     * @throws SQLException If an error occurs while accessing the database.
+     */
+    public List<HashMap<Integer, String>> getTopTenSearches() throws SQLException {
+        Connection connect = null;
+        PreparedStatement stm = null;
+        ResultSet resultSet = null;
+
+        List<HashMap<Integer, String>> topSearches = new ArrayList<>();
+
+        try {
+            connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
+
+            stm = connect.prepareStatement(
+                    "SELECT type, searchstring " +
+                            "FROM searches " +
+                            "ORDER BY count " +
+                            "DESC LIMIT 10",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY
+            );
+
+            resultSet = stm.executeQuery();
+
+            resultSet.beforeFirst();
+            while (resultSet.next()) {
+                int type = resultSet.getInt("type");
+                String searchstring = resultSet.getString("searchstring");
+                HashMap<Integer, String> aux = new HashMap<>();
+                aux.put(type, searchstring);
+                topSearches.add(aux);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error while accessing searches table. Error message: " + e.getMessage());
+        } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (stm != null) {
+                stm.close();
+            }
+            if (connect != null) {
+                connect.close();
+            }
+        }
+        return topSearches;
     }
 
     @Override

@@ -15,12 +15,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
+    public final HashMap<SearchModuleC, List<HashMap<Integer, String>>> resultsTopTen;
     public static Thread t1, t2, t3;
 
     public static ServerInfo sI;
 
+
     /**
-     * Constructs a new SearchModule object and initializes the tasks and result pages.
+     * Constructs a new SearchModule object and initializes the tasks, result pages and resultsTopTen.
      * If the file containing the server backed up information exists, it loads the information from the file.
      * If the file does not exist, it creates a new ServerInfo object.
      * It also initializes the threads to communicate with the clients, the barrels and the downloaders.
@@ -30,6 +32,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         super();
         tasks = new LinkedHashMap<>();
         result_pages = new HashMap<>();
+        resultsTopTen = new HashMap<>();
 
         File file = new File("src/databases/serverInfo.ser");
         if (!file.exists()) {
@@ -45,9 +48,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
             ois.close();
         }
 
-        SearchModuleB sb = new SearchModuleB(tasks, result_pages);
+        SearchModuleB sb = new SearchModuleB(tasks, result_pages, resultsTopTen);
         t1 = new Thread(sb);
-        SearchModuleC sc = new SearchModuleC(tasks, result_pages);
+        SearchModuleC sc = new SearchModuleC(tasks, result_pages, resultsTopTen);
         t2 = new Thread(sc);
         AdminModule adminModule = new AdminModule();
         t3 = new Thread(adminModule);

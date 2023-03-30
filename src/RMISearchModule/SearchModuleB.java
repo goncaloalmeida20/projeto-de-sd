@@ -24,19 +24,20 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
+    public final HashMap<SearchModuleC, List<HashMap<Integer, String>>> resultsTopTen;
 
     /**
      * Creates a new instance of the Search Module Barrel.
-     *
      * @param t A map of search tasks, where each task is associated with a set of search parameters and a client ID.
      * @param p A map of search results, where each result is associated with a client ID.
+     * @param rtt A map of search results of the top 10 searches, where each result is associated with a client ID.
      * @throws RemoteException If there is an error with the remote connection.
      */
-    public SearchModuleB(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) throws RemoteException {
+    public SearchModuleB(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p, HashMap<SearchModuleC, List<HashMap<Integer, String>>> rtt) throws RemoteException {
         super();
         tasks = t;
         result_pages = p;
-
+        this.resultsTopTen = rtt;
     }
 
     /**
@@ -97,7 +98,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         BarrelModule_S_I barrelM;
         int randomIndex = 0;
         try {
-            searchModuleB = new SearchModuleB(tasks, result_pages);
+            searchModuleB = new SearchModuleB(tasks, result_pages, resultsTopTen);
             Registry r = LocateRegistry.createRegistry(PORT);
             r.rebind(hostname, searchModuleB);
             System.out.println("Search Module - Barrel connection ready.");
@@ -156,6 +157,14 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                                         for (SearchModuleC client : key.keySet()) {
                                             result_pages.put(client, res);
                                             result_pages.notifyAll();
+                                        }
+                                    }
+                                } else if(type == 3){
+                                    List<HashMap<Integer, String>> res = barrelM.getTopTenSearches();
+                                    synchronized (resultsTopTen) {
+                                        for (SearchModuleC client : key.keySet()) {
+                                            resultsTopTen.put(client, res);
+                                            resultsTopTen.notifyAll();
                                         }
                                     }
                                 }
