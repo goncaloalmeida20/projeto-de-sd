@@ -22,6 +22,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
 
     public final Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> tasks;
     public final HashMap<SearchModuleC, ArrayList<Page>> result_pages;
+    public final HashMap<SearchModuleC, List<HashMap<Integer, String>>> resultsTopTen;
 
     /**
      The SearchModuleC constructor initializes the tasks and result_pages fields.
@@ -29,10 +30,11 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      @param p the search results associated with this client
      @throws RemoteException if a communication error occurs during the remote method invocation
      */
-    public SearchModuleC(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p) throws RemoteException {
+    public SearchModuleC(Map<HashMap<SearchModuleC, Integer>, HashMap<Object, Integer>> t, HashMap<SearchModuleC, ArrayList<Page>> p, HashMap<SearchModuleC, List<HashMap<Integer, String>>> rtt) throws RemoteException {
         super();
         tasks = t;
         result_pages = p;
+        this.resultsTopTen = rtt;
     }
 
     /**
@@ -241,12 +243,33 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         }
     }
 
+    /**
+     * Retrieves the top ten searches from the database.
+     * This method uses a synchronized block to add the task to the task list and wait for the result.
+     * @return a List of HashMaps containing the top ten searches, where the key is the type and the value is the search string.
+     * @throws RemoteException if a communication-related exception occurs
+     * @throws InterruptedException if the current thread is interrupted while waiting
+     */
+     public List<HashMap<Integer, String>> getTopTenSeaches() throws RemoteException, InterruptedException {
+        HashMap<Object, Integer> task = new HashMap<>();
+        task.put(null, null);
+        addTask(3, task);
+        synchronized(resultsTopTen) {
+            while (!resultsTopTen.containsKey(this)) {
+                resultsTopTen.wait();
+            }
+            List<HashMap<Integer, String>> res = resultsTopTen.get(this);
+            resultsTopTen.remove(this);
+            return res;
+        }
+    }
+
     // =======================================================
 
     /**
-     This method starts a server for the Search Module, creates a registry, and binds the SearchModule object to it.
-     Once the binding is complete, the method prints a message indicating that the connection is ready.
-     @throws RemoteException if there is an error with the remote communication
+     * This method starts a server for the Search Module, creates a registry, and binds the SearchModule object to it.
+     * Once the binding is complete, the method prints a message indicating that the connection is ready.
+     * @throws RemoteException if there is an error with the remote communication
      */
     public void run() {
         try {

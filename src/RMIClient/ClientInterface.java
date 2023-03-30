@@ -162,7 +162,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void indexUrlRecover() throws NotBoundException, RemoteException {
         searchM.indexUrl(cAI.url.toLowerCase());
         serverActive = true;
-        System.out.println("Url indexed!");
+        System.out.println("Url is going indexed!");
     }
 
     /**
@@ -288,24 +288,45 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
      * Access the administration panel.
      * @throws IOException if there is an I/O error while reading input
      */
-    private static void admin() throws IOException {
+    private static void admin() throws IOException, InterruptedException {
         Map<Integer, Integer> info = searchM.admin();
+        List<HashMap<Integer, String>> topTenSearches = searchM.getTopTenSeaches();
         int activeBarrels, activeDownloaders;
         if (!info.isEmpty()) {
             Map.Entry<Integer, Integer> entry = info.entrySet().iterator().next();
             activeBarrels = entry.getKey();
             activeDownloaders = entry.getValue();
-            System.out.println("\n-----------------------Administration panel-----------------------");
+            System.out.println("\n-----------------------Administration panel-----------------------\n");
             if(activeBarrels == 0) System.out.println("No barrels are active");
             else {
-                System.out.println("Number of active barrels: " + activeBarrels);
+                System.out.println("\t\tNumber of active barrels: " + activeBarrels);
             }
             if(activeDownloaders == 0) System.out.println("No downloaders are active");
             else {
-                System.out.println("Number of active downloaders: " + activeDownloaders);
+                System.out.println("\t\tNumber of active downloaders: " + activeDownloaders);
             }
-            System.out.println("------------------------------------------------------------------\n");
         } else System.out.println("Couldn't get any information about the active downloaders and barrels");
+        System.out.println("\n          ---------------Top Ten Searches---------------          ");
+        if(topTenSearches.isEmpty()) {
+            System.out.println("                   No Searches have been done yet                   ");
+        }
+        else{
+            //System.out.println("topTenSearches size: " + topTenSearches.size());
+            final int[] counter = {1};
+
+            for (HashMap<Integer, String> tTS: topTenSearches) {
+                tTS.forEach((key, value) -> {
+                    System.out.print("\t\t" + counter[0] + ". ");
+                    if(key == 1){
+                        System.out.println("Term: " + value);
+                    } else if(key == 2){
+                        System.out.println("Url: " + value);
+                    }
+                    counter[0]++;
+                });
+            }
+        }
+        System.out.println("\n------------------------------------------------------------------\n");
     }
 
     /**

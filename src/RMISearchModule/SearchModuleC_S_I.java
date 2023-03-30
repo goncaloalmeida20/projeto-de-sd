@@ -5,6 +5,8 @@ import classes.Page;
 import java.rmi.*;
 import java.rmi.server.ServerNotActiveException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public interface SearchModuleC_S_I extends Remote{
@@ -16,4 +18,5 @@ public interface SearchModuleC_S_I extends Remote{
     ArrayList<Page> searchPages(String url, int n_page, int id, boolean logged) throws java.rmi.RemoteException, NotBoundException, ServerNotActiveException, InterruptedException;
     Map<Integer, Integer> admin() throws java.rmi.RemoteException;
     int logout(int id) throws java.rmi.RemoteException, ServerNotActiveException;
+    List<HashMap<Integer, String>> getTopTenSeaches() throws java.rmi.RemoteException, InterruptedException;
 }

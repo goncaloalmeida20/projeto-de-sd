@@ -118,6 +118,15 @@ public class BarrelDatabase {
 
             /*query = "CREATE UNIQUE INDEX IF NOT EXISTS links ON links (pageid, link)";
             stm.executeUpdate(query);*/
+
+            // Create Searches table
+            query = "CREATE TABLE IF NOT EXISTS searches (" +
+                    "type INTEGER NOT NULL, " +
+                    "searchstring VARCHAR(" + VARCHAR_SIZE + ") NOT NULL, " +
+                    "count INTEGER, " +
+                    "PRIMARY KEY (type, searchstring) " +
+                    ")";
+            stm.executeUpdate(query);
             
             System.out.println("Tables loaded with success!");
         } catch (SQLException e) {
@@ -296,5 +305,42 @@ public class BarrelDatabase {
             }
         }
         return pages;
+    }
+
+    /**
+     * Adds a search to the "searches" table in the database.
+     * @param type the type of the search
+     * @param searchstring the search string
+     * @throws RuntimeException if there's a problem with the JDBC driver
+     * @throws SQLException if there's a problem with the SQL query
+     */
+    public void addSearch(int type, String searchstring) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            Class.forName("org.postgresql.Driver");
+            conn = DriverManager.getConnection(urldb, user, password);
+            String sql = "INSERT INTO searches(type, searchstring, count) VALUES (?, ?, 1) " +
+                    "ON CONFLICT (type, searchstring) DO UPDATE SET count = searches.count + 1";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, type);
+            pstmt.setString(2, searchstring);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Failed to insert search. Error message: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error while closing connection with database. Error message: " + e.getMessage());
+            }
+        }
     }
 }
