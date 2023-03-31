@@ -40,7 +40,8 @@ public class DownloaderMulticastWorker implements Runnable{
                 System.out.println(currentPage.multicastString());
                 //Split the message so that each part doesn't exceed the packet size
                 ByteArrayInputStream bis = new ByteArrayInputStream(pageBytes);
-                DownloaderManager.seqNumber++;
+
+                DownloaderManager.updateSeqNumber();
 
                 //List<byte[]> testBuffers = new ArrayList<>();
 
