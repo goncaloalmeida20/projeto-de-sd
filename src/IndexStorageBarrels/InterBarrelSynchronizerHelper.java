@@ -92,8 +92,8 @@ public class InterBarrelSynchronizerHelper implements Runnable{
 
                     //check if this barrel contains information about the required downloader and the difference
                     //in sequence numbers is significant
-                    if(localDownloaderSeqNumber == -1 || (localDownloaderSeqNumber > seqNumber &&
-                            localDownloaderSeqNumber - seqNumber < Barrel.SEQ_NUMBER_DIFF_TOLERANCE)){
+                    if(localDownloaderSeqNumber == -1 ||
+                            localDownloaderSeqNumber - seqNumber < Barrel.SEQ_NUMBER_DIFF_TOLERANCE){
                         continue;
                     }
 

@@ -177,7 +177,6 @@ public class BarrelDatabase {
             stm.setInt(8, sender);
             stm.setInt(9, seqNumber);
             int insertedRows = stm.executeUpdate();
-            System.out.println("Inserted rows:" + insertedRows + " url " + p.url.substring(0, Math.min(p.url.length(), VARCHAR_SIZE-1)));
             if(insertedRows > 0){
                 ResultSet rs = stm.getGeneratedKeys();
                 long insertId = -1;

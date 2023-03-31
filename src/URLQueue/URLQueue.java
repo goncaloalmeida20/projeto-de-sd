@@ -1,17 +1,49 @@
 package URLQueue;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
 public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
     public final List<URLItem> URLList;
-    public final List<URLItem> indexedURLs;
+    public final Object indexedURLsLock = new Object();
 
     public URLQueue() throws RemoteException{
         super();
         URLList = Collections.synchronizedList(new ArrayList<URLItem>());
-        indexedURLs = Collections.synchronizedList(new ArrayList<URLItem>());
+    }
+
+    public boolean tryAddUrlToIndexed(String url){
+        File f = new File("urlQueue_already_indexed.txt");
+        if(f.exists()){
+            try(BufferedReader br = new BufferedReader(new FileReader(f))){
+                String line;
+                while((line = br.readLine()) != null){
+                    if(line.equals(url)){
+                        System.out.println("HELLO");
+                        return false;
+                    }
+                }
+            }catch(Exception e){
+                System.out.println("Error opening " + f.getName());
+                return false;
+            }
+            try(BufferedWriter bw = new BufferedWriter(new FileWriter(f, true))){
+                bw.write(url + "\n");
+                return true;
+            }catch(Exception e){
+                System.out.println("Error writing to " + f.getName());
+                return true;
+            }
+        }
+        try(BufferedWriter bw = new BufferedWriter(new FileWriter(f))){
+            bw.write(url + "\n");
+            return true;
+        }catch(Exception e){
+            System.out.println("Error writing to " + f.getName());
+            return false;
+        }
     }
 
     /**
@@ -25,7 +57,9 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         synchronized(URLList){
             if(URLList.contains(uIt)) return false;
 
-            indexedURLs.add(uIt);
+            synchronized (indexedURLsLock){
+                tryAddUrlToIndexed(uIt.url);
+            }
             URLList.add(uIt);
             URLList.notify();
         }
@@ -41,8 +75,8 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
      */
     public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException {
         URLItem uIt = new URLItem(newURL, recursion_count);
-        synchronized(indexedURLs){
-            if(indexedURLs.contains(uIt)) return false;
+        synchronized (indexedURLsLock){
+            if(!tryAddUrlToIndexed(uIt.url)) return false;
         }
         //System.out.println("11111111111111111111111111111111111111111111111");
         synchronized(URLList){
@@ -50,7 +84,9 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
             //System.out.println("22222222222222222222222222222222222222222222222");
             if(URLList.contains(uIt)) return false;
 
-            indexedURLs.add(uIt);
+            synchronized (indexedURLsLock){
+                tryAddUrlToIndexed(uIt.url);
+            }
             URLList.add(uIt);
             URLList.notify();
         }
