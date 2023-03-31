@@ -160,7 +160,11 @@ public class BarrelDatabase {
 
             query = "INSERT INTO page(url, title, citation, sender, seqnumber) " +
                     "VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT (url) DO NOTHING;";
+                    "ON CONFLICT (url) DO UPDATE " +
+                    "SET title = ?, " +
+                    "   citation = ?, " +
+                    "   sender = ?, " +
+                    "   seqNumber = ?;";
 
             stm = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             stm.setString(1, p.url.substring(0, Math.min(p.url.length(), VARCHAR_SIZE-1)));
@@ -168,6 +172,10 @@ public class BarrelDatabase {
             stm.setString(3, p.citation.substring(0, Math.min(p.citation.length(), VARCHAR_SIZE-1)));
             stm.setInt(4, sender);
             stm.setInt(5, seqNumber);
+            stm.setString(6, p.title.substring(0, Math.min(p.title.length(), VARCHAR_SIZE-1)));
+            stm.setString(7, p.citation.substring(0, Math.min(p.citation.length(), VARCHAR_SIZE-1)));
+            stm.setInt(8, sender);
+            stm.setInt(9, seqNumber);
             int insertedRows = stm.executeUpdate();
             System.out.println("Inserted rows:" + insertedRows + " url " + p.url.substring(0, Math.min(p.url.length(), VARCHAR_SIZE-1)));
             if(insertedRows > 0){
@@ -185,10 +193,7 @@ public class BarrelDatabase {
                         if(i != 0) sb.append(", ");
                         sb.append("(?, ").append(insertId).append(")");
                     }
-                    sb.append(";");
-                    /*sb.append(" ON CONFLICT (term, pageid) DO UPDATE " +
-                    "SET term = excluded.term, " +
-                    "pageid = excluded.pageid;");*/
+                    sb.append(" ON CONFLICT (term, pageid) DO NOTHING;");
 
                     query = sb.toString();
                     stm = connect.prepareStatement(query);
@@ -207,10 +212,7 @@ public class BarrelDatabase {
                         if (i != 0) sb.append(", ");
                         sb.append("(").append(insertId).append(", ?)");
                     }
-                    sb.append(";");
-                    /*sb.append(" ON CONFLICT (pageid, link) DO UPDATE " +
-                    "SET pageid = excluded.pageid, " +
-                    "link = excluded.link;");*/
+                    sb.append(" ON CONFLICT (pageid, link) DO NOTHING;");
                     query = sb.toString();
                     stm = connect.prepareStatement(query);
                     for (int i = 0; i < p.links.size(); i++) {

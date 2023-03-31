@@ -8,9 +8,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class InterBarrelSynchronizerInserter implements Runnable{
     public int id;
@@ -97,6 +95,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                                     }
                                 }
                             }
+                            Barrel.bmw.writeLastSeqNumberFile();
                         }
                         break;
                     }
@@ -114,7 +113,12 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                 }
 
                 boolean errorOcurred = false;
-                for(var entry: BarrelMulticastWorker.lastSeqNumber.entrySet()){
+
+                Set<Map.Entry<Integer, Integer>> entries;
+                synchronized (BarrelMulticastWorker.lastSeqNumber){
+                     entries = BarrelMulticastWorker.lastSeqNumber.entrySet();
+                }
+                for(var entry: entries){
                     int downloaderId = entry.getKey(), currentSeqNumber = entry.getValue();
 
                     byte[] packetBuffer =
@@ -137,7 +141,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                         else{
                             System.out.println("No synchronization packets received, assuming this barrel " +
                                     "has the correct packets from downloader " + downloaderId);
-                            break;
+                            continue;
                         }
                     }
 
@@ -207,6 +211,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                             //increment seqNumber
                             synchronized (BarrelMulticastWorker.lastSeqNumber){
                                 BarrelMulticastWorker.lastSeqNumber.put(downloaderId, seqNumber);
+                                Barrel.bmw.writeLastSeqNumberFile();
                             }
                             System.out.println("Recovered " + downloaderId + " " + seqNumber);
                             byte[] messageBytes = messageBB.array();

@@ -55,10 +55,10 @@ public class BarrelMulticastRecovery implements Runnable{
         //check if there are any seqNumbers ahead of the counter (lastSeqNumber)
         synchronized (BarrelMulticastWorker.lastSeqNumber){
             for(var downloaderSet: BarrelMulticastWorker.lastSeqNumber.entrySet()){
-                int downloader = downloaderSet.getKey(), lastSeqNumber = downloaderSet.getValue();
+                int downloader = downloaderSet.getKey(), seqNumber = downloaderSet.getValue();
                 synchronized (BarrelMulticastWorker.downloadersByteBuffers){
                     for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
-                        if(seqNumberSet.getKey() > lastSeqNumber){
+                        if(seqNumberSet.getKey() > seqNumber){
                             long timeTemp = TimedByteBuffer.TIMEOUT_MS - seqNumberSet.getValue().timeSinceCreation();
                             if(minWaitTime == -1 || timeTemp < minWaitTime){
                                 //System.out.println("SOOOP " + downloader + " " + seqNumberSet.getKey() + " "
@@ -115,20 +115,20 @@ public class BarrelMulticastRecovery implements Runnable{
                 //get seqNumbers ahead of the counter (lastSeqNumber)
                 synchronized (BarrelMulticastWorker.lastSeqNumber){
                     for(var downloaderSet: BarrelMulticastWorker.lastSeqNumber.entrySet()){
-                        int downloader = downloaderSet.getKey(), lastSeqNumber = downloaderSet.getValue(),
+                        int downloader = downloaderSet.getKey(), seqNumber = downloaderSet.getValue(),
                             newLastSeqNumber = 0;
                         synchronized (BarrelMulticastWorker.downloadersByteBuffers){
                             //System.out.println("BMR " + downloader);
                             for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
                                 int currentSeqNumber = seqNumberSet.getKey();
-                                //if(downloader == 2) System.out.println(currentSeqNumber + " " + lastSeqNumber);
-                                if(currentSeqNumber > lastSeqNumber){
+                                //if(downloader == 2) System.out.println(currentSeqNumber + " " + seqNumber);
+                                if(currentSeqNumber > seqNumber){
                                     TimedByteBuffer tbb = seqNumberSet.getValue();
                                     if(tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS){
                                         if(newLastSeqNumber == 0 || currentSeqNumber < newLastSeqNumber){
                                             newLastSeqNumber = currentSeqNumber;
                                         }
-                                        for(int i = lastSeqNumber + 1; i < currentSeqNumber; i++){
+                                        for(int i = seqNumber + 1; i < currentSeqNumber; i++){
                                             List<Integer> currentPossibleNack = Arrays.asList(downloader, i);
                                             if(!nacks.contains(currentPossibleNack)) nacks.add(currentPossibleNack);
                                         }
@@ -140,8 +140,10 @@ public class BarrelMulticastRecovery implements Runnable{
                         }
                         //System.out.println("PUT " + downloader + " " + newLastSeqNumber
                         //        + " " + BarrelMulticastWorker.lastSeqNumber.get(downloader));
-                        if(newLastSeqNumber != 0)
+                        if(newLastSeqNumber != 0) {
                             BarrelMulticastWorker.lastSeqNumber.put(downloader, newLastSeqNumber);
+                            Barrel.bmw.writeLastSeqNumberFile();
+                        }
                     }
                 }
 

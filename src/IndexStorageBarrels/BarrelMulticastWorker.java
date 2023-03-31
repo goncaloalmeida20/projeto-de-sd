@@ -4,6 +4,7 @@ import classes.MulticastPacket;
 import classes.Page;
 import classes.TimedByteBuffer;
 
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -22,13 +23,48 @@ public class BarrelMulticastWorker implements Runnable{
     public int id;
     public BarrelMulticastWorker(int id){
         this.id = id;
+        readLastSeqNumberFile();
         t = new Thread(this);
         t.start();
     }
 
+    public void writeLastSeqNumberFile(){
+        try{
+            File fLastSeqNumber = new File("lastSeqNumber_barrel"+id+".dat");
+            FileOutputStream fos = new FileOutputStream(fLastSeqNumber);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(lastSeqNumber);
+            oos.close();
+        } catch(Exception e){
+            System.out.println("BarrelMulticastWorker" + id + ": Error writing lastSeqNumber file, not saving" +
+                    "the counter ");
+        }
+    }
+
+    public void readLastSeqNumberFile(){
+        try{
+            File fLastSeqNumber = new File("lastSeqNumber_barrel"+id+".dat");
+            if(fLastSeqNumber.exists()){
+                FileInputStream fis = new FileInputStream(fLastSeqNumber);
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                Map<Integer, Integer> fileHashMap = (Map<Integer, Integer>) ois.readObject();
+                synchronized (lastSeqNumber){
+                    lastSeqNumber.putAll(fileHashMap);
+                    System.out.println("Successfully recovered the lastSeqNumber map");
+                    for(var entry: lastSeqNumber.entrySet()){
+                        System.out.println(entry.getKey() + ": " + entry.getValue());
+                    }
+                }
+                ois.close();
+            }
+        } catch(Exception e){
+            System.out.println("BarrelMulticastWorker" + id + ": Error reading lastSeqNumber file, starting" +
+                    "counter from 0");
+        }
+    }
+
     public void run(){
         System.out.println("BarrelMulticastWorker " + id);
-
         try {
             while (true) {
                 byte[] packet;
@@ -76,6 +112,7 @@ public class BarrelMulticastWorker implements Runnable{
                     }
                     else if(seqNumber != 1){
                         lastSeqNumber.put(downloaderId, 0);
+                        writeLastSeqNumberFile();
                         aheadSeqNumber = true;
                     }
                 }
@@ -123,7 +160,10 @@ public class BarrelMulticastWorker implements Runnable{
                 //System.out.println("HELLO3 " + aheadSeqNumber);
                 //if the seqNumber order is right, update the last right seqNumber
                 synchronized (lastSeqNumber){
-                    if(!aheadSeqNumber) lastSeqNumber.put(downloaderId, seqNumber);
+                    if(!aheadSeqNumber){
+                        lastSeqNumber.put(downloaderId, seqNumber);
+                        writeLastSeqNumberFile();
+                    }
                 }
 
                 //System.out.println("AAAA " + BarrelMulticastWorker.lastSeqNumber.get(downloaderId));
