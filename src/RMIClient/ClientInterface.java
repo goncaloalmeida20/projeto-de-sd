@@ -213,7 +213,7 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void searchRecover() throws NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.search(cAI.termCount, cAI.terms, cAI.n_page);
         serverActive = true;
-        if (pages == null) System.out.println("There are no pages that corresponds to the request" +
+        if (pages == null) System.out.println("There are no pages that corresponds to the request " +
                 "or there weren't barrels to respond to this request in an interval of 10 seconds\n");
         else {
             if (pages.size() == 0) {
