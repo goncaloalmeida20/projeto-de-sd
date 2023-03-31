@@ -21,7 +21,6 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
                 String line;
                 while((line = br.readLine()) != null){
                     if(line.equals(url)){
-                        System.out.println("HELLO");
                         return false;
                     }
                 }

@@ -11,9 +11,6 @@ public class URLQueueStarter {
             URLQueue uq = new URLQueue();
             Registry r = LocateRegistry.createRegistry(URLQUEUE_PORT);
             r.rebind(URLQUEUE_NAME, uq);
-
-            System.out.println(uq.addURL("https://www.google.com"));
-            System.out.println(uq.addURL("https://www.google.com"));
         }
         catch(Exception e){
             System.out.println("URL Queue exception: " + e.getMessage());
