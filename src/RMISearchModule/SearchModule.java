@@ -30,6 +30,22 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
      */
     public SearchModule() throws IOException {
         super();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                // Code to be executed when the program is shutting down
+                File file = new File("src/databases/serverInfo.ser");
+                ObjectOutputStream oos;
+                try {
+                    oos = new ObjectOutputStream(new FileOutputStream(file));
+                    oos.writeObject(SearchModule.sI);
+                    oos.close();
+                } catch (IOException e) {
+                    System.out.println("Server save before shutting down: " + e.getMessage());
+                }
+            }
+        });
+
         tasks = new LinkedHashMap<>();
         result_pages = new HashMap<>();
         resultsTopTen = new HashMap<>();

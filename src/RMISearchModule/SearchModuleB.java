@@ -3,8 +3,10 @@ package RMISearchModule;
 import IndexStorageBarrels.BarrelModule_S_I;
 import classes.Page;
 
+import java.net.SocketException;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -28,8 +30,9 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
 
     /**
      * Creates a new instance of the Search Module Barrel.
-     * @param t A map of search tasks, where each task is associated with a set of search parameters and a client ID.
-     * @param p A map of search results, where each result is associated with a client ID.
+     *
+     * @param t   A map of search tasks, where each task is associated with a set of search parameters and a client ID.
+     * @param p   A map of search results, where each result is associated with a client ID.
      * @param rtt A map of search results of the top 10 searches, where each result is associated with a client ID.
      * @throws RemoteException If there is an error with the remote connection.
      */
@@ -88,6 +91,15 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
         }
     }
 
+    private int getBarrelsListSize() {
+        synchronized (SearchModule.sI.barrels) {
+            if (SearchModule.sI.barrels.isEmpty()) {
+                return 0;
+            }
+            return SearchModule.sI.barrels.size();
+        }
+    }
+
     // =======================================================
 
     /**
@@ -95,7 +107,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
      */
     @Override
     public void run() {
-        BarrelModule_S_I barrelM;
+        BarrelModule_S_I barrelM = null;
         int randomIndex = 0;
         try {
             searchModuleB = new SearchModuleB(tasks, result_pages, resultsTopTen);
@@ -131,51 +143,110 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                             }
                         }
                         for (HashMap<SearchModuleC, Integer> key : tasks.keySet()) {
-                            synchronized (SearchModule.sI.barrels) {
-                                randomIndex = (int) (Math.random() * SearchModule.sI.barrels.size());
-                            }
-                            barrelM = getRandomBarrelModule(randomIndex);
-                            if (barrelM != null) {
-                                // System.out.println("Type error");
-                                int type = key.values().iterator().next();
-                                // System.out.println("Type: " + type);
-                                synchronized (tasks) {
-                                    task = tasks.get(key);
+                            long startTime = System.currentTimeMillis();
+                            long elapsedTime = 0;
+                            boolean barrelFound = false;
+                            while (elapsedTime < 5000 && !barrelFound) {
+                                synchronized (SearchModule.sI.barrels) {
+                                    if (!SearchModule.sI.barrels.isEmpty()) {
+                                        randomIndex = (int) (Math.random() * SearchModule.sI.barrels.size());
+                                        barrelM = getRandomBarrelModule(randomIndex);
+                                        if (barrelM != null) {
+                                            barrelFound = true;
+                                        }
+                                    }
                                 }
+                                elapsedTime = System.currentTimeMillis() - startTime;
+                            }
+                            int type = key.values().iterator().next();
+                            synchronized (tasks) {
+                                task = tasks.get(key);
+                            }
+                            if (barrelFound) {
+                                // System.out.println("Type error");
+                                // System.out.println("Type: " + type);
                                 // System.out.println("Task: " + task + " Type: " + type);
                                 if (type == 1) {
-                                    ArrayList<Page> res = barrelM.search((String[]) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
-                                    synchronized (result_pages) {
-                                        for (SearchModuleC client : key.keySet()) {
-                                            result_pages.put(client, res);
-                                            result_pages.notifyAll();
+                                    try {
+                                        ArrayList<Page> res = barrelM.search((String[]) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
+                                        synchronized (result_pages) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                result_pages.put(client, res);
+                                                result_pages.notifyAll();
+                                            }
                                         }
+                                    } catch (RemoteException e) {
+                                        synchronized (result_pages) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                result_pages.put(client, null);
+                                                result_pages.notifyAll();
+                                            }
+                                        }
+                                        throw new SocketException();
                                     }
                                 } else if (type == 2) {
-                                    ArrayList<Page> res = barrelM.search_pages((String) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
+                                    try {
+                                        ArrayList<Page> res = barrelM.search_pages((String) task.keySet().toArray()[0], (int) task.values().toArray()[0]);
+                                        synchronized (result_pages) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                result_pages.put(client, res);
+                                                result_pages.notifyAll();
+                                            }
+                                        }
+                                    } catch (RemoteException e) {
+                                        synchronized (result_pages) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                result_pages.put(client, null);
+                                                result_pages.notifyAll();
+                                            }
+                                        }
+                                        throw new SocketException();
+                                    }
+                                } else if (type == 3) {
+                                    try {
+                                        List<HashMap<Integer, String>> res = barrelM.getTopTenSearches();
+                                        synchronized (resultsTopTen) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                resultsTopTen.put(client, res);
+                                                resultsTopTen.notifyAll();
+                                            }
+                                        }
+                                    } catch (RemoteException e) {
+                                        synchronized (resultsTopTen) {
+                                            for (SearchModuleC client : key.keySet()) {
+                                                resultsTopTen.put(client, null);
+                                                resultsTopTen.notifyAll();
+                                            }
+                                        }
+                                        throw new SocketException();
+                                    }
+                                }
+                                tasks.remove(key);
+                            } else {
+                                if (type == 1 || type == 2) {
                                     synchronized (result_pages) {
                                         for (SearchModuleC client : key.keySet()) {
-                                            result_pages.put(client, res);
+                                            result_pages.put(client, null);
                                             result_pages.notifyAll();
                                         }
                                     }
-                                } else if(type == 3){
-                                    List<HashMap<Integer, String>> res = barrelM.getTopTenSearches();
+                                } else if (type == 3) {
                                     synchronized (resultsTopTen) {
                                         for (SearchModuleC client : key.keySet()) {
-                                            resultsTopTen.put(client, res);
+                                            resultsTopTen.put(client, null);
                                             resultsTopTen.notifyAll();
                                         }
                                     }
                                 }
-                                tasks.remove(key);
                             }
                         }
                     }
                 }
-            } catch (ConnectException e) {
+            } catch (SocketException ex) {
                 disconnect(randomIndex);
-            } catch (RemoteException | SQLException e) {
+                System.out.println("The barrel that was responding to the client has been disconnected in the middle of the search.");
+                //System.out.println("Trying with another Barrel");
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }

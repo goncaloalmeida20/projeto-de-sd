@@ -26,7 +26,6 @@ public class ServerInfo implements Serializable {
     }
 
     public ClientInfo clientInfoById(int id){
-        System.out.println(id + " " + cIList.size());
         return cIList.get(id - 1);
     }
 }
