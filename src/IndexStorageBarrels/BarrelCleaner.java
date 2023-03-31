@@ -30,7 +30,8 @@ public class BarrelCleaner implements Runnable {
                     for (var downloaderEntry: setCopy){
                         var downloaderSetCopy = new ArrayList<>(downloaderEntry.getValue().entrySet());
                         for(var seqNumberEntry: downloaderSetCopy){
-                            if(seqNumberEntry.getValue().entrySet().iterator().next().getValue().timeSinceCreation()
+                            if(seqNumberEntry.getValue().entrySet().iterator().hasNext() &&
+                            seqNumberEntry.getValue().entrySet().iterator().next().getValue().timeSinceCreation()
                                     > DELETE_BY_TIMEOUT_MS){
                                 System.out.println("Cleaning aheadBuffer " + seqNumberEntry.getKey());
                                 BarrelMulticastWorker.aheadBuffer.remove(seqNumberEntry.getKey());
