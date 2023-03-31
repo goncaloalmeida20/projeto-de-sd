@@ -19,7 +19,7 @@ public class AdminDownloader extends UnicastRemoteObject implements AdminDownloa
 
     /**
      * Constructor for AdminDownloader class that initializes its id
-     * @param id The id of the AdminDownloader object
+     * @param id The id of the AdminDownloader object (basically the id of the downloader itself)
      * @throws RemoteException If a RemoteException occurs
      */
     AdminDownloader(int id) throws RemoteException {

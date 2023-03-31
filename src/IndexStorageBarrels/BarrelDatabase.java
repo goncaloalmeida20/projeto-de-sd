@@ -3,9 +3,7 @@ package IndexStorageBarrels;
 import classes.Page;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class BarrelDatabase {
@@ -24,7 +22,7 @@ public class BarrelDatabase {
     }
 
     /**
-     * Starts the local Barrel Database, creating it if it doesn't exists yet
+     * Starts the local Barrel Database, creating it if it doesn't exist yet
      */
     private void startDatabase(){
         Connection connect = null;
@@ -248,7 +246,7 @@ public class BarrelDatabase {
     /**
      * Retrieves all pages processed by a downloader with sequence number higher than seqNumber
      * @param downloaderId Id of the downloader that processed the pages
-     * @param seqNumber sequence number to start retrieving pages
+     * @param seqNumber sequence number when it is being sent
      * @return a map with the pages retrieved and the sequence number of the message in which they arrived
      */
     public Map<Page, Integer> sendDownloaderPages(int downloaderId, int seqNumber){
@@ -329,7 +327,6 @@ public class BarrelDatabase {
      * @param type the type of the search
      * @param searchstring the search string
      * @throws RuntimeException if there's a problem with the JDBC driver
-     * @throws SQLException if there's a problem with the SQL query
      */
     public void addSearch(int type, String searchstring) {
         Connection conn = null;

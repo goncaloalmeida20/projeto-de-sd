@@ -130,7 +130,7 @@ public class SearchModuleB extends UnicastRemoteObject implements SearchModuleB_
                  * Within the task execution loop, it is randomly selected a barrel module from a list,
                 and then executes the task using the randomly selected barrel.
                  * After the task is executed, the result is stored in another HashMap object
-                called "result_pages", which is also synchronized.
+                called "result_pages" or "resultTopTen", which is also synchronized.
                  * Finally, the task is removedfrom the "tasks" HashMap.
                 **/
                 while (true) {
