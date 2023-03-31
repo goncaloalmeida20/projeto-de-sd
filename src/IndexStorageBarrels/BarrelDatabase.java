@@ -177,44 +177,48 @@ public class BarrelDatabase {
                     insertId = rs.getLong(1);
                 if(insertId == -1) throw new RuntimeException("Error on returned generated keys");
 
-                sb = new StringBuilder();
-                sb.append("INSERT INTO invertedindex(term, pageid) " +
-                        "VALUES ");
-                for(int i = 0; i < p.words.size(); i++){
-                    if(i != 0) sb.append(", ");
-                    sb.append("(?, ").append(insertId).append(")");
-                }
-                sb.append(";");
-                /*sb.append(" ON CONFLICT (term, pageid) DO UPDATE " +
+                if(p.words.size() > 0){
+                    sb = new StringBuilder();
+                    sb.append("INSERT INTO invertedindex(term, pageid) " +
+                            "VALUES ");
+                    for(int i = 0; i < p.words.size(); i++){
+                        if(i != 0) sb.append(", ");
+                        sb.append("(?, ").append(insertId).append(")");
+                    }
+                    sb.append(";");
+                    /*sb.append(" ON CONFLICT (term, pageid) DO UPDATE " +
                     "SET term = excluded.term, " +
                     "pageid = excluded.pageid;");*/
 
-                query = sb.toString();
-                stm = connect.prepareStatement(query);
-                for(int i = 0; i < p.words.size(); i++){
-                    stm.setString(i + 1, p.words.get(i).substring(0, Math.min(p.words.get(i).length(),
-                            VARCHAR_SIZE-1)));
+                    query = sb.toString();
+                    stm = connect.prepareStatement(query);
+                    for(int i = 0; i < p.words.size(); i++){
+                        stm.setString(i + 1, p.words.get(i).substring(0, Math.min(p.words.get(i).length(),
+                                VARCHAR_SIZE-1)));
+                    }
+                    stm.executeUpdate();
                 }
-                stm.executeUpdate();
 
-                sb = new StringBuilder();
-                sb.append("INSERT INTO links(pageid, link) " +
-                        "VALUES ");
-                for(int i = 0; i < p.links.size(); i++){
-                    if(i != 0) sb.append(", ");
-                    sb.append("(").append(insertId).append(", ?)");
-                }
-                sb.append(";");
-                /*sb.append(" ON CONFLICT (pageid, link) DO UPDATE " +
+                if(p.links.size() > 0) {
+                    sb = new StringBuilder();
+                    sb.append("INSERT INTO links(pageid, link) " +
+                            "VALUES ");
+                    for (int i = 0; i < p.links.size(); i++) {
+                        if (i != 0) sb.append(", ");
+                        sb.append("(").append(insertId).append(", ?)");
+                    }
+                    sb.append(";");
+                    /*sb.append(" ON CONFLICT (pageid, link) DO UPDATE " +
                     "SET pageid = excluded.pageid, " +
                     "link = excluded.link;");*/
-                query = sb.toString();
-                stm = connect.prepareStatement(query);
-                for(int i = 0; i < p.links.size(); i++){
-                    stm.setString(i + 1, p.links.get(i).substring(0, Math.min(p.links.get(i).length(),
-                            VARCHAR_SIZE-1)));
+                    query = sb.toString();
+                    stm = connect.prepareStatement(query);
+                    for (int i = 0; i < p.links.size(); i++) {
+                        stm.setString(i + 1, p.links.get(i).substring(0, Math.min(p.links.get(i).length(),
+                                VARCHAR_SIZE - 1)));
+                    }
+                    stm.executeUpdate();
                 }
-                stm.executeUpdate();
 
                 System.out.println("Inserted page " + p.url + " with id " + insertId);
             }

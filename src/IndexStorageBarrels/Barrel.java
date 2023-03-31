@@ -27,6 +27,8 @@ public class Barrel{
     public static InterBarrelSynchronizerHelper ibsh;
     public static InterBarrelSynchronizerInserter ibsi;
 
+    public static BarrelCleaner bc;
+
     public static BarrelDatabase bdb;
 
     /**
@@ -66,6 +68,7 @@ public class Barrel{
         ibsr = new InterBarrelSynchronizerReceiver(id);
         ibsh = new InterBarrelSynchronizerHelper(id);
         ibsi = new InterBarrelSynchronizerInserter(id);
+        bc = new BarrelCleaner(id);
         System.out.println("Barrel is ready");
     }
 }

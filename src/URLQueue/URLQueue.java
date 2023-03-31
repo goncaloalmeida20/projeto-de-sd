@@ -26,12 +26,15 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         return true;
     }
 
-    public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException{
+    public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException, InterruptedException {
         URLItem uIt = new URLItem(newURL, recursion_count);
         synchronized(indexedURLs){
             if(indexedURLs.contains(uIt)) return false;
         }
+        //System.out.println("11111111111111111111111111111111111111111111111");
         synchronized(URLList){
+            //Thread.sleep(5000);
+            //System.out.println("22222222222222222222222222222222222222222222222");
             if(URLList.contains(uIt)) return false;
 
             indexedURLs.add(uIt);
