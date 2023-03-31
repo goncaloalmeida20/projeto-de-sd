@@ -213,7 +213,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
     private static void searchRecover() throws NotBoundException, RemoteException, InterruptedException {
         ArrayList<Page> pages = searchM.search(cAI.termCount, cAI.terms, cAI.n_page);
         serverActive = true;
-        if (pages == null) System.out.println("There are no pages that corresponds to the request\n");
+        if (pages == null) System.out.println("There are no pages that corresponds to the request" +
+                "or there weren't barrels to respond to this request in an interval of 10 seconds\n");
         else {
             if (pages.size() == 0) {
                 System.out.println("There are no pages that corresponds to the request\n");
@@ -270,7 +271,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         ArrayList<Page> pages = searchM.searchPages(cAI.url.toLowerCase(), cAI.n_page, id, logged);
         serverActive = true;
         if (pages == null) {
-            System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request!");
+            System.out.println("Client needs to be logged on to perform this operation or there are no pages that corresponds to the request " +
+                    "or there weren't barrels to respond to this request in an interval of 10 seconds\n");
         } else {
             if (pages.size() == 0) {
                 System.out.println("There are no pages that corresponds to the request\n");
@@ -307,23 +309,26 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
             }
         } else System.out.println("Couldn't get any information about the active downloaders and barrels");
         System.out.println("\n          ---------------Top Ten Searches---------------          ");
-        if(topTenSearches.isEmpty()) {
-            System.out.println("                   No Searches have been done yet                   ");
-        }
-        else{
-            //System.out.println("topTenSearches size: " + topTenSearches.size());
-            final int[] counter = {1};
+        if(topTenSearches == null){
+            System.out.println("There weren't barrels to respond to this request in an interval of 10 seconds\n");
+        }else {
+            if (topTenSearches.isEmpty()) {
+                System.out.println("                   No Searches have been done yet                   ");
+            } else {
+                //System.out.println("topTenSearches size: " + topTenSearches.size());
+                final int[] counter = {1};
 
-            for (HashMap<Integer, String> tTS: topTenSearches) {
-                tTS.forEach((key, value) -> {
-                    System.out.print("\t\t" + counter[0] + ". ");
-                    if(key == 1){
-                        System.out.println("Term: " + value);
-                    } else if(key == 2){
-                        System.out.println("Url: " + value);
-                    }
-                    counter[0]++;
-                });
+                for (HashMap<Integer, String> tTS : topTenSearches) {
+                    tTS.forEach((key, value) -> {
+                        System.out.print("\t\t" + counter[0] + ". ");
+                        if (key == 1) {
+                            System.out.println("Term: " + value);
+                        } else if (key == 2) {
+                            System.out.println("Url: " + value);
+                        }
+                        counter[0]++;
+                    });
+                }
             }
         }
         System.out.println("\n------------------------------------------------------------------\n");
