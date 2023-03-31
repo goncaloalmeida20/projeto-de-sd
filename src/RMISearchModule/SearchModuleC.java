@@ -165,8 +165,9 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      * Searches for pages containing specified terms with pagination support.
      * @param termCount the number of terms being searched for
      * @param terms an array of terms to search for
-     * @param n_page the page number of the search results to retrieve
-     * @return an ArrayList of Page objects containing the search results
+     * @param n_page Number of the group of ten pages that should be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
+     * @return an ArrayList of Page objects containing the search results,
+     * the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
      * @throws RemoteException if a communication-related exception occurs
      * @throws InterruptedException if the current thread is interrupted while waiting for the search result
      */
@@ -187,10 +188,11 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     /**
      * Searches for pages that have a link to a specific URL with pagination support.
      * @param url the URL to search for pages on
-     * @param n_page the page number of the search results to retrieve
+     * @param n_page Number of the group of ten pages that should be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
      * @param id the ID of the client performing the search
      * @param logged a boolean indicating whether the client is logged in
-     * @return an ArrayList of Page objects containing the search results
+     * @return an ArrayList of Page objects containing the search results,
+     * the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
      * @throws RemoteException if a communication-related exception occurs
      * @throws InterruptedException if the current thread is interrupted while waiting for the search result
      */
