@@ -310,7 +310,8 @@ public class ClientInterface extends UnicastRemoteObject implements ClientInterf
         } else System.out.println("Couldn't get any information about the active downloaders and barrels");
         System.out.println("\n          ---------------Top Ten Searches---------------          ");
         if(topTenSearches == null){
-            System.out.println("There weren't barrels to respond to this request in an interval of 10 seconds\n");
+            System.out.println("There weren't barrels to respond to this request in an interval of 5 seconds\n" +
+                    "or a barrel or a downloader were shutdown during the search\n");
         }else {
             if (topTenSearches.isEmpty()) {
                 System.out.println("                   No Searches have been done yet                   ");
