@@ -20,6 +20,7 @@ public class Downloader implements Runnable{
     public void run(){
         System.out.println("Downloader " + id + " started!");
         try{
+            //get the urlqueue remote object
             URLQueue_I uq = (URLQueue_I) LocateRegistry
                     .getRegistry(URLQueueStarter.URLQUEUE_PORT)
                     .lookup(URLQueueStarter.URLQUEUE_NAME);

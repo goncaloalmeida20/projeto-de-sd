@@ -53,8 +53,10 @@ public class InterBarrelSynchronizerReceiver implements Runnable {
                 System.out.println("SYNC Received " + barrelId + " " + senderId + " " + msgType + " " + msgsLeft
                 + " " + ack);
 
+                //check if the message target isn't this buffer
                 if(barrelId > 0 && barrelId != id || senderId == id) continue;
 
+                //redirect the packet to the helper or inserter depending on the header
                 if(barrelId == -1 || msgType == -1 || msgType == -3 || msgType == -4 || ack == -1){
                     //Send to helper
                     synchronized (InterBarrelSynchronizerHelper.helperQueue){

@@ -14,6 +14,12 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         indexedURLs = Collections.synchronizedList(new ArrayList<URLItem>());
     }
 
+    /**
+     * Add URL to the queue
+     * @param newURL URL to add to the list
+     * @return true if the URL was inserted; false otherwise
+     * @throws RemoteException
+     */
     public boolean addURL(String newURL) throws RemoteException{
         URLItem uIt = new URLItem(newURL);
         synchronized(URLList){
@@ -26,7 +32,14 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         return true;
     }
 
-    public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException, InterruptedException {
+    /**
+     * Add URL to the queue with recursion count
+     * @param newURL URL to add to the list
+     * @param recursion_count current recursion count of the insertion
+     * @return true if the URL was inserted; false otherwise
+     * @throws RemoteException
+     */
+    public boolean addURLRecursively(String newURL, int recursion_count) throws RemoteException {
         URLItem uIt = new URLItem(newURL, recursion_count);
         synchronized(indexedURLs){
             if(indexedURLs.contains(uIt)) return false;
@@ -44,6 +57,11 @@ public class URLQueue extends UnicastRemoteObject implements URLQueue_I{
         return true;
     }
 
+    /**
+     * waits and retrieves the next URL from the URLQueue
+     * @return the next URL from the URLQueue
+     * @throws RemoteException
+     */
     public URLItem nextURL() throws RemoteException{
         synchronized(URLList){
             try{

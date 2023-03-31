@@ -32,7 +32,6 @@ public class BarrelMulticastRecovery implements Runnable{
      */
     private long searchOutOfOrderPackets(){
         //check if there are buffered packets
-        //System.out.println("BMR SOOOP");
         long minWaitTime = -1;
         synchronized (BarrelMulticastWorker.aheadBuffer){
             List<List<Integer>> removeFromAheadBuffer = new ArrayList<>();
@@ -61,10 +60,6 @@ public class BarrelMulticastRecovery implements Runnable{
                         if(seqNumberSet.getKey() > seqNumber){
                             long timeTemp = TimedByteBuffer.TIMEOUT_MS - seqNumberSet.getValue().timeSinceCreation();
                             if(minWaitTime == -1 || timeTemp < minWaitTime){
-                                //System.out.println("SOOOP " + downloader + " " + seqNumberSet.getKey() + " "
-                                //        + timeTemp + " " + seqNumberSet.getValue().timeSinceCreation()
-                                //+ " " + System.currentTimeMillis());
-
                                 if(timeTemp < 0) minWaitTime = 0;
                                 else minWaitTime = timeTemp;
                             }
@@ -76,6 +71,12 @@ public class BarrelMulticastRecovery implements Runnable{
         return minWaitTime;
     }
 
+    /**
+     * Check if there are packets in the nackAcksQueue with the required parameters
+     * @param nack0 first desired parameter of the packet
+     * @param nack1 second desired parameter of the packet
+     * @return
+     */
     public int containsNack(int nack0, int nack1){
         for(int i = 0; i < nackAcksQueue.size(); i++){
             ByteBuffer bb = ByteBuffer.wrap(nackAcksQueue.get(i));
@@ -92,24 +93,26 @@ public class BarrelMulticastRecovery implements Runnable{
         System.out.println("BarrelMulticastRecovery " + id);
         try (MulticastSocket socket = new MulticastSocket()) {
             long minWaitTime = 0; //time to wait for next out of order packet timeout
+
+            //wait while there are no out of order packets
             while(true){
-                //System.out.println("BMR1");
                 synchronized (BarrelMulticastWorker.aheadBuffer){
-                    //System.out.println("BMR2");
                     minWaitTime = searchOutOfOrderPackets();
                     while(minWaitTime < 0){
                         BarrelMulticastWorker.aheadBuffer.wait();
                         minWaitTime = searchOutOfOrderPackets();
-                        //System.out.println("BMR " + aheadError);
                     }
                 }
                 //Wait for the next out of order packet timeout
                 Thread.sleep(minWaitTime);
 
+                //Don't start recovery if there is an inter barrel synchronization going on
                 synchronized (InterBarrelSynchronizerInserter.syncLock){
                     while(InterBarrelSynchronizerInserter.needSync == 1)
                         InterBarrelSynchronizerInserter.syncLock.wait();
                 }
+
+                //list of nacks to be sent to the downloaders
                 List<List<Integer>> nacks = new ArrayList<>();
 
                 //get seqNumbers ahead of the counter (lastSeqNumber)
@@ -118,10 +121,8 @@ public class BarrelMulticastRecovery implements Runnable{
                         int downloader = downloaderSet.getKey(), seqNumber = downloaderSet.getValue(),
                             newLastSeqNumber = 0;
                         synchronized (BarrelMulticastWorker.downloadersByteBuffers){
-                            //System.out.println("BMR " + downloader);
                             for(var seqNumberSet: BarrelMulticastWorker.downloadersByteBuffers.get(downloader).entrySet()){
                                 int currentSeqNumber = seqNumberSet.getKey();
-                                //if(downloader == 2) System.out.println(currentSeqNumber + " " + seqNumber);
                                 if(currentSeqNumber > seqNumber){
                                     TimedByteBuffer tbb = seqNumberSet.getValue();
                                     if(tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS){
@@ -132,15 +133,12 @@ public class BarrelMulticastRecovery implements Runnable{
                                             List<Integer> currentPossibleNack = Arrays.asList(downloader, i);
                                             if(!nacks.contains(currentPossibleNack)) nacks.add(currentPossibleNack);
                                         }
-                                        //System.out.println("PUT " + downloader + " " + newLastSeqNumber);
-
                                     }
                                 }
                             }
                         }
-                        //System.out.println("PUT " + downloader + " " + newLastSeqNumber
-                        //        + " " + BarrelMulticastWorker.lastSeqNumber.get(downloader));
                         if(newLastSeqNumber != 0) {
+                            //update the counters so that the same ack isn't send twice
                             BarrelMulticastWorker.lastSeqNumber.put(downloader, newLastSeqNumber);
                             Barrel.bmw.writeLastSeqNumberFile();
                         }
@@ -149,28 +147,19 @@ public class BarrelMulticastRecovery implements Runnable{
 
                 //get buffered packets
                 synchronized (BarrelMulticastWorker.aheadBuffer){
-                    //System.out.println("BMR HELLO0");
                     List<List<Integer>> removeFromAheadBuffer = new ArrayList<>();
                     for(var downloaderSet: BarrelMulticastWorker.aheadBuffer.entrySet()){
                         int downloader = downloaderSet.getKey();
-                        //System.out.println("BMR HELLO1");
                         for(var seqNumberSet: BarrelMulticastWorker.aheadBuffer.get(downloader).entrySet()){
                             int seqNumber = seqNumberSet.getKey();
-                            //System.out.println("BMR HELLO2");
                             for(var msgsLeftSet: BarrelMulticastWorker.aheadBuffer.get(downloader).get(seqNumber)
                                     .entrySet()){
                                 int msgsLeft = msgsLeftSet.getKey();
-                                //System.out.println("BMR HELLO3");
                                 TimedByteBuffer tbb = msgsLeftSet.getValue();
                                 synchronized (BarrelMulticastWorker.lastMsgsLeft){
                                     //if a there is a buffered packet in the current seqNumber of the current
                                     //downloader and it has timed out, register NACK to send to downloader
                                     List<Integer> currentPossibleNack = Arrays.asList(downloader, seqNumber);
-                                    /*for(var nack: nacks){
-                                        System.out.println("NACKTEMP " + nack[0] + " " + nack[1] + " " + msgsLeft);
-                                        System.out.println(nacks.contains(currentPossibleNack));
-                                        System.out.println(currentPossibleNack.equals(nack));
-                                    }*/
                                     if (msgsLeft < BarrelMulticastWorker.lastMsgsLeft.get(downloader).get(seqNumber)
                                         - 1 && tbb.timeSinceCreation() >= TimedByteBuffer.TIMEOUT_MS &&
                                         !nacks.contains(currentPossibleNack)) {
@@ -179,32 +168,29 @@ public class BarrelMulticastRecovery implements Runnable{
                                         nacks.add(currentPossibleNack);
                                     }
                                 }
-                                //System.out.println("BMR HELLO4");
                             }
                         }
                     }
-                    /*for(var nack: nacks){
-                        System.out.println("NACKTEMP2 " + nack.get(0) + " " + nack.get(1));
-                    }*/
+                    //add necessary nacks to be sent to the downloaders
                     for(var nack: removeFromAheadBuffer){
-                        //System.out.println("NACKS " + nack.get(0) + " " + nack.get(1));
                         BarrelMulticastWorker.aheadBuffer.get(nack.get(0)).remove(nack.get(1));
                         if(BarrelMulticastWorker.aheadBuffer.get(nack.get(0)).isEmpty())
                             BarrelMulticastWorker.aheadBuffer.remove(nack.get(0));
-                        //System.out.println("NACKS2 " + nack.get(0) + " " + nack.get(1));
                     }
                 }
+                //send nacks (each at max MAX_RETRIES times)
                 for(var nack: nacks){
                     int foundNack = 0;
                     for(int i = 0; i < MAX_RETRIES; i++){
                         System.out.println("NACK " + nack.get(0) + " " + nack.get(1));
                         byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -1, -1).toBytes();
-                        //Send the packet
+                        //Send the nack packet
                         InetAddress group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
                         DatagramPacket packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
                                 DownloaderManager.MULTICAST_PORT);
                         socket.send(packet);
 
+                        //wait at max TIMEOUT_MS ms for a response
                         long sendTime = System.currentTimeMillis();
                         synchronized (nackAcksQueue){
                             do{
@@ -224,7 +210,7 @@ public class BarrelMulticastRecovery implements Runnable{
 
 
                     byte[] nackBuffer = new MulticastPacket(id, nack.get(0), nack.get(1), -4, -1).toBytes();
-                    //Send the packet
+                    //Send the nack ack ack packet
                     InetAddress group = InetAddress.getByName(Barrel.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(nackBuffer, nackBuffer.length, group,
                             DownloaderManager.MULTICAST_PORT);
@@ -232,15 +218,15 @@ public class BarrelMulticastRecovery implements Runnable{
 
                     System.out.println("Sending NACK ACK ACK " +  id + " " + nack.get(0) + " " + nack.get(1) + " -4");
 
+                    //check if the downloader didn't have the required sequence number buffered,
                     if(foundNack == -3){
+                        //start inter barrel synchronization process
                         synchronized (InterBarrelSynchronizerInserter.syncLock){
                             InterBarrelSynchronizerInserter.needSync = 1;
                             InterBarrelSynchronizerInserter.syncLock.notify();
                         }
                     }
                 }
-
-                //System.out.println("BMR HELLO5");
             }
         } catch (Exception e) {
             System.out.println("BarrelMulticastRecovery " + id + " exception: " + e + " - " + e.getMessage());

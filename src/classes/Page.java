@@ -34,23 +34,33 @@ public class Page implements Serializable {
         this.links = new ArrayList<>(links);
     }
 
+
+    /**
+     * Adds a word to the citation, filters the word
+     * @param word word to add to the list and to the citation
+     */
     public void addWord(String word){
         if(citation == null) citation = word;
         else citation += " " + word;
-        String lowerCase = word.toLowerCase();
-        if(!words.contains(lowerCase))
+        String lowerCase = word.toLowerCase().replaceAll("[^a-zA-Z0-9]", "");
+        if(lowerCase.length() > 0 && !words.contains(lowerCase))
             words.add(lowerCase);
     }
 
+    /**
+     * Adds a link to the link list
+     * @param link link to add to the list
+     */
     public void addLink(String link){
         if(!links.contains(link))
             links.add(link);
     }
 
-    public int n_links(){
-        return links.size();
-    }
 
+    /**
+     * Generates a formatted string with this page's info to be used in the multicast communication
+     * @return the formatted string
+     */
     public String multicastString(){
         StringBuilder sb = new StringBuilder();
         sb.append("url;").append(url.replace("|", "||").replace(";","|0")).append(";");
@@ -70,6 +80,11 @@ public class Page implements Serializable {
         return sb.toString();
     }
 
+
+    /**
+     * decodes the formatted string and adds the info to this page
+     * @param multicastString the formatted string
+     */
     public void decodeMulticastString(String multicastString){
         String[] splitString = multicastString.split(";");
         String type;

@@ -24,6 +24,11 @@ public class InterBarrelSynchronizerHelper implements Runnable{
         t.start();
     }
 
+    /**
+     * Check if a packet of the required type exists in the helperQueue
+     * @param belowZero type of check to perform (related to the third header field)
+     * @return the index of the required packet; -1 in case none was found
+     */
     public int packetTypeExists(boolean belowZero){
         ByteBuffer bbTemp;
         for(int i = 0; i < helperQueue.size(); i++){
@@ -84,11 +89,15 @@ public class InterBarrelSynchronizerHelper implements Runnable{
                             localDownloaderSeqNumber = BarrelMulticastWorker.lastSeqNumber.get(downloaderId);
 
                     }
-                    if(localDownloaderSeqNumber == -1 ||
-                            Math.abs(localDownloaderSeqNumber - seqNumber) < Barrel.SEQ_NUMBER_DIFF_TOLERANCE){
+
+                    //check if this barrel contains information about the required downloader and the difference
+                    //in sequence numbers is significant
+                    if(localDownloaderSeqNumber == -1 || (localDownloaderSeqNumber > seqNumber &&
+                            localDownloaderSeqNumber - seqNumber < Barrel.SEQ_NUMBER_DIFF_TOLERANCE)){
                         continue;
                     }
 
+                    //send the packet
                     byte[] packetBuffer = new MulticastPacket(
                             senderId, id, -2, downloaderId, localDownloaderSeqNumber).toBytes();
                     InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
@@ -101,6 +110,8 @@ public class InterBarrelSynchronizerHelper implements Runnable{
                 //msgType is -3
                 Map<Page, Integer> pagesToSend = Barrel.bdb.sendDownloaderPages(downloaderId, seqNumber);
                 int currentSeqNumber = -6;
+
+                //get the pages needed by the other barrel and sort them by sequence number
                 List<Map.Entry<Page, Integer>> keys = new ArrayList<>(pagesToSend.entrySet());
                 keys.sort(Map.Entry.comparingByValue());
                 for(var entry: keys){
@@ -124,6 +135,7 @@ public class InterBarrelSynchronizerHelper implements Runnable{
 
                         packetBuffer = mp.toBytes();
 
+                        //Send each packet at max MAX_RETRIES times and wait for ACK
                         byte[] ackPacket = null;
                         for(int j = 0; ackPacket == null && j < MAX_RETRIES; j++){
                             //Send the packet
@@ -165,9 +177,12 @@ public class InterBarrelSynchronizerHelper implements Runnable{
                     }
                 }
                 if(currentSeqNumber == -6) continue;
+
+                //Send a packet signaling the end of the packet transmission
                 byte[] packetBuffer =
                         new MulticastPacket(senderId, id, currentSeqNumber, -1, -9999).toBytes();
 
+                //Wait for ACK at most TIMEOUT_MS ms, at most MAX_RETRIES times
                 byte[] ackPacket = null;
                 for(int j = 0; ackPacket == null && j < MAX_RETRIES; j++){
                     //Send the packet

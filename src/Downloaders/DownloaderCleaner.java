@@ -20,7 +20,10 @@ public class DownloaderCleaner implements Runnable {
         System.out.println("DownloaderCleaner " + id);
         while(true){
             try {
+                //Check for timeouts each CHECK_INTERVAL_MS ms
                 Thread.sleep(CHECK_INTERVAL_MS);
+
+                //check for pageBuffer timeouts
                 synchronized (DownloaderManager.pageBuffer){
                     var setCopy = new ArrayList<>(DownloaderManager.pageBuffer.entrySet());
                     for (var seqNumberEntry: setCopy){
@@ -34,6 +37,7 @@ public class DownloaderCleaner implements Runnable {
                         }
                     }
                 }
+                //check for recoveredPages timeouts
                 synchronized (DownloaderManager.recoveredPages){
                     var keySetCopy = new ArrayList<>(DownloaderManager.recoveredPages.keySet());
                     for (var key: keySetCopy){
@@ -44,6 +48,7 @@ public class DownloaderCleaner implements Runnable {
                         }
                     }
                 }
+                //check for nackPackets timeouts
                 synchronized (DownloaderMulticastRecovery.nackPackets){
                     for(int i = 0; i < DownloaderMulticastRecovery.nackPackets.size(); i++){
                         if(DownloaderMulticastRecovery.nackPackets.get(i).timeSinceCreation() > DELETE_BY_TIMEOUT_MS){
@@ -53,6 +58,7 @@ public class DownloaderCleaner implements Runnable {
                         }
                     }
                 }
+                //check for nackackacks timeouts
                 synchronized (DownloaderMulticastRecovery.nackackacks){
                     for(int i = 0; i < DownloaderMulticastRecovery.nackackacks.size(); i++){
                         if(DownloaderMulticastRecovery.nackackacks.get(i).timeSinceCreation() > DELETE_BY_TIMEOUT_MS){

@@ -28,8 +28,12 @@ public class BarrelMulticastWorker implements Runnable{
         t.start();
     }
 
+    /**
+     * Update the lastSeqNumber file of this barrel
+     */
     public void writeLastSeqNumberFile(){
         try{
+            //write the map to the file
             File fLastSeqNumber = new File("lastSeqNumber_barrel"+id+".dat");
             FileOutputStream fos = new FileOutputStream(fLastSeqNumber);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -41,10 +45,16 @@ public class BarrelMulticastWorker implements Runnable{
         }
     }
 
+    /**
+     * Recover the lastSeqNumber map from the lastSeqNumber file of this barrel if it exists (if this is not the first
+     * time running this barrel)
+     */
     public void readLastSeqNumberFile(){
         try{
             File fLastSeqNumber = new File("lastSeqNumber_barrel"+id+".dat");
+            //check if the file already exists
             if(fLastSeqNumber.exists()){
+                //read the map from the file
                 FileInputStream fis = new FileInputStream(fLastSeqNumber);
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 Map<Integer, Integer> fileHashMap = (Map<Integer, Integer>) ois.readObject();
@@ -78,6 +88,7 @@ public class BarrelMulticastWorker implements Runnable{
                     packet = msgPacketQueue.remove(0);
                 }
 
+                //check if there is an inter barrel synchronization process going on
                 synchronized (InterBarrelSynchronizerInserter.syncLock){
                     while(InterBarrelSynchronizerInserter.needSync == 1){
                         InterBarrelSynchronizerInserter.syncLock.wait();
@@ -117,8 +128,6 @@ public class BarrelMulticastWorker implements Runnable{
                     }
                 }
 
-
-                //System.out.println("HELLO1");
                 //check if the order of the message packets (msgsLeft) of the current seqNumber is right
                 synchronized (lastMsgsLeft){
                     if(lastMsgsLeft.containsKey(downloaderId)){
@@ -145,7 +154,6 @@ public class BarrelMulticastWorker implements Runnable{
                         }
                     }
                 }
-                //System.out.println("HELLO2");
 
                 //if it's the first msg from the downloader, create the hashmap
                 synchronized (downloadersByteBuffers){
@@ -157,7 +165,6 @@ public class BarrelMulticastWorker implements Runnable{
                     }
                 }
 
-                //System.out.println("HELLO3 " + aheadSeqNumber);
                 //if the seqNumber order is right, update the last right seqNumber
                 synchronized (lastSeqNumber){
                     if(!aheadSeqNumber){
@@ -165,8 +172,6 @@ public class BarrelMulticastWorker implements Runnable{
                         writeLastSeqNumberFile();
                     }
                 }
-
-                //System.out.println("AAAA " + BarrelMulticastWorker.lastSeqNumber.get(downloaderId));
 
                 synchronized (aheadBuffer){
                     if(aheadMsgsLeft){
@@ -224,6 +229,7 @@ public class BarrelMulticastWorker implements Runnable{
                     System.out.println("Received from Downloader " + downloaderId + " seqNumber " + seqNumber
                             + " " + message);
 
+                    //add page to the local database
                     Page receivedPage = new Page(message);
                     Barrel.bdb.insertPage(receivedPage, downloaderId, seqNumber);
                 }

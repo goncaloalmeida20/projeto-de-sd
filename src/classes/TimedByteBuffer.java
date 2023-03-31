@@ -23,7 +23,9 @@ public class TimedByteBuffer {
     }
 
 
-
+    /**
+     * @return time since the creation of this buffer
+     */
     public long timeSinceCreation(){
         return System.currentTimeMillis() - creationTime;
     }

@@ -23,6 +23,13 @@ public class DownloaderMulticastRecovery implements Runnable{
         t.start();
     }
 
+    /**
+     * Check if nackackacks queue contains an ack with these parameters
+     * @param barrelId id of the barrel
+     * @param downloaderId id of the downloader
+     * @param seqNumber sequence number of the message
+     * @return
+     */
     private TimedByteBuffer containsAck(int barrelId, int downloaderId, int seqNumber){
         for(var tbb: nackackacks){
             int tempBarrelId = tbb.byteBuffer.getInt(), tempDownloaderId = tbb.byteBuffer.getInt(),
@@ -41,6 +48,7 @@ public class DownloaderMulticastRecovery implements Runnable{
         try (MulticastSocket socket = new MulticastSocket()) {
             while (true) {
                 ByteBuffer bb;
+                //wait while the nackPackets queue is empty
                 synchronized (nackPackets){
                     while(nackPackets.size() == 0){
                         nackPackets.wait();
@@ -52,6 +60,7 @@ public class DownloaderMulticastRecovery implements Runnable{
                 int barrelId = bb.getInt(), downloaderId = bb.getInt(),
                         seqNumber = bb.getInt(), messageType = bb.getInt();
 
+                //check if the required page is still buffered
                 int msgType;
                 Page recoveredPage = null;
                 synchronized (DownloaderManager.pageBuffer){
@@ -64,6 +73,7 @@ public class DownloaderMulticastRecovery implements Runnable{
                         msgType = -2;
                     }
                 }
+                //send result
                 byte[] packetBuffer = new MulticastPacket(barrelId, id, seqNumber, msgType, -1).toBytes();
                 System.out.println("Sending NACK ACK " + barrelId + " " + id + " " + seqNumber + " " + msgType);
                 InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
@@ -71,7 +81,7 @@ public class DownloaderMulticastRecovery implements Runnable{
                         DownloaderManager.MULTICAST_PORT);
                 socket.send(packet);
 
-
+                //wait for ack of the result
                 TimedByteBuffer tbb;
                 synchronized (nackackacks){
                     tbb = containsAck(barrelId, downloaderId, seqNumber);
@@ -89,7 +99,7 @@ public class DownloaderMulticastRecovery implements Runnable{
                     System.out.println("Received NACK ACK ACK " + tempBarrelId + " " + tempDownloaderId
                             + " " + tempSeqNumber + " " + tempMsgType);
                     if(recoveredPage != null){
-
+                        //if a page was recovered and it was not already readded recently, readd it to the page queue
                         synchronized (DownloaderManager.pageQueue){
                             synchronized (DownloaderManager.recoveredPages){
                                 if(!DownloaderManager.pageQueue.contains(recoveredPage)

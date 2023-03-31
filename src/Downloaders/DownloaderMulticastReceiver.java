@@ -42,8 +42,10 @@ public class DownloaderMulticastReceiver implements Runnable{
                 int barrelId = bb.getInt(), downloaderId = bb.getInt(), seqNumber = bb.getInt(), msgType = bb.getInt(),
                         firstMsg = bb.getInt();
 
+                //ignore packet if the target isn't this downloader
                 if(downloaderId != id || barrelId < 0) continue;
 
+                //filter and redirect messages to the correct queue
                 if(msgType == -1){
                     synchronized (DownloaderMulticastRecovery.nackPackets){
                         DownloaderMulticastRecovery.nackPackets.add(new TimedByteBuffer(ByteBuffer.wrap(packetBytes),

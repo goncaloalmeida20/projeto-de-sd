@@ -21,7 +21,10 @@ public class BarrelCleaner implements Runnable {
         System.out.println("BarrelCleaner " + id);
         while(true){
             try {
+                //Check for timeouts each CHECK_INTERVAL_MS ms
                 Thread.sleep(CHECK_INTERVAL_MS);
+
+                //check for aheadBuffer timeouts
                 synchronized (BarrelMulticastWorker.aheadBuffer){
                     var setCopy = new ArrayList<>(BarrelMulticastWorker.aheadBuffer.entrySet());
                     for (var downloaderEntry: setCopy){
@@ -35,6 +38,7 @@ public class BarrelCleaner implements Runnable {
                         }
                     }
                 }
+                //check for downloadersByteBuffers timeouts
                 synchronized (BarrelMulticastWorker.downloadersByteBuffers){
                     var setCopy = new ArrayList<>(BarrelMulticastWorker.downloadersByteBuffers.entrySet());
                     for (var downloaderEntry: setCopy){

@@ -15,16 +15,21 @@ public class JsoupAnalyzer{
 
     public Page pageAnalyzer(String url){
         try{
+            //connect to the url
             Document doc = Jsoup.connect(url).get();
+
+            //get the page
             Page p = new Page();
             p.url = url;
             p.title = doc.title();
             StringTokenizer tokens = new StringTokenizer(doc.text());
             int wordCount = 0;
+            //get at max WORD_LIMIT words
             while(tokens.hasMoreElements() && wordCount++ < WORD_LIMIT)
             {
                 p.addWord(tokens.nextToken());
             }
+            //add all the links in the page
             Elements links = doc.select("a[href]");
             for(Element link: links){
                 p.addLink(link.attr("abs:href"));

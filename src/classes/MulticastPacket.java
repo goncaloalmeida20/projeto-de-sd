@@ -30,6 +30,11 @@ public class MulticastPacket{
         this.msgBytes = msgBytes.clone();
     }
 
+
+    /**
+     * Turns this packet into a byte array
+     * @return this packet in bytes
+     */
     public byte[] toBytes(){
         try{
             ByteBuffer bb = ByteBuffer.allocate(PACKET_SIZE);

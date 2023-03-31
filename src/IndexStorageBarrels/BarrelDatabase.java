@@ -21,18 +21,11 @@ public class BarrelDatabase {
         this.password = password;
         startDatabase();
         loadTables();
-        /*Page p = new Page();
-        p.url = "testeurl";
-        p.title = "testetitle";
-        p.citation = "testecitation";
-        p.words.add("teste1");
-        p.words.add("teste2");
-        p.words.add("teste3");
-        p.links.add("www.ph.com");
-        p.links.add("www.xv.com");
-        insertPage(p);*/
     }
 
+    /**
+     * Starts the local Barrel Database, creating it if it doesn't exists yet
+     */
     private void startDatabase(){
         Connection connect = null;
         Statement stm = null;
@@ -46,11 +39,12 @@ public class BarrelDatabase {
             stm = connect.createStatement();
 
             try {
+                //try to create the database
                 stm.executeUpdate("CREATE DATABASE " + dbName);
             }
             catch(SQLException e){
+                //it already exists, continue normally
                 System.out.println("Database " + dbName + " already exists");
-                //System.out.println("Error message: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database creation failed. Error message: " + e);
@@ -70,6 +64,9 @@ public class BarrelDatabase {
         }
     }
 
+    /**
+     * Load the local Barrel Database tables, creating them if they don't exist yet
+     */
     private void loadTables(){
         Connection connect = null;
         Statement stm = null;
@@ -105,8 +102,6 @@ public class BarrelDatabase {
                     ")";
             stm.executeUpdate(query);
 
-            /*query = "CREATE UNIQUE INDEX IF NOT EXISTS invertedindex ON invertedindex (term, pageid)";
-            stm.executeUpdate(query);*/
 
             // Create Links table
             query = "CREATE TABLE IF NOT EXISTS links (" +
@@ -116,8 +111,6 @@ public class BarrelDatabase {
                     ")";
             stm.executeUpdate(query);
 
-            /*query = "CREATE UNIQUE INDEX IF NOT EXISTS links ON links (pageid, link)";
-            stm.executeUpdate(query);*/
 
             // Create Searches table
             query = "CREATE TABLE IF NOT EXISTS searches (" +
@@ -147,6 +140,12 @@ public class BarrelDatabase {
         }
     }
 
+    /**
+     * Inserts a page into the local Barrel Database
+     * @param p Page to insert
+     * @param sender downloader that processed the page
+     * @param seqNumber sequence number of the message where this page was sent
+     */
     public void insertPage(Page p, int sender, int seqNumber){
         Connection connect = null;
         PreparedStatement stm = null;
@@ -158,6 +157,7 @@ public class BarrelDatabase {
             System.out.println("Connecting to Database " + urldb + "...");
             connect = DriverManager.getConnection(urldb , user, password);
 
+            //insert page into page table, replacing it if it already exists
             query = "INSERT INTO page(url, title, citation, sender, seqnumber) " +
                     "VALUES (?, ?, ?, ?, ?) " +
                     "ON CONFLICT (url) DO UPDATE " +
@@ -185,6 +185,7 @@ public class BarrelDatabase {
                     insertId = rs.getLong(1);
                 if(insertId == -1) throw new RuntimeException("Error on returned generated keys");
 
+                //if the page contains words, add them to the inverted index
                 if(p.words.size() > 0){
                     sb = new StringBuilder();
                     sb.append("INSERT INTO invertedindex(term, pageid) " +
@@ -204,6 +205,7 @@ public class BarrelDatabase {
                     stm.executeUpdate();
                 }
 
+                //if the page contains links to other pages, add them to the link table
                 if(p.links.size() > 0) {
                     sb = new StringBuilder();
                     sb.append("INSERT INTO links(pageid, link) " +
@@ -243,6 +245,12 @@ public class BarrelDatabase {
         }
     }
 
+    /**
+     * Retrieves all pages processed by a downloader with sequence number higher than seqNumber
+     * @param downloaderId Id of the downloader that processed the pages
+     * @param seqNumber sequence number to start retrieving pages
+     * @return a map with the pages retrieved and the sequence number of the message in which they arrived
+     */
     public Map<Page, Integer> sendDownloaderPages(int downloaderId, int seqNumber){
         Connection connect = null;
         PreparedStatement stm = null;
@@ -254,6 +262,7 @@ public class BarrelDatabase {
             System.out.println("Connecting to Database " + urldb + "...");
             connect = DriverManager.getConnection(urldb , user, password);
 
+            //query to get the url, title, citation and seqNumber of the required pages
             query = "SELECT id, url, title, citation, seqnumber " +
                     "FROM page " +
                     "WHERE sender=? AND seqnumber>=?;";
@@ -269,6 +278,7 @@ public class BarrelDatabase {
                 p.title = rs.getString("title");
                 p.citation = rs.getString("citation");
                 int currentSeqNumber = rs.getInt("seqnumber");
+                //query to get the words from the required pages
                 query = "SELECT term " +
                         "FROM invertedindex " +
                         "WHERE pageid=?;";
@@ -279,7 +289,7 @@ public class BarrelDatabase {
                 while(rsII.next()){
                     p.words.add(rsII.getString("term"));
                 }
-
+                //query to get the links from the required pages
                 query = "SELECT link " +
                         "FROM links " +
                         "WHERE pageid=?;";
@@ -290,6 +300,7 @@ public class BarrelDatabase {
                 while(rsL.next()){
                     p.links.add(rsL.getString("link"));
                 }
+                //add the page and respective sequence number to the map
                 pages.put(p, currentSeqNumber);
             }
 

@@ -26,6 +26,12 @@ public class InterBarrelSynchronizerInserter implements Runnable{
         t.start();
     }
 
+    /**
+     * Check if a packet of the required type exists in the helperQueue
+     * @param belowZero type of check to perform (related to the third header field)
+     * @param type the required type
+     * @return the index of the packet; -1 in case none was found
+     */
     public int packetTypeExists(boolean belowZero, int type){
         ByteBuffer bbTemp;
         for(int i = 0; i < inserterQueue.size(); i++){
@@ -64,11 +70,13 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                     byte[] packetBuffer =
                             new MulticastPacket(-2, id, -4, -2, -2).toBytes();
 
+                    //send the packet
                     InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                             Barrel.SYNC_MULTICAST_PORT);
                     socket.send(packet);
 
+                    //check if the response packet exists in the inserterQueue
                     queuePacket = null;
                     synchronized (inserterQueue){
                         int packetIndex = packetTypeExists(true, -5);
@@ -87,6 +95,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                         //get the header bytes
                         int barrelId = bb.getInt(), senderId = bb.getInt(), msgType = bb.getInt(),
                                 downloaderCount = bb.getInt();
+                        //create indexes for new downloaders
                         synchronized (BarrelMulticastWorker.lastSeqNumber){
                             if(downloaderCount > BarrelMulticastWorker.lastSeqNumber.size()){
                                 for(int i = 0; i < downloaderCount; i++){
@@ -105,6 +114,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                 }
                 if(queuePacket == null){
                     System.out.println("No packets received\nAssuming this barrel is the only one running");
+                    //End synchronization process
                     synchronized (syncLock){
                         needSync = 0;
                         syncLock.notifyAll();
@@ -114,6 +124,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
 
                 boolean errorOcurred = false;
 
+                //Recover lost messages from each of the downloaders by communicating with the other barrels
                 Set<Map.Entry<Integer, Integer>> entries;
                 synchronized (BarrelMulticastWorker.lastSeqNumber){
                      entries = BarrelMulticastWorker.lastSeqNumber.entrySet();
@@ -124,11 +135,14 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                     byte[] packetBuffer =
                             new MulticastPacket(-1, id, -1, downloaderId, currentSeqNumber).toBytes();
 
+                    //send packet asking for other barrels to compare the local last sequence number of the current
+                    //downloader with theirs
                     InetAddress group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                             Barrel.SYNC_MULTICAST_PORT);
                     socket.send(packet);
 
+                    //wait for response
                     synchronized (inserterQueue){
                         int packetIndex = packetTypeExists(true, -2);
                         long initialTime = System.currentTimeMillis();
@@ -154,6 +168,8 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                     packetBuffer =
                             new MulticastPacket(senderId, id, -3, downloaderId, currentSeqNumber).toBytes();
 
+                    //start recovering messages from the current downloader, sent by the barrel that noticed a
+                    //significant difference in packet numbers
                     group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
                     packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
                             Barrel.SYNC_MULTICAST_PORT);
@@ -165,6 +181,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                         int msgsLeft = -2;
                         int seqNumber = -1;
                         while(msgsLeft != 0){
+                            //check if the next packet has arrived
                             synchronized (inserterQueue){
                                 int packetIndex = packetTypeExists(false, 0);
                                 long initialTime = System.currentTimeMillis();
@@ -190,15 +207,17 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                             int firstMsg = tempbb.getInt();
 
                             if(msgsLeft == -1){
+                                //end of transmission
                                 break;
                             }
 
+                            //add bytes to the current buffer
                             if(messageBB == null){
                                 messageBB = ByteBuffer.allocate((msgsLeft + 1) * MulticastPacket.MSG_BYTES_SIZE);
                             }
-
                             messageBB.put(tempbb);
 
+                            //send ack
                             packetBuffer = new MulticastPacket(tempSenderid, id, seqNumber, msgsLeft, -1).toBytes();
 
                             group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
@@ -223,10 +242,12 @@ public class InterBarrelSynchronizerInserter implements Runnable{
                             System.out.println("Received from Barrel " + senderId + " seqNumber " + seqNumber
                                     + " " + message);
 
+                            //add page to the local database
                             Page receivedPage = new Page(message);
                             Barrel.bdb.insertPage(receivedPage, downloaderId, seqNumber);
                         }
                         else if(msgsLeft == -1){
+                            //send ack of end of transmission
                             packetBuffer = new MulticastPacket(senderId, id, seqNumber, msgsLeft, -1).toBytes();
 
                             group = InetAddress.getByName(Barrel.SYNC_MULTICAST_ADDRESS);
@@ -244,6 +265,7 @@ public class InterBarrelSynchronizerInserter implements Runnable{
 
                 }
                 if(!errorOcurred){
+                    //Synchronization finished successfully, reactivating the waiting threads
                     synchronized (syncLock){
                         needSync = 0;
                         syncLock.notifyAll();

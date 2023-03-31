@@ -33,7 +33,6 @@ public class DownloaderMulticastWorker implements Runnable{
                     }
                     currentPage = DownloaderManager.pageQueue.remove(0);
                     System.out.println("DownloaderMulticastWorker " + id + " sending page " + currentPage.url);
-                    //DownloaderManager.pageQueue.notify();
                 }
 
                 //Convert the page to the multicast udp protocol string
@@ -56,7 +55,7 @@ public class DownloaderMulticastWorker implements Runnable{
                             msgBytes);
 
                     packetBuffer = mp.toBytes();
-                    //System.out.println(new String(msgBytes));
+
                     //Send the packet
                     InetAddress group = InetAddress.getByName(DownloaderManager.MULTICAST_ADDRESS);
                     DatagramPacket packet = new DatagramPacket(packetBuffer, packetBuffer.length, group,
@@ -76,6 +75,8 @@ public class DownloaderMulticastWorker implements Runnable{
                 }*/
                 System.out.println("############################# " + " " + DownloaderManager.seqNumber + " " +
                         currentPage.url);
+
+                //buffer the sent page for possible recoveries
                 Map<Page, Long> mapTemp = new HashMap<>();
                 mapTemp.put(currentPage, System.currentTimeMillis());
                 synchronized (DownloaderManager.pageBuffer){
