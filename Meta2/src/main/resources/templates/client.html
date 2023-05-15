@@ -4,29 +4,57 @@
   <title>Client Page</title>
 </head>
 <body>
-  <h2>Welcome, Client!</h2>
-  <button onclick="window.location.href='index-url'">Index URL</button>
-  <button onclick="window.location.href='search-terms'">Search</button>
-  <button onclick="window.location.href='search-links'">Search for Pages</button>
-  <button onclick="openPopup()">Admin</button>
-  <button onclick="logout()">Logout</button>
-  <script>
-
-    function logout() {
-      if (confirm("Are you sure you want to log out?")) {
-        alert("Logged out successfully.");
-        window.location.href = "/logout";
-      }
+<h2>Welcome, Client!</h2>
+<button onclick="window.location.href='index-url'">Index URL</button>
+<button onclick="window.location.href='search-terms'">Search</button>
+<button onclick="window.location.href='search-links'">Search for Pages</button>
+<button onclick="openAdmin()">Admin</button>
+<button onclick="logout()">Logout</button>
+<div id="adminPanel" style="display: none;">
+  <h3>Admin Panel</h3>
+  <p>Number of Downloads: <span id="numDownloads"></span></p>
+  <p>Number of Active Barrels: <span id="numActiveBarrels"></span></p>
+  <h4>Most Searched Items</h4>
+  <ul id="mostSearchedItems"></ul>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+  function logout() {
+    if (confirm("Are you sure you want to log out?")) {
+      alert("Logged out successfully.");
+      window.location.href = "/logout";
     }
+  }
 
+  function openAdmin() {
+    var popup = window.open("", "Admin Popup", "width=400,height=300");
+    popup.document.write("<html><head><title>Admin Popup</title></head><body>");
+    popup.document.write("<h2>Admin Popup</h2>");
+    popup.document.write("<div id='adminPanel'></div>");
+    popup.document.write("</body></html>");
+    connectToWebSocket();
+  }
 
-    function openPopup() {
-      var popup = window.open("", "Admin Popup", "width=400,height=300");
-      popup.document.write("<html><head><title>Admin Popup</title></head><body>");
-      popup.document.write("<h2>Admin Popup</h2>");
-      popup.document.write("<p>This is the admin popup with certain information.</p>");
-      popup.document.write("</body></html>");
-    }
-  </script>
+  function connectToWebSocket() {
+    var socket = new WebSocket("ws://localhost:8080/ws"); // Connect to the WebSocket endpoint
+
+// Create a STOMP client over the WebSocket connection
+    var client = Stomp.over(socket);
+
+    client.connect({}, function() {
+      // Subscribe to the "/topic/admin-info" destination to receive admin information updates
+      client.subscribe("/topic/admin-info", function(response) {
+        var adminInfo = JSON.parse(response.body);
+
+        // Update the admin panel with the received information
+        $('#numDownloads').text(adminInfo.numDownloads);
+        $('#numActiveBarrels').text(adminInfo.numActiveBarrels);
+      });
+
+      // Request the initial admin information
+      client.send("/app/admin", {}, "");
+    });
+  }
+</script>
 </body>
 </html>

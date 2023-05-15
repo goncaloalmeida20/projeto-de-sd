@@ -3,8 +3,11 @@
 <head>
     <title>Search for pages with the link</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script>
+    <script th:inline="javascript">
         $(document).ready(function() {
+            var currentPage = 1;
+
+
             $('#searchForm').submit(function(event) {
                 event.preventDefault(); // Prevent form submission
 
@@ -13,7 +16,7 @@
                 // Send an AJAX request to the server
                 $.ajax({
                     type: 'POST',
-                    url: '/search-terms-results',
+                    url: '/search-links-results?page=' + currentPage,
                     contentType: 'application/json',
                     data: JSON.stringify({ url: url }),
                     success: function(response) {
@@ -24,6 +27,18 @@
                         alert(err.Message);
                     }
                 });
+            });
+
+            $('#previousPage').click(function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    $('#searchForm').submit();
+                }
+            });
+
+            $('#nextPage').click(function() {
+                currentPage++;
+                $('#searchForm').submit();
             });
 
             function displayResults(results) {
@@ -38,6 +53,26 @@
                     resultItem.append('<p>Citation: ' + result.citation + '</p>');
                     $('#searchResults').append(resultItem);
                 });
+
+                // Update pagination
+                updatePagination();
+            }
+
+            function updatePagination(totalResults) {
+                var resultsPerPage = [[${RESULTS_PER_PAGE}]]
+                console.log(resultsPerPage);
+                var totalPages = Math.ceil(totalResults / resultsPerPage); // Calculate the total number of pages
+                if (currentPage > 1) {
+                    $('#previousPage').show();
+                } else {
+                    $('#previousPage').hide();
+                }
+
+                if (currentPage < totalPages) {
+                    $('#nextPage').show();
+                } else {
+                    $('#nextPage').hide();
+                }
             }
         });
     </script>
@@ -49,6 +84,9 @@
     <input type="text" id="url" name="url" required>
     <button type="submit">Search</button>
 </form>
-<div id="searchResults"></div>
+
+<button id="previousPage" style="display: none;">Previous</button>
+<button id="nextPage" style="display: none;">Next</button>
+
 </body>
 </html>

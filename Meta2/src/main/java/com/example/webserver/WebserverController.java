@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -196,23 +197,25 @@ public class WebserverController {
 
 
     @GetMapping("/search-links")
-    public String showSearchLinksPage() {
+    public String showSearchLinksPage(Model model) {
+        model.addAttribute("RESULTS_PER_PAGE", RESULTS_PER_PAGE);
         return "search-links";
     }
 
+
     @PostMapping("/search-links-results")
     @ResponseBody
-    public List<Page> searchLinksResults(@RequestBody String url) {
-        // TODO: With links, get pages from the server that contain the link to the url and save them in the "pages" variable
-        //logger.info(url);
+    public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) {
+        // TODO: With links, get pages from the server that contain the link to the URL and save them in the "pages" variable
+        // logger.info(url);
         List<Page> pages = new ArrayList<>();
-        Page p = new Page();
-        p.title = "OLA";
-        p.url = "hello";
-        p.citation = "bye";
-        pages.add(p);
+        // Populate pages with the results
 
-        return pages;
+        // Apply pagination
+        int startIndex = (page - 1) * RESULTS_PER_PAGE;
+        int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, pages.size());
+        List<Page> paginatedPages = pages.subList(startIndex, endIndex);
+
+        return paginatedPages;
     }
-
 }
