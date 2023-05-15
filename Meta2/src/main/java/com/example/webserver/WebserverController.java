@@ -1,11 +1,16 @@
 package com.example.webserver;
 
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.util.HtmlUtils;
 import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
 
 @Controller
 public class WebserverController {
@@ -64,7 +69,7 @@ public class WebserverController {
     public String indexUrl(@RequestParam("urlInput") String url) {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 6000);
-            SearchModuleC searchC = (SearchModuleC) registry.lookup("searchC");
+            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("searchC");
 
             searchC.indexUrl(url.toLowerCase());
 
@@ -102,7 +107,7 @@ public class WebserverController {
 
         //TESTE
 
-        List<Page> pages = new ArrayList<>();
+        List<Page> pages = new ArrayList<Page>();
 
         Page page1 = new Page();
         page1.url = "https://example.com/page1";
