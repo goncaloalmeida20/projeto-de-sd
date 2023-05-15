@@ -6,16 +6,19 @@
 <body>
   <h2>Welcome, Client!</h2>
   <button onclick="window.location.href='index-url'">Index URL</button>
-  <button onclick="window.location.href='search'">Search</button>
-  <button onclick="window.location.href='search-pages'">Search for Pages</button>
+  <button onclick="window.location.href='search-terms'">Search</button>
+  <button onclick="window.location.href='search-links'">Search for Pages</button>
   <button onclick="openPopup()">Admin</button>
   <button onclick="logout()">Logout</button>
   <script>
 
     function logout() {
-      alert("Logged out successfully.");
-      //TODO: Redirect the user to the login page or perform any other desired action
+      if (confirm("Are you sure you want to log out?")) {
+        alert("Logged out successfully.");
+        window.location.href = "/logout";
+      }
     }
+
 
     function openPopup() {
       var popup = window.open("", "Admin Popup", "width=400,height=300");

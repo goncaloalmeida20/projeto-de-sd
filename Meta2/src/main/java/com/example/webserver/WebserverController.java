@@ -20,11 +20,13 @@ import classes.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.json.*;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class WebserverController {
@@ -65,34 +67,33 @@ public class WebserverController {
     @PostMapping("/submit-register")
     public String processRegistration(@RequestParam("username") String username,
                                       @RequestParam("password") String password) {
-        //TODO: Verify the registration
+        //TODO: Verify the registration and add to the database
 
         return "redirect:/login";
     }
 
     @GetMapping("/login")
     public String createLoginForm(Model model) {
-
         model.addAttribute("login", new Login());
         return "login";
     }
 
     @PostMapping("/save-login")
-    public String saveLoginSubmission(@ModelAttribute Login login) {
-        if(validateLogin(login)) {
+    public String saveLoginSubmission(@ModelAttribute Login login, Model model) {
+        if (validateLogin(login)) {
             ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             HttpSession session = attr.getRequest().getSession(true);
             session.setAttribute("login", true);
             return "redirect:/client";
-        }
-        else {
-            // TODO: Show error message
-            return "redirect:/login";
+        } else {
+            model.addAttribute("errorMessage", "Invalid login credentials");
+            return "login";
         }
     }
 
+
     public boolean validateLogin(Login login){
-        //TODO: VALIDATE LOGIN
+        //TODO: VALIDATE LOGIN in the server
 
         return !login.getUsername().isEmpty() && !login.getPassword().isEmpty();
     }
@@ -101,6 +102,7 @@ public class WebserverController {
     public String logout() {
         return "redirect:/login";
     }
+
 
 
     //===========================================================================
@@ -157,30 +159,31 @@ public class WebserverController {
         return "top-stories";
     }
 
-    @PostMapping("/search")
-    public String search(@RequestParam("numTerms") int numTerms, @RequestParam("term") String[] terms) {
-        // Process the terms
 
     //===========================================================================
     // Search for pages with certain terms
     //===========================================================================
 
+
     @GetMapping("/search-terms")
-    public String showSearchPage() {
+    public String showSearchTermsPage() {
         return "search-terms";
     }
 
     @PostMapping("/search-terms-results")
     @ResponseBody
-    public List<Page> searchTermsResults(@RequestBody List<String> terms) {
+    public List<Page> searchTermsResults(@RequestBody String url) {
         // TODO: With terms, get pages from the server that contain the terms and save them in the "pages" variable
-        logger.info(terms.toString());
-
+        //logger.info(terms.toString());
         List<Page> pages = new ArrayList<>();
         Page p = new Page();
         p.title = "OLA";
         p.url = "hello";
         p.citation = "bye";
+        pages.add(p);
+        p.title = "ADEUS";
+        p.url = "bye";
+        p.citation = "hello";
         pages.add(p);
 
         return pages;
@@ -191,5 +194,25 @@ public class WebserverController {
     // Search for pages with certain links
     //===========================================================================
 
+
+    @GetMapping("/search-links")
+    public String showSearchLinksPage() {
+        return "search-links";
+    }
+
+    @PostMapping("/search-links-results")
+    @ResponseBody
+    public List<Page> searchLinksResults(@RequestBody String url) {
+        // TODO: With links, get pages from the server that contain the link to the url and save them in the "pages" variable
+        //logger.info(url);
+        List<Page> pages = new ArrayList<>();
+        Page p = new Page();
+        p.title = "OLA";
+        p.url = "hello";
+        p.citation = "bye";
+        pages.add(p);
+
+        return pages;
+    }
 
 }
