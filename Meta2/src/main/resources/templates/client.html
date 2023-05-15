@@ -32,8 +32,29 @@
     popup.document.write("<h2>Admin Popup</h2>");
     popup.document.write("<div id='adminPanel'></div>");
     popup.document.write("</body></html>");
+    //connectToWebSocket();
   }
 
+  /*function connectToWebSocket() {
+    var socket = new WebSocket("ws://localhost:8080/ws"); // Connect to the WebSocket endpoint
+
+// Create a STOMP client over the WebSocket connection
+    var client = Stomp.over(socket);
+
+    client.connect({}, function() {
+      // Subscribe to the "/topic/admin-info" destination to receive admin information updates
+      client.subscribe("/topic/admin-info", function(response) {
+        var adminInfo = JSON.parse(response.body);
+
+        // Update the admin panel with the received information
+        $('#numDownloads').text(adminInfo.numDownloads);
+        $('#numActiveBarrels').text(adminInfo.numActiveBarrels);
+      });
+
+      // Request the initial admin information
+      client.send("/app/admin", {}, "");
+    });
+  }*/
 </script>
 </body>
 </html>
