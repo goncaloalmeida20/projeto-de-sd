@@ -1,19 +1,26 @@
 package com.example.webserver;
 
-import RMISearchModule.SearchModuleC_S_I;
-import classes.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.HtmlUtils;
+import RMISearchModule.SearchModuleC_S_I;
+import classes.Page;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class WebserverController {
+    private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     @GetMapping("/random")
     public String hello(){
         return "clientPage";
@@ -65,19 +72,17 @@ public class WebserverController {
         return "index-url";
     }
 
-    @PostMapping("/index-url")
-    public String indexUrl(@RequestParam("urlInput") String url) {
+    @PostMapping("/submit-index-url")
+    public String indexUrl(@RequestParam("url") String url) {
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 6000);
-            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("searchC");
-
+            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
+            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
+            logger.info("Indexing URL: " + url);
             searchC.indexUrl(url.toLowerCase());
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //TODO: Display a message or perform any necessary actions after successful indexation
 
 
         return "redirect:/index-url";
@@ -107,7 +112,7 @@ public class WebserverController {
 
         //TESTE
 
-        List<Page> pages = new ArrayList<Page>();
+        List<Page> pages = new ArrayList<>();
 
         Page page1 = new Page();
         page1.url = "https://example.com/page1";
