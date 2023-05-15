@@ -6,27 +6,20 @@ import com.example.webserver.forms.Login;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.HtmlUtils;
-import RMISearchModule.SearchModuleC_S_I;
-import classes.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.json.*;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class WebserverController {
@@ -133,6 +126,12 @@ public class WebserverController {
 
     @GetMapping("/top-stories")
     public String topStories(Model model){
+        return "top-stories";
+    }
+
+    @PostMapping("/top-stories-results")
+    @ResponseBody
+    public List<String> topStoriesResults(@RequestBody List<String> termsJson){
         String topStoriesURL = "https://hacker-news.firebaseio.com/v0/topstories.json";
         RestTemplate restTemplate = new RestTemplate();
         List hnTopStories = restTemplate.getForObject(topStoriesURL, List.class);
@@ -147,16 +146,17 @@ public class WebserverController {
                 logger.info("Analyzing top story with URL: " + formattedTopStoryURL);
                 HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL
                         , HackerNewsItemRecord.class);
-                if(hnir == null || hnir.url() == null || hnir.text() == null) continue;
+                if(hnir == null || hnir.url() == null || hnir.title() == null
+                    || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
+
                 String storyURL = hnir.url().toLowerCase();
                 searchC.indexUrl(storyURL);
                 topStoryURLs.add(storyURL);
             }
-            model.addAttribute("topStoriesList", topStoryURLs);
         } catch(Exception e){
             e.printStackTrace();
         }
-        return "top-stories";
+        return topStoryURLs;
     }
 
 
