@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.HtmlUtils;
 import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
@@ -86,6 +87,34 @@ public class WebserverController {
 
 
         return "redirect:/index-url";
+    }
+
+    @GetMapping("/top-stories")
+    public String topStories(Model model){
+        String topStoriesURL = "https://hacker-news.firebaseio.com/v0/topstories.json";
+        RestTemplate restTemplate = new RestTemplate();
+        List hnTopStories = restTemplate.getForObject(topStoriesURL, List.class);
+        List<String> topStoryURLs = new ArrayList<>();
+        try {
+            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
+            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
+            for (var topStory : hnTopStories) {
+                String formattedTopStoryURL = "https://hacker-news.firebaseio.com/v0/item/" +
+                        topStory.toString() +
+                        ".json";
+                logger.info("Analyzing top story with URL: " + formattedTopStoryURL);
+                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL
+                        , HackerNewsItemRecord.class);
+                if(hnir == null || hnir.url() == null || hnir.text() == null) continue;
+                String storyURL = hnir.url().toLowerCase();
+                searchC.indexUrl(storyURL);
+                topStoryURLs.add(storyURL);
+            }
+            model.addAttribute("topStoriesList", topStoryURLs);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return "top-stories";
     }
 
     @PostMapping("/search")
