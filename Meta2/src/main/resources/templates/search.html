@@ -1,37 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dynamic Fields</title>
-  <script>
-    function generateFields() {
-      var numTerms = document.getElementById("numTerms").value;
-      var form = document.getElementById("dynamicForm");
+    <title>Search</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#searchForm').submit(function(event) {
+                event.preventDefault(); // Prevent form submission
 
-      form.innerHTML = "";
+                var terms = $('#terms').val(); // Get the input value
 
-      for (var i = 1; i <= numTerms; i++) {
-        var inputField = document.createElement("input");
-        inputField.type = "text";
-        inputField.name = "term" + i;
-        inputField.placeholder = "Term " + i;
-        form.appendChild(inputField);
-        form.appendChild(document.createElement("br"));
-      }
-    }
-  </script>
+                // Send an AJAX request to the server
+                $.ajax({
+                    type: 'POST',
+                    url: '/submit-search',
+                    data: { terms: terms },
+                    success: function(response) {
+                        displayResults(response); // Call the function to display the results
+                    },
+                    error: function() {
+                        alert('An error occurred during the search.');
+                    }
+                });
+            });
+
+            function displayResults(results) {
+                // Clear previous results
+                $('#searchResults').empty();
+
+                // Loop through the results and append them to the searchResults div
+                $.each(results, function(index, result) {
+                    var resultItem = $('<div>');
+                    resultItem.append('<h3>' + result.title + '</h3>');
+                    resultItem.append('<p>URL: ' + result.url + '</p>');
+                    resultItem.append('<p>Citation: ' + result.citation + '</p>');
+                    $('#searchResults').append(resultItem);
+                });
+            }
+        });
+    </script>
 </head>
 <body>
-<h2>Search for terms</h2>
-<form id="inputForm" onsubmit="event.preventDefault(); generateFields();">
-  <label for="numTerms">Number of terms:</label>
-  <input type="number" id="numTerms" name="numTerms" required>
-  <button type="submit">Generate</button>
+<h2>Search</h2>
+<form id="searchForm">
+    <label for="terms">Enter terms:</label>
+    <input type="text" id="terms" name="terms" required>
+    <button type="submit">Search</button>
 </form>
-<form id="dynamicForm" method="POST">
-</form>
-</body>
-</html>
-<body>
-
+<div id="searchResults"></div>
 </body>
 </html>

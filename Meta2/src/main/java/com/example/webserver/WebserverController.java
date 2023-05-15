@@ -1,17 +1,19 @@
 package com.example.webserver;
 
+import RMISearchModule.SearchModuleC_S_I;
+import classes.Page;
+import com.example.webserver.forms.Login;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.HtmlUtils;
-import RMISearchModule.SearchModuleC_S_I;
-import classes.Page;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -20,42 +22,20 @@ import java.util.List;
 
 @Controller
 public class WebserverController {
+
+    //===========================================================================
+    // Constants
+    //===========================================================================
+
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
-    @GetMapping("/random")
-    public String hello(){
-        return "clientPage";
-    }
+    private static final int RESULTS_PER_PAGE = 10;
 
-    @GetMapping("/register")
-    public String register(){
-        return "register";
-    }
+    //===========================================================================
+    // Pages
+    //===========================================================================
 
-    @PostMapping("/register")
-    public String processRegistration(@RequestParam("username") String username,
-                                      @RequestParam("password") String password) {
-        //TODO: Verify the registration
-
-        return "redirect:/login";
-    }
-
-    @GetMapping("/login")
-    public String login(){
-        return "login";
-    }
-
-    @PostMapping("/login")
-    public String processLogin(@RequestParam("username") String username,
-                               @RequestParam("password") String password) {
-        //TODO: Verify the login process
-
-        return "redirect:/client";
-    }
-
-    @GetMapping("/logout")
-    public String logout() {
-        return "redirect:/login";
-    }
+    @GetMapping("/")
+    public String redirect(){return "redirect:/guest";}
 
     @GetMapping("/guest")
     public String guestPage() {
@@ -64,8 +44,63 @@ public class WebserverController {
 
     @GetMapping("/client")
     public String clientPage() {
-        return "guest";
+        return "client";
     }
+
+    //===========================================================================
+    // Authentication
+    //===========================================================================
+
+    @GetMapping("/register")
+    public String register() {
+        return "register";
+    }
+
+    @PostMapping("/submit-register")
+    public String processRegistration(@RequestParam("username") String username,
+                                      @RequestParam("password") String password) {
+        //TODO: Verify the registration
+
+        return "redirect:/login";
+    }
+
+    @GetMapping("/login")
+    public String createLoginForm(Model model) {
+
+        model.addAttribute("login", new Login());
+        return "login";
+    }
+
+    @PostMapping("/save-login")
+    public String saveLoginSubmission(@ModelAttribute Login login) {
+        if(validateLogin(login)) {
+            ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+            HttpSession session = attr.getRequest().getSession(true);
+            session.setAttribute("login", true);
+            return "redirect:/client";
+        }
+        else {
+            // TODO: Show error message
+            return "redirect:/login";
+        }
+    }
+
+    public boolean validateLogin(Login login){
+        //TODO: VALIDATE LOGIN
+
+        return !login.getUsername().isEmpty() && !login.getPassword().isEmpty();
+    }
+
+    @GetMapping("/logout")
+    public String logout() {
+        return "redirect:/login";
+    }
+
+
+    //===========================================================================
+    // Index URL
+    //===========================================================================
+
 
     @GetMapping("/index-url")
     public String indexUrlForm() {
@@ -88,44 +123,38 @@ public class WebserverController {
         return "redirect:/index-url";
     }
 
-    @PostMapping("/search")
-    public String search(@RequestParam("numTerms") int numTerms, @RequestParam("term") String[] terms) {
-        // Process the terms
 
-        // TESTE
-        for (int i = 0; i < numTerms; i++) {
-            System.out.println("Term " + (i + 1) + ": " + terms[i]);
-        }
+    //===========================================================================
+    // Search for pages with certain terms
+    //===========================================================================
 
-        return "redirect:/index";
+
+    @GetMapping("/search")
+    public String showSearchPage() {
+        return "search";
     }
 
-    @PostMapping("/search-pages")
-    public String searchPages(@RequestParam("url") String url, Model model) {
-        List<Page> pages = searchResults(url);
+    @PostMapping("/submit-search")
+    public String search(@RequestParam("terms") List<String> terms, Model model) {
+        //TODO: With terms get pages
+
+        //TESTE
+        List<Page> pages = new ArrayList<>();
+
+        // Pass the search results to the HTML view
         model.addAttribute("pages", pages);
+
+        // Pagination
+        int numPages = (int) Math.ceil(pages.size() / (double) RESULTS_PER_PAGE);
+        model.addAttribute("numPages", numPages);
 
         return "search-results";
     }
 
-    private List<Page> searchResults(String url) {
 
-        //TESTE
+    //===========================================================================
+    // Search for pages with certain links
+    //===========================================================================
 
-        List<Page> pages = new ArrayList<>();
 
-        Page page1 = new Page();
-        page1.url = "https://example.com/page1";
-        page1.title = "Page 1";
-        page1.citation = "Citation 1";
-        pages.add(page1);
-
-        Page page2 = new Page();
-        page2.url = "https://example.com/page2";
-        page2.title = "Page 2";
-        page2.citation = "Citation 2";
-        pages.add(page2);
-
-        return pages;
-    }
 }
