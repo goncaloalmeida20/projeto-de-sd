@@ -1,16 +1,21 @@
 package com.example.webserver;
 
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Controller
 public class WebserverController {
     @GetMapping("/random")
-    public String hello(){
+    public String random(){
         return "clientPage";
     }
 
@@ -52,7 +57,7 @@ public class WebserverController {
 
     @GetMapping("/client")
     public String clientPage() {
-        return "guest";
+        return "client";
     }
 
     @GetMapping("/index-url")
@@ -62,7 +67,7 @@ public class WebserverController {
 
     @PostMapping("/index-url")
     public String indexUrl(@RequestParam("urlInput") String url) {
-        try {
+        /*try {
             Registry registry = LocateRegistry.getRegistry("localhost", 6000);
             SearchModuleC searchC = (SearchModuleC) registry.lookup("searchC");
 
@@ -70,7 +75,8 @@ public class WebserverController {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
+        System.out.println("INDEXURL");
 
         //TODO: Display a message or perform any necessary actions after successful indexation
 
@@ -97,6 +103,7 @@ public class WebserverController {
 
         return "search-results";
     }
+
 
     private List<Page> searchResults(String url) {
 
