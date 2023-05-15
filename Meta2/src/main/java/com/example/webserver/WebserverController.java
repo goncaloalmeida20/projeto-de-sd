@@ -130,7 +130,7 @@ public class WebserverController {
         return "top-stories";
     }
 
-    @PostMapping("/top-stories-results")
+    @PostMapping("top-stories-results")
     @ResponseBody
     public List<String> topStoriesResults(@RequestBody List<String> termsJson){
         String topStoriesURL = "https://hacker-news.firebaseio.com/v0/topstories.json";
@@ -148,7 +148,7 @@ public class WebserverController {
                 HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL
                         , HackerNewsItemRecord.class);
                 if(hnir == null || hnir.url() == null || hnir.title() == null
-                    || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
+                        || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
 
                 String storyURL = hnir.url().toLowerCase();
                 searchC.indexUrl(storyURL);
@@ -160,6 +160,48 @@ public class WebserverController {
         return topStoryURLs;
     }
 
+    @GetMapping("/user-stories")
+    public String userStories(){
+        return "user-stories";
+    }
+
+    @PostMapping("/user-stories-results")
+    @ResponseBody
+    public List<String> topStoriesResults(@RequestBody String user){
+        List<String> userStoryURLs = new ArrayList<>();
+        try {
+            logger.info(user);
+            user = user.replace("\"", "");
+            String hnUserURL = "https://hacker-news.firebaseio.com/v0/user/" + user + ".json";
+            logger.info(hnUserURL);
+            RestTemplate restTemplate = new RestTemplate();
+            HackerNewsUserRecord hnUser = restTemplate.getForObject(hnUserURL, HackerNewsUserRecord.class);
+            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
+            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
+            if(hnUser == null || hnUser.submitted() == null){
+                logger.info(hnUserURL);
+                return null;
+            }
+            for (var userStory : hnUser.submitted()) {
+                String formattedUserStoryURL = "https://hacker-news.firebaseio.com/v0/item/" +
+                        userStory.toString() +
+                        ".json";
+                logger.info("Analyzing top story with URL: " + formattedUserStoryURL);
+                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedUserStoryURL
+                        , HackerNewsItemRecord.class);
+
+                if(hnir == null || hnir.url() == null) continue;
+
+                String storyURL = hnir.url().toLowerCase();
+                searchC.indexUrl(storyURL);
+                userStoryURLs.add(storyURL);
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        for (var v: userStoryURLs) logger.info(v);
+        return userStoryURLs;
+    }
 
     //===========================================================================
     // Search for pages with certain terms

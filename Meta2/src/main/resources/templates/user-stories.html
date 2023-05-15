@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Stories</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    $(document).ready(function(){
+      $('#userForm').submit(function(event) {
+        event.preventDefault();
+        var userID = $('#user').val();
+
+        $.ajax({
+          type: 'POST',
+          url: '/user-stories-results',
+          contentType: 'application/json',
+          data: JSON.stringify(userID),
+          success: function(response) {
+            displayResults(response); // Call the function to display the results
+          },
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
+          }
+        });
+      });
+      function displayResults(results) {
+        // Clear previous results
+        if(results == null){
+          $('#Results').empty();
+          $('#Results').append("<p>User not found</p>")
+        }
+        else if(!results.length){
+          $('#Results').empty();
+          $('#Results').append("<p>User has no valid stories</p>")
+        }
+        else{
+          $('#Results').empty();
+          // Loop through the results and append them to the searchResults div
+          $.each(results, function(index, result) {
+            var resultItem = $('<div>');
+            resultItem.append('<p>Story ' + result + ' indexed</p>');
+            $('#Results').append(resultItem);
+          });
+        }
+      }
+    });
+  </script>
+</head>
+<body>
+  <form id="userForm" method="post">
+    <h2>Index a HackerNews User's Stories</h2>
+    <label>HackerNews User ID:</label>
+    <input type="text" id="user" name="user" required>
+    <input type="submit" value="Index User Stories">
+  </form>
+  <div id="Results"></div>
+</body>
+</html>
