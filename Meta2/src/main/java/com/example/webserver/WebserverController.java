@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -128,27 +125,25 @@ public class WebserverController {
     // Search for pages with certain terms
     //===========================================================================
 
-
-    @GetMapping("/search")
+    @GetMapping("/search-terms")
     public String showSearchPage() {
-        return "search";
+        return "search-terms";
     }
 
-    @PostMapping("/submit-search")
-    public String search(@RequestParam("terms") List<String> terms, Model model) {
-        //TODO: With terms get pages
+    @PostMapping("/search-terms-results")
+    @ResponseBody
+    public List<Page> searchTermsResults(@RequestBody List<String> terms) {
+        // TODO: With terms, get pages from the server that contain the terms and save them in the "pages" variable
+        logger.info(terms.toString());
 
-        //TESTE
         List<Page> pages = new ArrayList<>();
+        Page p = new Page();
+        p.title = "OLA";
+        p.url = "hello";
+        p.citation = "bye";
+        pages.add(p);
 
-        // Pass the search results to the HTML view
-        model.addAttribute("pages", pages);
-
-        // Pagination
-        int numPages = (int) Math.ceil(pages.size() / (double) RESULTS_PER_PAGE);
-        model.addAttribute("numPages", numPages);
-
-        return "search-results";
+        return pages;
     }
 
 
