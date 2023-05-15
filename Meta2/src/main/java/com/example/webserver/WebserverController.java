@@ -141,8 +141,7 @@ public class WebserverController {
                         topStory.toString() +
                         ".json";
                 logger.info("Analyzing top story with URL: " + formattedTopStoryURL);
-                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL
-                        , HackerNewsItemRecord.class);
+                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL, HackerNewsItemRecord.class);
                 if(hnir == null || hnir.url() == null || hnir.title() == null
                         || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
 
@@ -175,14 +174,13 @@ public class WebserverController {
             Registry registry = LocateRegistry.getRegistry("localhost", 7004);
             SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
             if(hnUser == null || hnUser.submitted() == null){
-                logger.info(hnUserURL);
                 return null;
             }
             for (var userStory : hnUser.submitted()) {
                 String formattedUserStoryURL = "https://hacker-news.firebaseio.com/v0/item/" +
                         userStory.toString() +
                         ".json";
-                logger.info("Analyzing top story with URL: " + formattedUserStoryURL);
+                //logger.info("Analyzing top story with URL: " + formattedUserStoryURL);
                 HackerNewsItemRecord hnir = restTemplate.getForObject(formattedUserStoryURL
                         , HackerNewsItemRecord.class);
 
@@ -191,6 +189,7 @@ public class WebserverController {
                 String storyURL = hnir.url().toLowerCase();
                 searchC.indexUrl(storyURL);
                 userStoryURLs.add(storyURL);
+                logger.info("Indexed URL: " + formattedUserStoryURL);
             }
         } catch(Exception e){
             e.printStackTrace();
