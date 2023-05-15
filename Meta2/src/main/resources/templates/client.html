@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client Page</title>
+</head>
+<body>
+<h2>Welcome, Client!</h2>
+<button onclick="window.location.href='search.html'">Search</button>
+<button onclick="window.location.href='searchpages.html'">Search for Pages</button>
+<button onclick="openPopup()">Admin</button>
+<button onclick="logout()">Logout</button>
+<script>
+
+  function logout() {
+    alert("Logged out successfully.");
+    //TODO: Redirect the user to the login page or perform any other desired action
+  }
+
+  function openPopup() {
+    var popup = window.open("", "Admin Popup", "width=400,height=300");
+    popup.document.write("<html><head><title>Admin Popup</title></head><body>");
+    popup.document.write("<h2>Admin Popup</h2>");
+    popup.document.write("<p>This is the admin popup with certain information.</p>");
+    popup.document.write("</body></html>");
+  }
+</script>
+</body>
+</html>

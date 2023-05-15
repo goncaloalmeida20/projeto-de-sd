@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guest Page</title>
+    <script>
+        function openPopup() {
+            var popup = window.open("", "Admin Popup", "width=400,height=300");
+            popup.document.write("<html><head><title>Admin Popup</title></head><body>");
+            popup.document.write("<h2>Admin Popup</h2>");
+            popup.document.write("<p>This is the admin popup with certain information.</p>");
+            popup.document.write("</body></html>");
+        }
+    </script>
+</head>
+<body>
+<h2>Welcome, Guest!</h2>
+<button onclick="window.location.href='register.html'">Register</button>
+<button onclick="window.location.href='login.html'">Login</button>
+<button onclick="window.location.href='search.html'">Search</button>
+<button onclick="openPopup()">Admin</button>
+</body>
+</html>
