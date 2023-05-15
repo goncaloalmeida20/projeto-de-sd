@@ -1,21 +1,16 @@
 package com.example.webserver;
 
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Controller
 public class WebserverController {
     @GetMapping("/random")
-    public String random(){
+    public String hello(){
         return "clientPage";
     }
 
@@ -57,7 +52,7 @@ public class WebserverController {
 
     @GetMapping("/client")
     public String clientPage() {
-        return "client";
+        return "guest";
     }
 
     @GetMapping("/index-url")
@@ -67,7 +62,7 @@ public class WebserverController {
 
     @PostMapping("/index-url")
     public String indexUrl(@RequestParam("urlInput") String url) {
-        /*try {
+        try {
             Registry registry = LocateRegistry.getRegistry("localhost", 6000);
             SearchModuleC searchC = (SearchModuleC) registry.lookup("searchC");
 
@@ -75,8 +70,7 @@ public class WebserverController {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }*/
-        System.out.println("INDEXURL");
+        }
 
         //TODO: Display a message or perform any necessary actions after successful indexation
 
@@ -84,8 +78,8 @@ public class WebserverController {
         return "redirect:/index-url";
     }
 
-    @PostMapping("/process-form")
-    public String processForm(@RequestParam("numTerms") int numTerms, @RequestParam("term") String[] terms) {
+    @PostMapping("/search")
+    public String search(@RequestParam("numTerms") int numTerms, @RequestParam("term") String[] terms) {
         // Process the terms
 
         // TESTE
@@ -96,14 +90,13 @@ public class WebserverController {
         return "redirect:/index";
     }
 
-    @PostMapping("/search")
-    public String search(@RequestParam("url") String url, Model model) {
+    @PostMapping("/search-pages")
+    public String searchPages(@RequestParam("url") String url, Model model) {
         List<Page> pages = searchResults(url);
         model.addAttribute("pages", pages);
 
         return "search-results";
     }
-
 
     private List<Page> searchResults(String url) {
 
