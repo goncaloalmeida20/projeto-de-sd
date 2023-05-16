@@ -9,12 +9,11 @@
       $('#userForm').submit(function(event) {
         event.preventDefault();
         var userID = $('#user').val();
-
         $.ajax({
           type: 'POST',
           url: '/user-stories-results',
-          contentType: 'application/json',
-          data: JSON.stringify(userID),
+          contentType: 'text/plain',
+          data: userID,
           success: function(response) {
             displayResults(response); // Call the function to display the results
           },

@@ -4,22 +4,29 @@ import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
 import com.example.webserver.forms.Login;
 import com.example.webserver.the_data.AdminInfo;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 @Controller
 public class WebserverController {
@@ -30,6 +37,29 @@ public class WebserverController {
 
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     private static final int RESULTS_PER_PAGE = 10;
+    private static final int MAX_RMI_CONCURRENT_CALLS = 100;
+
+    //===========================================================================
+    // RMIWrapper
+    //===========================================================================
+
+    @Resource(name="applicationRMISemaphore")
+    private Semaphore RMISem;
+
+    @Resource(name="sessionRMIWrapper")
+    private RMIWrapper rmiw;
+
+    @Bean
+    @Scope(value= WebApplicationContext.SCOPE_APPLICATION, proxyMode=ScopedProxyMode.TARGET_CLASS)
+    public Semaphore applicationRMISemaphore() throws RemoteException {
+        return new Semaphore(MAX_RMI_CONCURRENT_CALLS);
+    }
+
+    @Bean
+    @Scope(value= WebApplicationContext.SCOPE_SESSION, proxyMode=ScopedProxyMode.TARGET_CLASS)
+    public RMIWrapper sessionRMIWrapper() throws RemoteException {
+        return new RMIWrapper(RMISem);
+    }
 
     //===========================================================================
     // Pages
@@ -111,10 +141,8 @@ public class WebserverController {
     @PostMapping("/submit-index-url")
     public String indexUrl(@RequestParam("url") String url) {
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
-            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
-            logger.info("Indexing URL: " + url);
-            searchC.indexUrl(url.toLowerCase());
+            rmiw.indexUrl(url);
+            logger.info("Indexed URL: " + url);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,8 +165,6 @@ public class WebserverController {
         List hnTopStories = restTemplate.getForObject(topStoriesURL, List.class);
         List<String> topStoryURLs = new ArrayList<>();
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
-            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
             for (var topStory : hnTopStories) {
                 String formattedTopStoryURL = "https://hacker-news.firebaseio.com/v0/item/" +
                         topStory.toString() +
@@ -149,7 +175,7 @@ public class WebserverController {
                         || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
 
                 String storyURL = hnir.url().toLowerCase();
-                searchC.indexUrl(storyURL);
+                rmiw.indexUrl(storyURL);
                 topStoryURLs.add(storyURL);
             }
         } catch(Exception e){
@@ -169,13 +195,11 @@ public class WebserverController {
         List<String> userStoryURLs = new ArrayList<>();
         try {
             logger.info(user);
-            user = user.replace("\"", "");
+            //user = user.replace("\"", "");
             String hnUserURL = "https://hacker-news.firebaseio.com/v0/user/" + user + ".json";
             logger.info(hnUserURL);
             RestTemplate restTemplate = new RestTemplate();
             HackerNewsUserRecord hnUser = restTemplate.getForObject(hnUserURL, HackerNewsUserRecord.class);
-            Registry registry = LocateRegistry.getRegistry("localhost", 7004);
-            SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
             if(hnUser == null || hnUser.submitted() == null){
                 return null;
             }
@@ -190,7 +214,7 @@ public class WebserverController {
                 if(hnir == null || hnir.url() == null) continue;
 
                 String storyURL = hnir.url().toLowerCase();
-                searchC.indexUrl(storyURL);
+                rmiw.indexUrl(storyURL);
                 userStoryURLs.add(storyURL);
                 logger.info("Indexed URL: " + formattedUserStoryURL);
             }
