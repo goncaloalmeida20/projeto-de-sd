@@ -8,6 +8,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
@@ -44,7 +46,7 @@ public class RMIWrapper {
         throw new RemoteException("Server timed out");
     }
 
-    int register(String username, String password) throws RemoteException {
+    public int register(String username, String password) throws RemoteException {
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -65,7 +67,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    int login(String username, String password, int id) throws RemoteException{
+    public int login(String username, String password, int id) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -87,7 +89,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    void indexUrl(String url) throws RemoteException{
+    public void indexUrl(String url) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -112,7 +114,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException{
+    public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -134,7 +136,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    ArrayList<Page> searchPages(String url, int n_page, int id, boolean logged) throws RemoteException{
+    public ArrayList<Page> searchPages(String url, int n_page, int id, boolean logged) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -156,7 +158,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    Map<Integer, Integer> admin() throws RemoteException{
+    public Map<Integer, Integer> admin() throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -178,12 +180,35 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
-    int logout(int id) throws RemoteException{
+    public int logout(int id) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
                 RMISem.acquire();
                 return searchC.logout(id);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public List<HashMap<Integer, String>> getTopTenSeaches() throws RemoteException{
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.getTopTenSeaches();
             }
             catch(Exception e){
                 logger.info("Server is not responding, retrying...");

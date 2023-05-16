@@ -93,8 +93,6 @@ public class WebserverController {
     public String processRegistration(@RequestParam("username") String username,
                                       @RequestParam("password") String password) throws RemoteException, NotBoundException {
         //TODO: Verify the registration and add to the database
-        Registry registry = LocateRegistry.getRegistry("localhost", 7004);
-        SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
 
 
         return "redirect:/login";
