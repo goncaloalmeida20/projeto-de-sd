@@ -14,6 +14,19 @@
 <button onclick="window.location.href='search-links'">Search for Pages</button>
 <button onclick="openAdminPanel()">Admin</button>
 <button onclick="logout()">Logout</button>
+<div class="row">
+  <div class="col-md-12">
+    <table id="conversation" class="table table-striped">
+      <thead>
+      <tr>
+        <th>Messages</th>
+      </tr>
+      </thead>
+      <tbody id="admininformations">
+      </tbody>
+    </table>
+  </div>
+</div>
 <script>
   var adminPanel = null;
 
@@ -35,6 +48,8 @@
       li.textContent = item;
       mostSearchedItems.appendChild(li);
     });
+
+    $("#admininformations").append("<p><b>" + adminInfo.numDownloads + "</b></p>" + "<tr><td>" + adminInfo.numActiveBarrels + "</td></tr>");
   }
 
   function openAdminPanel() {

@@ -9,7 +9,7 @@ function setConnected(connected) {
     } else {
         $("#conversation").hide();
     }
-    $("#messages").html("");
+    $("#admininformations").html("");
 }
 
 function connect() {
@@ -51,13 +51,23 @@ function fetchAdminInfo() {
         url: "/admin/info",
         type: "GET",
         success: function (response) {
-            showAdminInfo(response);
+            sendAdminInfo(response);
         },
         error: function (xhr, status, error) {
             console.log("Error fetching admin info:", error);
         }
     });
 }
+
+function sendAdminInfo(response) {
+    var adminInfo = {
+        numDownloads: response.numDownloads,
+        numActiveBarrels: response.numActiveBarrels,
+        mostSearchedItems: response.mostSearchedItems
+    };
+    stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
+}
+
 
 $(function () {
     $("form").on("submit", function (e) {
