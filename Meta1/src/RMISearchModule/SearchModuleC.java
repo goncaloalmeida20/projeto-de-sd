@@ -151,6 +151,25 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     /**
+     * Verifies if a client with the given username and password is logged in.
+     * @param username the username of the client to be verified
+     * @param password the password of the client to be verified
+     * @return 0 if the client is already logged in, 1 if the client is now logged in, 2 if the credentials are invalid
+     */
+    private int maven_verifyLoggedClient(String username, String password){
+        int login = 2; // 0 - Already logged in -- 1 - Logged in -- 2 - Invalid credentials
+        synchronized (SearchModule.sI.mCIList){
+            for(MavenClientInfo mCI: SearchModule.sI.mCIList){
+                if(mCI.username.equals(username) && mCI.password.equals(password)) {
+                    login = mCI.logged;
+                    break;
+                }
+            }
+        }
+        return login;
+    }
+
+    /**
      * Logs a client in with the given username and password
      * @param username the username of the client to be logged in
      * @param password the password of the client to be logged in
@@ -158,7 +177,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      * @return 0 if the client is already logged in, 1 if the client is now logged in, 2 if the credentials are invalid
      */
     public int maven_login(String username, String password, String s_id) {
-        int logged = verifyLoggedClient(username, password);
+        int logged = maven_verifyLoggedClient(username, password);
         if (logged == 0){
             return 0; // "Client already logged on!"
         } else if(logged == 1) {
@@ -173,6 +192,21 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     /**
+     * The findClient method searches the client list for a given username.
+     * @param username the username to search for
+     * @return true if the username is found, false otherwise
+     */
+    private boolean maven_findClient(String username){
+        synchronized (SearchModule.sI.mCIList){
+            for(MavenClientInfo mCI: SearchModule.sI.mCIList){
+                if(mCI.username.equals(username)) return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * Registers a new client with the given username and password.
      * @param username the username of the client to be registered
      * @param password the password of the client to be registered
@@ -180,7 +214,7 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      * @return the ID of the newly registered client if successful, 0 if the client already exists
      */
     public synchronized int maven_register(String username, String password, String s_id) {
-        boolean exist = findClient(username);
+        boolean exist = maven_findClient(username);
         if (exist){
             return 0; // "Client already exists!"
         } else {
