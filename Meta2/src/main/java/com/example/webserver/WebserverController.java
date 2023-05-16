@@ -3,9 +3,12 @@ package com.example.webserver;
 import RMISearchModule.SearchModuleC_S_I;
 import classes.Page;
 import com.example.webserver.forms.Login;
+import com.example.webserver.the_data.AdminInfo;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -255,5 +258,42 @@ public class WebserverController {
         List<Page> paginatedPages = pages.subList(startIndex, endIndex);
 
         return paginatedPages;
+    }
+
+
+    //===========================================================================
+    // Admin Info
+    //===========================================================================
+
+
+    /*@MessageMapping("/admin/info")
+    @SendTo("/topic/admin")
+    public AdminInfo getAdminInfo() {
+        AdminInfo adminInfo = new AdminInfo();
+
+        //TODO: Get info from server
+
+        //TEST
+        adminInfo.setMostSearchedItems(new ArrayList<>());
+        adminInfo.setNumDownloads(2);
+        adminInfo.setNumActiveBarrels(3);
+
+        return adminInfo;
+    }*/
+
+
+    @GetMapping("/admin/info")
+    @ResponseBody
+    public AdminInfo getAdminInfo() {
+        AdminInfo adminInfo = new AdminInfo();
+
+        //TODO: Get info from server
+
+        //TEST
+        adminInfo.setMostSearchedItems(new ArrayList<>());
+        adminInfo.setNumDownloads(2);
+        adminInfo.setNumActiveBarrels(3);
+
+        return adminInfo;
     }
 }

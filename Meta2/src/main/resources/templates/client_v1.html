@@ -52,7 +52,21 @@
       adminPanel.document.write("</div>");
       adminPanel.document.write("</body></html>");
       connect();
+      fetchAdminInfo();
     }
+  }
+
+  function fetchAdminInfo() {
+    $.ajax({
+      url: "/admin/info",
+      type: "GET",
+      success: function(response) {
+        showAdminInfo(response);
+      },
+      error: function(xhr, status, error) {
+        console.log("Error fetching admin info:", error);
+      }
+    });
   }
 </script>
 </body>
