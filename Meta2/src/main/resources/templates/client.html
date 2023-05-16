@@ -2,6 +2,19 @@
 <html>
 <head>
   <title>Client Page</title>
+  <style>
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      z-index: 9999;
+    }
+  </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -12,14 +25,23 @@
 <button onclick="window.location.href='index-url'">Index URL</button>
 <button onclick="window.location.href='search-terms'">Search</button>
 <button onclick="window.location.href='search-links'">Search for Pages</button>
-<button onclick="openAdminPanel()">Admin</button>
+<button onclick="fetchAdminInfo()">Admin</button>
 <button onclick="logout()">Logout</button>
+
+<div id="popup" style="display: none;">
+  <div class="popup">
+    <h2 id="popupTitle"></h2>
+    <p id="popupMessage"></p>
+    <button onclick="closePopup()">Close</button>
+  </div>
+</div>
+
 <div class="row">
   <div class="col-md-12">
     <table id="conversation" class="table table-striped">
       <thead>
       <tr>
-        <th>Messages</th>
+        <th>Admin Info</th>
       </tr>
       </thead>
       <tbody id="admininformations">
@@ -27,47 +49,44 @@
     </table>
   </div>
 </div>
+
 <script>
-  var adminPanel = null;
 
-  function showAdminInfo(adminInfo) {
-    console.log(adminInfo);
-    var numDownloads = adminPanel.document.querySelector("#numDownloads");
-    var numActiveBarrels = adminPanel.document.querySelector("#numActiveBarrels");
-    var mostSearchedItems = adminPanel.document.querySelector("#mostSearchedItems");
-
-    numDownloads.textContent = adminInfo.numDownloads;
-    numActiveBarrels.textContent = adminInfo.numActiveBarrels;
-
-    // Clear previous most searched items
-    mostSearchedItems.innerHTML = "";
-
-    // Add new most searched items
-    adminInfo.mostSearchedItems.forEach(function(item) {
-      var li = adminPanel.document.createElement("li");
-      li.textContent = item;
-      mostSearchedItems.appendChild(li);
-    });
-
-    $("#admininformations").append("<p><b>" + adminInfo.numDownloads + "</b></p>" + "<tr><td>" + adminInfo.numActiveBarrels + "</td></tr>");
+  function logout() {
+    if (confirm("Are you sure you want to log out?")) {
+      $.ajax({
+        url: "/logout",
+        type: "GET",
+        success: function (response) {
+          if (response === "logged-off") {
+            openPopup("Success", "Logged out successfully.");
+            setTimeout(function () {
+              window.location.href = "/login";
+            }, 3000);
+          } else if (response === "is-guest") {
+            openPopup("Error", "You are already logged out.");
+            setTimeout(function () {
+              window.location.href = "/guest";
+            }, 3000);
+          } else {
+            console.log("Unknown response:", response);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.log("Error logging out:", error);
+        }
+      });
+    }
   }
 
-  function openAdminPanel() {
-    if (adminPanel && !adminPanel.closed) {
-      adminPanel.focus();
-    } else {
-      adminPanel = window.open("", "Admin Painel", "width=400,height=300");
-      adminPanel.document.write("<html><head><title>Admin Painel</title></head><body>");
-      adminPanel.document.write("<h2>Admin Painel</h2>");
-      adminPanel.document.write("<div id='adminPanel'>");
-      adminPanel.document.write("<p>Number of Downloads: <span id='numDownloads'></span></p>");
-      adminPanel.document.write("<p>Number of Active Barrels: <span id='numActiveBarrels'></span></p>");
-      adminPanel.document.write("<h4>Most Searched Items</h4>");
-      adminPanel.document.write("<ul id='mostSearchedItems'></ul>");
-      adminPanel.document.write("</div>");
-      adminPanel.document.write("</body></html>");
-      connect();
-    }
+  function openPopup(title, message) {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("popupTitle").innerText = title;
+    document.getElementById("popupMessage").innerText = message;
+  }
+
+  function closePopup() {
+    document.getElementById("popup").style.display = "none";
   }
 </script>
 </body>

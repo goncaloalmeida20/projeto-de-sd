@@ -110,33 +110,45 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             ResultSet resultSet = stm.executeQuery();
 
-            // Get total number of pages that have a hyperlink to the given url
-            int lenPages = 0;
-            while (resultSet.next()) {
-                lenPages++;
-            }
+            if (n_page == -1){
+                // In case if for the maven project
+                resultSet.beforeFirst();
+                while (resultSet.next()) {
+                    Page page = new Page();
+                    page.url = resultSet.getString("url");
+                    page.title = resultSet.getString("title");
+                    page.citation = resultSet.getString("citation");
+                    pages.add(page);
+                }
+            } else {
+                // Get total number of pages that have a hyperlink to the given url
+                int lenPages = 0;
+                while (resultSet.next()) {
+                    lenPages++;
+                }
 
-            // Calculate the index range
-            int startIndex = (lenPages / 10) * n_page;
-            int endIndex = startIndex + 10;
+                // Calculate the index range
+                int startIndex = (lenPages / 10) * n_page;
+                int endIndex = startIndex + 10;
 
-            // Set the result iterator in the startIndex
-            int counter = 0;
-            resultSet.beforeFirst();
-            while (resultSet.next()) {
-                if(counter == startIndex - 1) break;
-                counter++;
-            }
+                // Set the result iterator in the startIndex
+                int counter = 0;
+                resultSet.beforeFirst();
+                while (resultSet.next()) {
+                    if (counter == startIndex - 1) break;
+                    counter++;
+                }
 
-            // Add the pages to a list
-            resultSet.beforeFirst();
-            while (resultSet.next() && counter < endIndex) {
-                Page page = new Page();
-                page.url = resultSet.getString("url");
-                page.title = resultSet.getString("title");
-                page.citation = resultSet.getString("citation");
-                pages.add(page);
-                counter++;
+                // Add the pages to a list
+                resultSet.beforeFirst();
+                while (resultSet.next() && counter < endIndex) {
+                    Page page = new Page();
+                    page.url = resultSet.getString("url");
+                    page.title = resultSet.getString("title");
+                    page.citation = resultSet.getString("citation");
+                    pages.add(page);
+                    counter++;
+                }
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -172,34 +184,46 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             resultSet = stm.executeQuery();
             ResultSet copyResultSet = resultSet;
 
-            // Get total number of pages that have a hyperlink to the given url
-            int lenPages = 0;
-            while (copyResultSet.next()) {
-                lenPages++;
-            }
-
-            // Calculate the index range
-            int startIndex = (lenPages / 10) * n_page;
-            int endIndex = startIndex + 10;
-
-            // Set the result iterator in the startIndex
-            int counter = 0;
-            resultSet.beforeFirst();
-            while (resultSet.next()) {
-                if(counter == startIndex - 1) break;
-                counter++;
-            }
-
-            // Add the pages to a list
             ArrayList<Page> pages = new ArrayList<>();
-            resultSet.beforeFirst();
-            while (resultSet.next() && counter < endIndex) {
-                Page page = new Page();
-                page.url = resultSet.getString("url");
-                page.title = resultSet.getString("title");
-                page.citation = resultSet.getString("citation");
-                pages.add(page);
-                counter++;
+
+            if (n_page == -1){
+                // In case if for the maven project
+                while (resultSet.next()) {
+                    Page page = new Page();
+                    page.url = resultSet.getString("url");
+                    page.title = resultSet.getString("title");
+                    page.citation = resultSet.getString("citation");
+                    pages.add(page);
+                }
+            } else {
+                // Get total number of pages that have a hyperlink to the given url
+                int lenPages = 0;
+                while (copyResultSet.next()) {
+                    lenPages++;
+                }
+
+                // Calculate the index range
+                int startIndex = (lenPages / 10) * n_page;
+                int endIndex = startIndex + 10;
+
+                // Set the result iterator in the startIndex
+                int counter = 0;
+                resultSet.beforeFirst();
+                while (resultSet.next()) {
+                    if (counter == startIndex - 1) break;
+                    counter++;
+                }
+
+                // Add the pages to a list
+                resultSet.beforeFirst();
+                while (resultSet.next() && counter < endIndex) {
+                    Page page = new Page();
+                    page.url = resultSet.getString("url");
+                    page.title = resultSet.getString("title");
+                    page.citation = resultSet.getString("citation");
+                    pages.add(page);
+                    counter++;
+                }
             }
             Barrel.bdb.addSearch(2, url);
             return pages;

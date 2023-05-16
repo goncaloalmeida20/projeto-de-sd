@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.HtmlUtils;
 
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
@@ -27,6 +28,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -90,12 +92,15 @@ public class WebserverController {
     }
 
     @PostMapping("/submit-register")
+    @ResponseBody
     public String processRegistration(@RequestParam("username") String username,
-                                      @RequestParam("password") String password) throws RemoteException, NotBoundException {
-        //TODO: Verify the registration and add to the database
-
-
-        return "redirect:/login";
+                                      @RequestParam("password") String password) throws RemoteException {
+        int res = rmiw.maven_register(username, password, RequestContextHolder.currentRequestAttributes().getSessionId());
+        if (res == 0) {
+            return "register-error"; // Redirect to error page if client already exists
+        } else {
+            return "register-success"; // Redirect to login page if client is registered
+        }
     }
 
     @GetMapping("/login")
@@ -105,28 +110,34 @@ public class WebserverController {
     }
 
     @PostMapping("/save-login")
-    public String saveLoginSubmission(@ModelAttribute Login login, Model model) {
-        if (validateLogin(login)) {
+    @ResponseBody
+    public String saveLoginSubmission(@ModelAttribute Login login) throws RemoteException {
+        int res = rmiw.maven_login(login.getUsername(), login.getPassword(), RequestContextHolder.currentRequestAttributes().getSessionId());
+        logger.info(String.valueOf(res));
+        if (res == 0) {
             ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             HttpSession session = attr.getRequest().getSession(true);
             session.setAttribute("login", true);
-            return "redirect:/client";
-        } else {
-            model.addAttribute("errorMessage", "Invalid login credentials");
-            return "login";
+            return "already-login"; // Redirect to client page if Client already logged on!
+        } else if (res == 1){
+            return "logged-in"; // Redirect to client page if Client just logged in
+        } else{
+            return "invalid-credentials"; // Redirect to login page if Client inserted invalid credentials
         }
     }
 
-
-    public boolean validateLogin(Login login){
-        //TODO: VALIDATE LOGIN in the server
-
-        return !login.getUsername().isEmpty() && !login.getPassword().isEmpty();
-    }
-
-    @GetMapping("/logout")
-    public String logout() {
-        return "redirect:/login";
+    @PostMapping("/logout")
+    @ResponseBody
+    public String logout() throws RemoteException {
+        int res = rmiw.maven_logout(RequestContextHolder.currentRequestAttributes().getSessionId());
+        if (res == 0) {
+            ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+            HttpSession session = attr.getRequest().getSession(true);
+            session.setAttribute("login", true);
+            return "logged-off"; // Redirect to login page if Client is log off
+        } else{
+            return "is-guest"; // Redirect to guest page if Client is not logged on
+        }
     }
 
 
@@ -240,21 +251,8 @@ public class WebserverController {
 
     @PostMapping("/search-terms-results")
     @ResponseBody
-    public List<Page> searchTermsResults(@RequestBody String url) {
-        // TODO: With terms, get pages from the server that contain the terms and save them in the "pages" variable
-        //logger.info(terms.toString());
-        List<Page> pages = new ArrayList<>();
-        Page p = new Page();
-        p.title = "OLA";
-        p.url = "hello";
-        p.citation = "bye";
-        pages.add(p);
-        p.title = "ADEUS";
-        p.url = "bye";
-        p.citation = "hello";
-        pages.add(p);
-
-        return pages;
+    public List<Page> searchTermsResults(@RequestBody String[] terms) throws RemoteException {
+        return rmiw.maven_search(terms.length, terms);
     }
 
 
@@ -263,6 +261,7 @@ public class WebserverController {
     //===========================================================================
 
 
+    //TODO: Verify if the client is logged on
     @GetMapping("/search-links")
     public String showSearchLinksPage(Model model) {
         model.addAttribute("RESULTS_PER_PAGE", RESULTS_PER_PAGE);
@@ -272,11 +271,8 @@ public class WebserverController {
 
     @PostMapping("/search-links-results")
     @ResponseBody
-    public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) {
-        // TODO: With links, get pages from the server that contain the link to the URL and save them in the "pages" variable
-        // logger.info(url);
-        List<Page> pages = new ArrayList<>();
-        // Populate pages with the results
+    public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) throws RemoteException {
+        List<Page> pages = rmiw.maven_searchPages(url);
 
         // Apply pagination
         int startIndex = (page - 1) * RESULTS_PER_PAGE;
@@ -292,20 +288,12 @@ public class WebserverController {
     //===========================================================================
 
 
-    /*@MessageMapping("/admin/info")
+    @MessageMapping("/admin")
     @SendTo("/topic/admin")
-    public AdminInfo getAdminInfo() {
-        AdminInfo adminInfo = new AdminInfo();
+    public AdminInfo onAdminInfo(AdminInfo adminInfo) {
+        return new AdminInfo(Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumDownloads())), Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumActiveBarrels())), Collections.singletonList(HtmlUtils.htmlEscape(adminInfo.getMostSearchedItems().toString())));
 
-        //TODO: Get info from server
-
-        //TEST
-        adminInfo.setMostSearchedItems(new ArrayList<>());
-        adminInfo.setNumDownloads(2);
-        adminInfo.setNumActiveBarrels(3);
-
-        return adminInfo;
-    }*/
+    }
 
 
     @GetMapping("/admin/info")

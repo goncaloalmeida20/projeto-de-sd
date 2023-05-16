@@ -19,4 +19,9 @@ public interface SearchModuleC_S_I extends Remote{
     Map<Integer, Integer> admin() throws java.rmi.RemoteException;
     int logout(int id) throws java.rmi.RemoteException, ServerNotActiveException;
     List<HashMap<Integer, String>> getTopTenSeaches() throws java.rmi.RemoteException, InterruptedException;
+    int maven_login(String username, String password, String s_id) throws RemoteException;
+    int maven_register(String username, String password, String s_id) throws RemoteException;
+    int maven_logout(String s_id) throws RemoteException;
+    ArrayList<Page> maven_search(int termCount, String[] terms) throws RemoteException, InterruptedException;
+    List<Page> maven_searchPages(String url) throws RemoteException, InterruptedException;
 }

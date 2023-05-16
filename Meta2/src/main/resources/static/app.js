@@ -2,8 +2,8 @@ var stompClient = null;
 var intervalId = null; // Variable to hold the interval ID
 
 function setConnected(connected) {
-    $("#connect").prop("disabled", connected);
-    $("#disconnect").prop("disabled", !connected);
+    //$("#connect").prop("disabled", connected);
+    //$("#disconnect").prop("disabled", !connected);
     if (connected) {
         $("#conversation").show();
     } else {
@@ -68,6 +68,17 @@ function sendAdminInfo(response) {
     stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
 }
 
+//TODO: To complete
+function showAdminInfo(adminInfo) {
+    $("#admininformations").html(
+        "<tr><td><b>Number of Downloads:</b></td><td>" +
+        adminInfo.numDownloads +
+        "</td></tr>" +
+        "<tr><td><b>Number of Active Barrels:</b></td><td>" +
+        adminInfo.numActiveBarrels +
+        "</td></tr>"
+    )
+    ;}
 
 $(function () {
     $("form").on("submit", function (e) {

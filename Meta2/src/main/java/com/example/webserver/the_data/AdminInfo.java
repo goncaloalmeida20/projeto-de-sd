@@ -19,16 +19,16 @@ public class AdminInfo {
         this.mostSearchedItems = mostSearchedItems;
     }
 
-    public int getNumDownloads() {
-        return numDownloads;
+    public String getNumDownloads() {
+        return Integer.toString(numDownloads);
     }
 
     public void setNumDownloads(int numDownloads) {
         this.numDownloads = numDownloads;
     }
 
-    public int getNumActiveBarrels() {
-        return numActiveBarrels;
+    public String getNumActiveBarrels() {
+        return Integer.toString(numActiveBarrels);
     }
 
     public void setNumActiveBarrels(int numActiveBarrels) {

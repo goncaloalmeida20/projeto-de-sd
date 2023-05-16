@@ -46,7 +46,7 @@ public class RMIWrapper {
         throw new RemoteException("Server timed out");
     }
 
-    public int register(String username, String password) throws RemoteException {
+    public int register(String username, String password, String sessionId) throws RemoteException {
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
             try{
@@ -89,6 +89,7 @@ public class RMIWrapper {
         }
         throw new RemoteException("Server timed out");
     }
+
     public void indexUrl(String url) throws RemoteException{
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         while(System.currentTimeMillis() < timeout_time){
@@ -209,6 +210,120 @@ public class RMIWrapper {
             try{
                 RMISem.acquire();
                 return searchC.getTopTenSeaches();
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public int maven_register(String username, String password, String s_id) throws RemoteException {
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_register(username, password, s_id);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public int maven_login(String username, String password, String s_id) throws RemoteException{
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_login(username, password, s_id);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public int maven_logout(String s_id) throws RemoteException{
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_logout(s_id);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public ArrayList<Page> maven_search(int termCount, String[] terms) throws RemoteException{
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_search(termCount, terms);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public List<Page> maven_searchPages(String url) throws RemoteException {
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_searchPages(url);
             }
             catch(Exception e){
                 logger.info("Server is not responding, retrying...");

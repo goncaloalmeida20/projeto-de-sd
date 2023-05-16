@@ -151,6 +151,49 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     /**
+     * Logs a client in with the given username and password
+     * @param username the username of the client to be logged in
+     * @param password the password of the client to be logged in
+     * @param s_id the ID of the client to be logged in (a String)
+     * @return 0 if the client is already logged in, 1 if the client is now logged in, 2 if the credentials are invalid
+     */
+    public int maven_login(String username, String password, String s_id) {
+        int logged = verifyLoggedClient(username, password);
+        if (logged == 0){
+            return 0; // "Client already logged on!"
+        } else if(logged == 1) {
+            synchronized (SearchModule.sI.mCIList){
+                SearchModule.sI.clientInfoByS_id(s_id).logged = 1;
+            }
+            saveServer();
+            return 1; // "Client is now logged on!"
+        } else{
+            return 2; // "Invalid credentials"
+        }
+    }
+
+    /**
+     * Registers a new client with the given username and password.
+     * @param username the username of the client to be registered
+     * @param password the password of the client to be registered
+     * @param s_id the ID of the client to be registered (a String)
+     * @return the ID of the newly registered client if successful, 0 if the client already exists
+     */
+    public synchronized int maven_register(String username, String password, String s_id) {
+        boolean exist = findClient(username);
+        if (exist){
+            return 0; // "Client already exists!"
+        } else {
+            synchronized (SearchModule.sI.mCIList){
+                SearchModule.sI.mCIList.add(new MavenClientInfo(s_id, 0, username, password));
+            }
+            saveServer();
+            return 1; // "Client is now registered!"
+        }
+
+    }
+
+    /**
      * Indexes a URL.
      * @param url the URL to be indexed
      * @throws RemoteException if a remote exception occurs
@@ -174,6 +217,26 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     public ArrayList<Page> search(int termCount, String[] terms, int n_page) throws RemoteException, InterruptedException {
         HashMap<Object, Integer> task = new HashMap<>();
         task.put(terms, n_page);
+        addTask(1, task);
+        synchronized(result_pages) {
+            while (!result_pages.containsKey(this)) {
+                result_pages.wait();
+            }
+            ArrayList<Page> res = result_pages.get(this);
+            result_pages.remove(this);
+            return res;
+        }
+    }
+
+    /**
+     * Searches for pages containing specified terms with pagination support.
+     * @param termCount the number of terms being searched for
+     * @param terms an array of terms to search for
+     * @return an ArrayList of Page objects containing the search results
+     */
+    public ArrayList<Page> maven_search(int termCount, String[] terms) throws RemoteException, InterruptedException {
+        HashMap<Object, Integer> task = new HashMap<>();
+        task.put(terms, -1);
         addTask(1, task);
         synchronized(result_pages) {
             while (!result_pages.containsKey(this)) {
@@ -215,6 +278,25 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
     }
 
     /**
+     * Searches for pages that have a link to a specific URL with pagination support.
+     * @param url the URL to search for pages on
+     * @return an ArrayList of Page objects containing the search results
+     */
+    public ArrayList<Page> maven_searchPages(String url) throws RemoteException, InterruptedException {
+        HashMap<Object, Integer> task = new HashMap<>();
+        task.put(url, -1);
+        addTask(2, task);
+        synchronized(result_pages) {
+            while (!result_pages.containsKey(this)) {
+                result_pages.wait();
+            }
+            ArrayList<Page> res = result_pages.get(this);
+            result_pages.remove(this);
+            return res;
+        }
+    }
+
+    /**
      * Retrieves a map of active downloader and barrels threads
      * @return a Map with Integer keys representing thread IDs and Integer values representing the current progress of each thread
      * @throws RemoteException if a communication-related exception occurs
@@ -239,6 +321,27 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         } else {
             synchronized (SearchModule.sI.cIList){
                 SearchModule.sI.clientInfoById(id).logged = 0;
+                saveServer();
+            }
+            return 1; // "Client is now logged off!"
+        }
+    }
+
+    /**
+     Logs a client out of the system.
+     @param s_id the ID of the client to log out (String)
+     @return an integer indicating the success or failure of the logout attempt (0 for failure, 1 for success)
+     */
+    public int maven_logout(String s_id) {
+        int logged;
+        synchronized (SearchModule.sI.mCIList){
+            logged = SearchModule.sI.clientInfoByS_id(s_id).logged;
+        }
+        if (logged == 0){
+            return 0; // "Client is not logged on, so it cannot log out!"
+        } else {
+            synchronized (SearchModule.sI.mCIList){
+                SearchModule.sI.clientInfoByS_id(s_id).logged = 0;
                 saveServer();
             }
             return 1; // "Client is now logged off!"
