@@ -16,6 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
@@ -59,8 +61,11 @@ public class WebserverController {
 
     @PostMapping("/submit-register")
     public String processRegistration(@RequestParam("username") String username,
-                                      @RequestParam("password") String password) {
+                                      @RequestParam("password") String password) throws RemoteException, NotBoundException {
         //TODO: Verify the registration and add to the database
+        Registry registry = LocateRegistry.getRegistry("localhost", 7004);
+        SearchModuleC_S_I searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
+
 
         return "redirect:/login";
     }
