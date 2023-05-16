@@ -182,12 +182,12 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
             );
             stm.setString(1, url);
             resultSet = stm.executeQuery();
-            ResultSet copyResultSet = resultSet;
 
             ArrayList<Page> pages = new ArrayList<>();
 
             if (n_page == -1){
                 // In case if for the maven project
+                resultSet.beforeFirst();
                 while (resultSet.next()) {
                     Page page = new Page();
                     page.url = resultSet.getString("url");
@@ -197,6 +197,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                 }
             } else {
                 // Get total number of pages that have a hyperlink to the given url
+                ResultSet copyResultSet = resultSet;
                 int lenPages = 0;
                 while (copyResultSet.next()) {
                     lenPages++;
@@ -225,6 +226,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                     counter++;
                 }
             }
+            System.out.println(pages.size());
             Barrel.bdb.addSearch(2, url);
             return pages;
         } catch (SQLException e) {

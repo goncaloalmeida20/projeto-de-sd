@@ -273,7 +273,7 @@ public class WebserverController {
     @ResponseBody
     public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) throws RemoteException {
         List<Page> pages = rmiw.maven_searchPages(url);
-
+        System.out.println(pages.size());
         // Apply pagination
         int startIndex = (page - 1) * RESULTS_PER_PAGE;
         int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, pages.size());
