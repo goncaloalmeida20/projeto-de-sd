@@ -167,11 +167,11 @@ public class WebserverController {
         }
 
 
-        return "redirect:/index-url";
+        return "redirect:/client";
     }
 
     @GetMapping("/top-stories")
-    public String topStories(Model model){
+    public String topStories(){
         return "top-stories";
     }
 
@@ -187,11 +187,11 @@ public class WebserverController {
                 String formattedTopStoryURL = "https://hacker-news.firebaseio.com/v0/item/" +
                         topStory.toString() +
                         ".json";
-                logger.info("Analyzing top story with URL: " + formattedTopStoryURL);
-                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL, HackerNewsItemRecord.class);
-                if(hnir == null || hnir.url() == null || hnir.title() == null
-                        || termsJson.stream().noneMatch(hnir.title()::contains)) continue;
 
+                HackerNewsItemRecord hnir = restTemplate.getForObject(formattedTopStoryURL, HackerNewsItemRecord.class);
+                if(hnir == null || hnir.url() == null || hnir.text() == null
+                        || termsJson.stream().noneMatch(hnir.text()::contains)) continue;
+                logger.info("Indexing top story " + topStory + "  with URL: " + formattedTopStoryURL);
                 String storyURL = hnir.url().toLowerCase();
                 rmiw.indexUrl(storyURL);
                 topStoryURLs.add(storyURL);
