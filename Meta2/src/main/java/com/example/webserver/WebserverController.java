@@ -83,7 +83,7 @@ public class WebserverController {
     public String clientPage() {
         ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         HttpSession session = attr.getRequest().getSession(true);
-        session.setAttribute("login", false);
+        if(session.getAttribute("login") == null) session.setAttribute("login", false);
         return "client";
     }
 
