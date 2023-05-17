@@ -60,7 +60,7 @@ function sendAdminInfo(response) {
     };
     console.log(adminInfo);
 
-    if (stompClient && stompClient.connected) { // Check if stompClient is not null and connected
+    if (stompClient && stompClient.connected) {
         stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
     } else {
         console.log("WebSocket connection is not established or has been closed.");
