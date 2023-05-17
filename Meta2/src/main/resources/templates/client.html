@@ -63,7 +63,7 @@
           if (response === "logged-off") {
             openPopup("Success", "Logged out successfully.");
             setTimeout(function () {
-              window.location.href = "/login";
+              window.location.href = "/guest";
             }, 3000);
           } else if (response === "is-guest") {
             openPopup("Error", "You are already logged out.");
