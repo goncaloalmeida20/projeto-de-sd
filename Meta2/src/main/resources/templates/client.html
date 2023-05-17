@@ -7,6 +7,29 @@
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script src="/app.js"></script>
+  <script th:inline="javascript">
+    $(document).ready(function() {
+      $.ajax({
+        type: 'POST',
+        url: '/check-authentication',
+        success: function(response) {
+          if (response === 'authenticated') {
+            initClientPage();
+          } else {
+            alert('Authentication failed. Please login.');
+            window.location.href = '/login';
+          }
+        },
+        error: function(xhr, status, error) {
+          alert('Authentication failed. Please login.');
+          window.location.href = '/login';
+        }
+      });
+
+      function initClientPage() {
+      }
+    });
+  </script>
 </head>
 <body>
 <script th:inline="javascript">
