@@ -4,12 +4,14 @@
     <title>Guest Page</title>
     <script src="/app.js"></script>
     <script>
-        function openPopup() {
-            var popup = window.open("", "Admin Popup", "width=400,height=300");
-            popup.document.write("<html><head><title>Admin Popup</title></head><body>");
-            popup.document.write("<h2>Admin Popup</h2>");
-            popup.document.write("<p>This is the admin popup with certain information.</p>");
-            popup.document.write("</body></html>");
+        function openPopup(title, message) {
+            document.getElementById("popup").style.display = "block";
+            document.getElementById("popupTitle").innerText = title;
+            document.getElementById("popupMessage").innerText = message;
+        }
+
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
         }
     </script>
 </head>
@@ -19,6 +21,28 @@
 <button onclick="window.location.href='login'">Login</button>
 <button onclick="window.location.href='search-terms'">Search</button>
 <button onclick="window.location.href='index-url'">Index URL</button>
-<button onclick="openPopup()">Admin</button>
+<button onclick="connect()">Admin</button>
+
+<div id="popup" style="display: none;">
+    <div class="popup">
+        <h2 id="popupTitle"></h2>
+        <p id="popupMessage"></p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="conversation" class="table table-striped">
+            <thead>
+            <tr>
+                <th>Admin Info</th>
+            </tr>
+            </thead>
+            <tbody id="admininformations">
+            </tbody>
+        </table>
+    </div>
+</div>
 </body>
 </html>
