@@ -23,7 +23,7 @@ function connect() {
             showAdminInfo(parsedAdminInfo);
         });
         // Start the interval to fetch admin info every 3 second
-        intervalId = setInterval(fetchAdminInfo, 3000);
+        //intervalId = setInterval(fetchAdminInfo, 3000);
     }, function (error) {
         console.log("Error connecting to WebSocket:", error);
     });

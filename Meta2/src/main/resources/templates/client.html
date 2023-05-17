@@ -19,14 +19,13 @@
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script src="/app.js"></script>
-  <script>connect()</script>
 </head>
 <body>
 <h2>Welcome, Client!</h2>
 <button onclick="window.location.href='index-url'">Index URL</button>
 <button onclick="window.location.href='search-terms'">Search</button>
 <button onclick="window.location.href='search-links'">Search for Pages</button>
-<button onclick="fetchAdminInfo()">Admin</button>
+<button onclick="connect()">Admin</button>
 <button onclick="logout()">Logout</button>
 
 <div id="popup" style="display: none;">

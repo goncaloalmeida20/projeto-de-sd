@@ -7,11 +7,15 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+@EnableScheduling
 @Controller
 public class WebserverController {
 
@@ -36,6 +41,8 @@ public class WebserverController {
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     private static final int RESULTS_PER_PAGE = 10;
     private static final int MAX_RMI_CONCURRENT_CALLS = 100;
+    @Autowired
+    private SimpMessagingTemplate template;
 
     //===========================================================================
     // RMIWrapper
@@ -290,17 +297,14 @@ public class WebserverController {
     // Admin Info
     //===========================================================================
 
-
-    @MessageMapping("/admin")
-    @SendTo("/topic/admin")
-    public AdminInfo onAdminInfo(AdminInfo adminInfo) {
-        return new AdminInfo(Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumDownloads())), Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumActiveBarrels())), HtmlUtils.htmlEscape(adminInfo.getMostSearchedItems()));
-
+    @Scheduled(fixedRate = 3000)
+    public void onAdminInfo() throws RemoteException, InterruptedException {
+        Thread.sleep(1000);
+        this.template.convertAndSend("/topic/admin", rmiw.maven_admin());
     }
 
 
     @GetMapping("/admin/info")
-    @ResponseBody
     public AdminInfo getAdminInfo() throws RemoteException {
         return rmiw.maven_admin();
     }
