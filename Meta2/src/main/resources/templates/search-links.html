@@ -8,7 +8,6 @@
         $(document).ready(function() {
             var currentPage = 1;
 
-            // Perform AJAX request to check authentication status
             $.ajax({
                 type: 'POST',
                 url: '/check-authentication',
@@ -28,18 +27,17 @@
 
             function initSearchPage() {
                 $('#searchForm').submit(function(event) {
-                    event.preventDefault(); // Prevent form submission
+                    event.preventDefault();
 
                     var url = $('#url').val();
 
-                    // Send an AJAX request to the server
                     $.ajax({
                         type: 'POST',
                         url: '/search-links-results?page=' + currentPage,
                         contentType: 'application/json',
                         data: JSON.stringify({ url: url }),
                         success: function(response) {
-                            displayResults(response); // Call the function to display the results
+                            displayResults(response);
                         },
                         error: function(xhr, status, error) {
                             var err = eval("(" + xhr.responseText + ")");
@@ -48,7 +46,6 @@
                     });
                 });
 
-                // Bind previous page button click event
                 $('#previousPage').click(function() {
                     if (currentPage > 1) {
                         currentPage--;
@@ -56,7 +53,6 @@
                     }
                 });
 
-                // Bind next page button click event
                 $('#nextPage').click(function() {
                     currentPage++;
                     $('#searchForm').submit();
@@ -74,7 +70,6 @@
                     return;
                 }
 
-                // Loop through the results and append them to the searchResults div
                 $.each(results, function(index, result) {
                     var resultItem = $('<div>');
                     resultItem.append('<h3>' + result.title + '</h3>');
@@ -89,7 +84,7 @@
 
             function updatePagination(totalResults) {
                 var resultsPerPage = 10;
-                var totalPages = Math.ceil(totalResults / resultsPerPage); // Calculate the total number of pages
+                var totalPages = Math.ceil(totalResults / resultsPerPage);
                 if (currentPage > 1) {
                     $('#previousPage').show();
                 } else {

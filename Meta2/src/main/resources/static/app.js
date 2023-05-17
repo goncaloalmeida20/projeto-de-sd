@@ -1,9 +1,6 @@
 var stompClient = null;
-var intervalId = null; // Variable to hold the interval ID
 
 function setConnected(connected) {
-    //$("#connect").prop("disabled", connected);
-    //$("#disconnect").prop("disabled", !connected);
     if (connected) {
         $("#conversation").show();
     } else {
@@ -22,8 +19,6 @@ function connect() {
             var parsedAdminInfo = JSON.parse(adminInfo.body);
             showAdminInfo(parsedAdminInfo);
         });
-        // Start the interval to fetch admin info every 3 second
-        //intervalId = setInterval(fetchAdminInfo, 3000);
     }, function (error) {
         console.log("Error connecting to WebSocket:", error);
     });
@@ -37,34 +32,6 @@ function disconnect() {
     setConnected(false);
     console.log("Disconnected");
     clearInterval(intervalId);
-}
-
-function fetchAdminInfo() {
-    $.ajax({
-        url: "/admin/info",
-        type: "GET",
-        success: function (response) {
-            sendAdminInfo(response);
-        },
-        error: function (xhr, status, error) {
-            console.log("Error fetching admin info:", error);
-        }
-    });
-}
-
-function sendAdminInfo(response) {
-    var adminInfo = {
-        numDownloads: response.numDownloads,
-        numActiveBarrels: response.numActiveBarrels,
-        mostSearchedItems: response.mostSearchedItems
-    };
-    console.log(adminInfo);
-
-    if (stompClient && stompClient.connected) { // Check if stompClient is not null and connected
-        stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
-    } else {
-        console.log("WebSocket connection is not established or has been closed.");
-    }
 }
 
 function showAdminInfo(adminInfo) {

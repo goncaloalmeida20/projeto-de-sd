@@ -57,7 +57,6 @@
             });
 
             function displayResults(results) {
-                // Clear previous results
                 $('#searchResults').empty();
 
                 if (results.length === 0) {
@@ -67,12 +66,10 @@
                     return;
                 }
 
-                // Calculate pagination
                 var totalPages = Math.ceil(results.length / resultsPerPage);
                 var startIndex = (currentPage - 1) * resultsPerPage;
                 var endIndex = startIndex + resultsPerPage;
 
-                // Loop through the results and append them to the searchResults div
                 for (var i = startIndex; i < endIndex && i < results.length; i++) {
                     var result = results[i];
                     var resultItem = $('<div>');
@@ -82,7 +79,6 @@
                     $('#searchResults').append(resultItem);
                 }
 
-                // Update pagination buttons
                 $('#pagination').empty();
                 if (currentPage > 1) {
                     $('#pagination').append('<button id="prevPage">Prev</button>');
@@ -91,7 +87,6 @@
                     $('#pagination').append('<button id="nextPage">Next</button>');
                 }
 
-                // Bind click event for pagination buttons
                 $('#prevPage').click(function() {
                     if (currentPage > 1) {
                         currentPage--;
