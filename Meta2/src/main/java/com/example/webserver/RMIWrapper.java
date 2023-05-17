@@ -115,8 +115,8 @@ public class RMIWrapper {
         while(System.currentTimeMillis() < timeout_time){
             try{
                 RMISem.acquire();
-                logger.info("Test " + RMISem.availablePermits());
-                Thread.sleep(10000);
+                //logger.info("Test " + RMISem.availablePermits());
+                //Thread.sleep(10000);
                 searchC.indexUrl(url);
                 return;
             }
@@ -343,7 +343,7 @@ public class RMIWrapper {
         while(System.currentTimeMillis() < timeout_time){
             try{
                 RMISem.acquire();
-                return searchC.maven_searchPages(url);
+                return searchC.searchPages(url,1, 1, true);
             }
             catch(Exception e){
                 logger.info("Server is not responding, retrying...");

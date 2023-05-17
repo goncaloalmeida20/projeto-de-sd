@@ -40,7 +40,7 @@ public class WebserverController {
 
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     private static final int RESULTS_PER_PAGE = 10;
-    private static final int MAX_RMI_CONCURRENT_CALLS = 2;
+    private static final int MAX_RMI_CONCURRENT_CALLS = 100;
     @Autowired
     private SimpMessagingTemplate template;
 
@@ -216,13 +216,12 @@ public class WebserverController {
 
     @PostMapping("/user-stories-results")
     @ResponseBody
-    public List<String> topStoriesResults(@RequestBody String user){
+    public List<String> userStoriesResults(@RequestBody String user){
         List<String> userStoryURLs = new ArrayList<>();
         try {
             logger.info(user);
             //user = user.replace("\"", "");
             String hnUserURL = "https://hacker-news.firebaseio.com/v0/user/" + user + ".json";
-            logger.info(hnUserURL);
             RestTemplate restTemplate = new RestTemplate();
             HackerNewsUserRecord hnUser = restTemplate.getForObject(hnUserURL, HackerNewsUserRecord.class);
             if(hnUser == null || hnUser.submitted() == null){
