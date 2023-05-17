@@ -2,25 +2,37 @@
 <html>
 <head>
   <title>Client Page</title>
-  <style>
-    .popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      z-index: 9999;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script src="/app.js"></script>
 </head>
 <body>
+<script th:inline="javascript">
+  $(document).ready(function() {
+    $.ajax({
+      type: 'POST',
+      url: '/check-authentication',
+      success: function(response) {
+        if (response === 'authenticated') {
+          initClientPage();
+        } else {
+          alert('Authentication failed. Please login.');
+          window.location.href = '/login';
+        }
+      },
+      error: function(xhr, status, error) {
+        alert('Authentication failed. Please login.');
+        window.location.href = '/login';
+      }
+    });
+
+    function initClientPage() {
+    }
+  });
+</script>
+
 <h2>Welcome, Client!</h2>
 <button onclick="window.location.href='index-url'">Index URL</button>
 <button onclick="window.location.href='search-terms'">Search</button>
@@ -51,45 +63,5 @@
     </table>
   </div>
 </div>
-
-<script>
-
-  function logout() {
-    if (confirm("Are you sure you want to log out?")) {
-      $.ajax({
-        url: "/logout",
-        type: "POST",
-        success: function (response) {
-          if (response === "logged-off") {
-            openPopup("Success", "Logged out successfully.");
-            setTimeout(function () {
-              window.location.href = "/guest";
-            }, 3000);
-          } else if (response === "is-guest") {
-            openPopup("Error", "You are already logged out.");
-            setTimeout(function () {
-              window.location.href = "/guest";
-            }, 3000);
-          } else {
-            console.log("Unknown response:", response);
-          }
-        },
-        error: function (xhr, status, error) {
-          console.log("Error logging out:", error);
-        }
-      });
-    }
-  }
-
-  function openPopup(title, message) {
-    document.getElementById("popup").style.display = "block";
-    document.getElementById("popupTitle").innerText = title;
-    document.getElementById("popupMessage").innerText = message;
-  }
-
-  function closePopup() {
-    document.getElementById("popup").style.display = "none";
-  }
-</script>
 </body>
 </html>

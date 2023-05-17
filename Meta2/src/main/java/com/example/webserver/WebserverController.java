@@ -1,6 +1,5 @@
 package com.example.webserver;
 
-import classes.AdminInfo;
 import classes.Page;
 import com.example.webserver.forms.Login;
 import jakarta.annotation.Resource;
@@ -11,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.util.HtmlUtils;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -284,7 +280,6 @@ public class WebserverController {
     public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) throws RemoteException {
         List<Page> pages = rmiw.maven_searchPages(url);
         System.out.println(pages.size());
-        // Apply pagination
         int startIndex = (page - 1) * RESULTS_PER_PAGE;
         int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, pages.size());
         List<Page> paginatedPages = pages.subList(startIndex, endIndex);
