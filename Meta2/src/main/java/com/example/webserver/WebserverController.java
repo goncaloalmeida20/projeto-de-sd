@@ -81,9 +81,6 @@ public class WebserverController {
 
     @GetMapping("/client")
     public String clientPage() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        HttpSession session = attr.getRequest().getSession(true);
-        if(session.getAttribute("login") == null) session.setAttribute("login", false);
         return "client";
     }
 
@@ -147,12 +144,13 @@ public class WebserverController {
     @PostMapping("/check-authentication")
     @ResponseBody
     public String checkAuthentication() {
-       ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-       HttpSession session = attr.getRequest().getSession(true);
-       if((boolean) session.getAttribute("login")){
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        HttpSession session = attr.getRequest().getSession(true);
+        if(session.getAttribute("login") == null) session.setAttribute("login", false);
+        if((boolean) session.getAttribute("login")){
            return "authenticated";
-       }
-       return "not-authenticated";
+        }
+        return "not-authenticated";
     }
 
 
