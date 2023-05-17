@@ -41,6 +41,7 @@ public class WebserverController {
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     private static final int RESULTS_PER_PAGE = 10;
     private static final int MAX_RMI_CONCURRENT_CALLS = 100;
+
     @Autowired
     private SimpMessagingTemplate template;
 
@@ -55,13 +56,13 @@ public class WebserverController {
     private RMIWrapper rmiw;
 
     @Bean
-    @Scope(value= WebApplicationContext.SCOPE_APPLICATION, proxyMode=ScopedProxyMode.TARGET_CLASS)
-    public Semaphore applicationRMISemaphore() throws RemoteException {
+    @Scope(value="singleton", proxyMode=ScopedProxyMode.TARGET_CLASS)
+    public Semaphore applicationRMISemaphore(){
         return new Semaphore(MAX_RMI_CONCURRENT_CALLS);
     }
 
     @Bean
-    @Scope(value= WebApplicationContext.SCOPE_APPLICATION, proxyMode=ScopedProxyMode.TARGET_CLASS)
+    @Scope(value="singleton", proxyMode=ScopedProxyMode.TARGET_CLASS)
     public RMIWrapper applicationRMIWrapper() throws RemoteException {
         return new RMIWrapper(RMISem);
     }
@@ -117,7 +118,6 @@ public class WebserverController {
     @ResponseBody
     public String saveLoginSubmission(@ModelAttribute Login login) throws RemoteException {
         int res = rmiw.maven_login(login.getUsername(), login.getPassword(), RequestContextHolder.currentRequestAttributes().getSessionId());
-        logger.info(String.valueOf(res));
         if (res == 0) {
             ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             HttpSession session = attr.getRequest().getSession(true);
@@ -285,7 +285,6 @@ public class WebserverController {
     @ResponseBody
     public List<Page> searchLinksResults(@RequestBody String url, @RequestParam(required = false, defaultValue = "1") int page) throws RemoteException {
         List<Page> pages = rmiw.maven_searchPages(url);
-        System.out.println(pages.size());
         // Apply pagination
         int startIndex = (page - 1) * RESULTS_PER_PAGE;
         int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, pages.size());

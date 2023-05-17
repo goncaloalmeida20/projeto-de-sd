@@ -26,6 +26,9 @@ public class RMIWrapper {
     private SearchModuleC_S_I searchC;
 
     private Semaphore RMISem;
+    public RMIWrapper(){
+
+    }
     public RMIWrapper(Semaphore RMISem) throws RemoteException {
         long timeout_time = System.currentTimeMillis() + TIMEOUT;
         this.RMISem = RMISem;
