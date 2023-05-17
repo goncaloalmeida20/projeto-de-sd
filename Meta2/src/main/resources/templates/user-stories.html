@@ -15,7 +15,7 @@
           contentType: 'text/plain',
           data: userID,
           success: function(response) {
-            displayResults(response); // Call the function to display the results
+            displayResults(response);
           },
           error: function(xhr, status, error) {
             var err = eval("(" + xhr.responseText + ")");
@@ -24,14 +24,12 @@
         });
       });
       function displayResults(results) {
-        // Clear previous results
         if(results == null || !results.length){
           $('#Results').empty();
           $('#Results').append("<p>User doesn't exist or has no valid stories</p>")
         }
         else{
           $('#Results').empty();
-          // Loop through the results and append them to the searchResults div
           $.each(results, function(index, result) {
             var resultItem = $('<div>');
             resultItem.append('<p>Story ' + result + ' indexed</p>');

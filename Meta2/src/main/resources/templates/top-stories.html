@@ -7,25 +7,22 @@
     <script>
         $(document).ready(function() {
             $('#searchForm').submit(function(event) {
-                event.preventDefault(); // Prevent form submission
+                event.preventDefault();
 
                 var numTerms = $('#numTerms').val();
 
-                // Generate dynamic form fields
                 var termFields = '';
                 for (var i = 1; i <= numTerms; i++) {
                     termFields += '<input type="text" name="term' + i + '" placeholder="Term ' + i + '" required><br>';
                 }
 
-                // Append the term fields to the dynamicForm
                 $('#termFields').html(termFields);
 
-                // Show the dynamicForm
                 $('#dynamicForm').show();
             });
 
             $('#dynamicForm').submit(function(event) {
-                event.preventDefault(); // Prevent form submission
+                event.preventDefault();
 
                 var terms = [];
                 $('#termFields input[type="text"]').each(function() {
@@ -37,14 +34,13 @@
 
                 console.log("Top stories terms: " + terms);
 
-                // Send an AJAX request to the server
                 $.ajax({
                     type: 'POST',
                     url: '/top-stories-results',
                     contentType: 'application/json',
                     data: JSON.stringify(terms),
                     success: function(response) {
-                        displayResults(response); // Call the function to display the results
+                        displayResults(response);
                     },
                     error: function(xhr, status, error) {
                         var err = eval("(" + xhr.responseText + ")");
@@ -54,10 +50,8 @@
             });
 
             function displayResults(results) {
-                // Clear previous results
                 $('#searchResults').empty();
 
-                // Loop through the results and append them to the searchResults div
                 $.each(results, function(index, result) {
                     var resultItem = $('<div>');
                     resultItem.append('<p>Story ' + result + ' indexed</p>');

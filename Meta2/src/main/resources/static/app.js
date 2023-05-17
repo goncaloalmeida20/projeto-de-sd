@@ -1,9 +1,11 @@
+//===========================================================================
+// WebSockets
+//===========================================================================
+
 var stompClient = null;
-var intervalId = null; // Variable to hold the interval ID
+var intervalId = null;
 
 function setConnected(connected) {
-    //$("#connect").prop("disabled", connected);
-    //$("#disconnect").prop("disabled", !connected);
     if (connected) {
         $("#conversation").show();
     } else {
@@ -22,8 +24,6 @@ function connect() {
             var parsedAdminInfo = JSON.parse(adminInfo.body);
             showAdminInfo(parsedAdminInfo);
         });
-        // Start the interval to fetch admin info every 3 second
-        //intervalId = setInterval(fetchAdminInfo, 3000);
     }, function (error) {
         console.log("Error connecting to WebSocket:", error);
     });
@@ -92,3 +92,48 @@ $(function () {
         disconnect();
     });
 });
+
+//===========================================================================
+// Client
+//===========================================================================
+
+function logout() {
+    if (confirm("Are you sure you want to log out?")) {
+        $.ajax({
+            url: "/logout",
+            type: "POST",
+            success: function (response) {
+                if (response === "logged-off") {
+                    openPopup("Success", "Logged out successfully.");
+                    setTimeout(function () {
+                        window.location.href = "/guest";
+                    }, 3000);
+                } else if (response === "is-guest") {
+                    openPopup("Error", "You are already logged out.");
+                    setTimeout(function () {
+                        window.location.href = "/guest";
+                    }, 3000);
+                } else {
+                    console.log("Unknown response:", response);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log("Error logging out:", error);
+            }
+        });
+    }
+}
+
+//===========================================================================
+// Popups
+//===========================================================================
+
+function openPopup(title, message) {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("popupTitle").innerText = title;
+    document.getElementById("popupMessage").innerText = message;
+}
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
