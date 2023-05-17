@@ -2,13 +2,13 @@
 <html>
 <head>
     <title>Search for pages with the link</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="/app.js"></script>
     <script th:inline="javascript">
         $(document).ready(function() {
             var currentPage = 1;
 
+            // Perform AJAX request to check authentication status
             $.ajax({
                 type: 'POST',
                 url: '/check-authentication',
@@ -28,17 +28,18 @@
 
             function initSearchPage() {
                 $('#searchForm').submit(function(event) {
-                    event.preventDefault();
+                    event.preventDefault(); // Prevent form submission
 
                     var url = $('#url').val();
 
+                    // Send an AJAX request to the server
                     $.ajax({
                         type: 'POST',
                         url: '/search-links-results?page=' + currentPage,
                         contentType: 'application/json',
                         data: JSON.stringify({ url: url }),
                         success: function(response) {
-                            displayResults(response);
+                            displayResults(response); // Call the function to display the results
                         },
                         error: function(xhr, status, error) {
                             var err = eval("(" + xhr.responseText + ")");
@@ -47,6 +48,7 @@
                     });
                 });
 
+                // Bind previous page button click event
                 $('#previousPage').click(function() {
                     if (currentPage > 1) {
                         currentPage--;
@@ -54,6 +56,7 @@
                     }
                 });
 
+                // Bind next page button click event
                 $('#nextPage').click(function() {
                     currentPage++;
                     $('#searchForm').submit();
@@ -61,6 +64,7 @@
             }
 
             function displayResults(results) {
+                // Clear previous results
                 $('#searchResults').empty();
 
                 if (results.length === 0) {
@@ -70,6 +74,7 @@
                     return;
                 }
 
+                // Loop through the results and append them to the searchResults div
                 $.each(results, function(index, result) {
                     var resultItem = $('<div>');
                     resultItem.append('<h3>' + result.title + '</h3>');
@@ -78,12 +83,13 @@
                     $('#searchResults').append(resultItem);
                 });
 
+                // Update pagination
                 updatePagination(results.length);
             }
 
             function updatePagination(totalResults) {
                 var resultsPerPage = 10;
-                var totalPages = Math.ceil(totalResults / resultsPerPage);
+                var totalPages = Math.ceil(totalResults / resultsPerPage); // Calculate the total number of pages
                 if (currentPage > 1) {
                     $('#previousPage').show();
                 } else {
