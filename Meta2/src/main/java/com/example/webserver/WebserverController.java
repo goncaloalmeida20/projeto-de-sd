@@ -40,7 +40,7 @@ public class WebserverController {
 
     private static final Logger logger = LoggerFactory.getLogger(WebserverController.class);
     private static final int RESULTS_PER_PAGE = 10;
-    private static final int MAX_RMI_CONCURRENT_CALLS = 100;
+    private static final int MAX_RMI_CONCURRENT_CALLS = 2;
     @Autowired
     private SimpMessagingTemplate template;
 
@@ -51,7 +51,7 @@ public class WebserverController {
     @Resource(name="applicationRMISemaphore")
     private Semaphore RMISem;
 
-    @Resource(name="sessionRMIWrapper")
+    @Resource(name="applicationRMIWrapper")
     private RMIWrapper rmiw;
 
     @Bean
@@ -61,8 +61,8 @@ public class WebserverController {
     }
 
     @Bean
-    @Scope(value= WebApplicationContext.SCOPE_SESSION, proxyMode=ScopedProxyMode.TARGET_CLASS)
-    public RMIWrapper sessionRMIWrapper() throws RemoteException {
+    @Scope(value= WebApplicationContext.SCOPE_APPLICATION, proxyMode=ScopedProxyMode.TARGET_CLASS)
+    public RMIWrapper applicationRMIWrapper() throws RemoteException {
         return new RMIWrapper(RMISem);
     }
 
@@ -299,13 +299,6 @@ public class WebserverController {
 
     @Scheduled(fixedRate = 3000)
     public void onAdminInfo() throws RemoteException, InterruptedException {
-        Thread.sleep(1000);
         this.template.convertAndSend("/topic/admin", rmiw.maven_admin());
-    }
-
-
-    @GetMapping("/admin/info")
-    public AdminInfo getAdminInfo() throws RemoteException {
-        return rmiw.maven_admin();
     }
 }

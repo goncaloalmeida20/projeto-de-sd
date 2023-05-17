@@ -5,6 +5,11 @@ import classes.AdminInfo;
 import classes.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -17,6 +22,7 @@ import java.util.concurrent.Semaphore;
 public class RMIWrapper {
     private static final Logger logger = LoggerFactory.getLogger(RMIWrapper.class);
     private static final long TIMEOUT = 10000, RETRY_INTERVAL = 1000;
+    private static String REGISTRY_ADDRESS_FILE = "registry_address.txt";
     private SearchModuleC_S_I searchC;
 
     private Semaphore RMISem;
@@ -25,8 +31,21 @@ public class RMIWrapper {
         this.RMISem = RMISem;
         while(System.currentTimeMillis() < timeout_time){
             try{
+                String regAddr;
+                try{
+                    File regAddrF = new File(REGISTRY_ADDRESS_FILE);
+                    FileReader fr = new FileReader(regAddrF);
+                    BufferedReader br = new BufferedReader(fr);
+                    regAddr = br.readLine();
+                    fr.close();
+                }
+                catch(Exception e){
+                    logger.info("Error reading " + REGISTRY_ADDRESS_FILE + " file.");
+                    return;
+                }
+
                 RMISem.acquire();
-                Registry registry = LocateRegistry.getRegistry("localhost", 7004);
+                Registry registry = LocateRegistry.getRegistry(regAddr, 7004);
                 searchC = (SearchModuleC_S_I) registry.lookup("127.0.0.1");
                 return;
             }
@@ -96,8 +115,8 @@ public class RMIWrapper {
         while(System.currentTimeMillis() < timeout_time){
             try{
                 RMISem.acquire();
-                //logger.info("Test " + RMISem.availablePermits());
-                //Thread.sleep(100000);
+                logger.info("Test " + RMISem.availablePermits());
+                Thread.sleep(10000);
                 searchC.indexUrl(url);
                 return;
             }
