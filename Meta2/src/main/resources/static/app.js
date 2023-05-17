@@ -74,7 +74,6 @@ function sendAdminInfo(response) {
     }
 }
 
-//TODO: To complete
 function showAdminInfo(adminInfo) {
     $("#admininformations").html(
         "<tr><td><b>Number of Downloads:</b></td><td>" +
@@ -82,6 +81,9 @@ function showAdminInfo(adminInfo) {
         "</td></tr>" +
         "<tr><td><b>Number of Active Barrels:</b></td><td>" +
         adminInfo.numDownloads +
+        "</td></tr>" +
+        "<tr><td><b>Most Searched Items:</b></td><td>" +
+        adminInfo.mostSearchedItems +
         "</td></tr>"
     )
     ;}

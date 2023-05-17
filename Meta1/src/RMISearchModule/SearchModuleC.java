@@ -360,7 +360,6 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
         String topTenSearches = "";
         List<HashMap<Integer, String>> results = getTopTenSeaches();
 
-        topTenSearches += "\n          ---------------Top Ten Searches---------------          ";
         if(results == null){
             topTenSearches += "There weren't barrels to respond to this request in an interval of 5 seconds\n" +
                     "or a barrel or a downloader were shutdown during the search\n";
