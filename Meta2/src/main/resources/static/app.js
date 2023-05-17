@@ -22,8 +22,8 @@ function connect() {
             var parsedAdminInfo = JSON.parse(adminInfo.body);
             showAdminInfo(parsedAdminInfo);
         });
-        // Start the interval to fetch admin info every 1 second
-        intervalId = setInterval(fetchAdminInfo, 1000);
+        // Start the interval to fetch admin info every 3 second
+        intervalId = setInterval(fetchAdminInfo, 3000);
     }, function (error) {
         console.log("Error connecting to WebSocket:", error);
     });
@@ -65,17 +65,23 @@ function sendAdminInfo(response) {
         numActiveBarrels: response.numActiveBarrels,
         mostSearchedItems: response.mostSearchedItems
     };
-    stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
+    console.log(adminInfo);
+
+    if (stompClient && stompClient.connected) { // Check if stompClient is not null and connected
+        stompClient.send("/app/admin", {}, JSON.stringify(adminInfo));
+    } else {
+        console.log("WebSocket connection is not established or has been closed.");
+    }
 }
 
 //TODO: To complete
 function showAdminInfo(adminInfo) {
     $("#admininformations").html(
         "<tr><td><b>Number of Downloads:</b></td><td>" +
-        adminInfo.numDownloads +
+        adminInfo.numActiveBarrels +
         "</td></tr>" +
         "<tr><td><b>Number of Active Barrels:</b></td><td>" +
-        adminInfo.numActiveBarrels +
+        adminInfo.numDownloads +
         "</td></tr>"
     )
     ;}

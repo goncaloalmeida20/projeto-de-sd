@@ -1,5 +1,6 @@
 package RMISearchModule;
 
+import classes.AdminInfo;
 import classes.Page;
 
 import java.rmi.*;
@@ -24,4 +25,5 @@ public interface SearchModuleC_S_I extends Remote{
     int maven_logout(String s_id) throws RemoteException;
     ArrayList<Page> maven_search(int termCount, String[] terms) throws RemoteException, InterruptedException;
     List<Page> maven_searchPages(String url) throws RemoteException, InterruptedException;
+    AdminInfo maven_admin() throws RemoteException, InterruptedException;
 }

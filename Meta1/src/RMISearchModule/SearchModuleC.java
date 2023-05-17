@@ -6,6 +6,7 @@ import java.util.*;
 
 import URLQueue.URLQueueStarter;
 import URLQueue.URLQueue_I;
+import classes.AdminInfo;
 import classes.Page;
 import java.rmi.registry.Registry;
 import java.rmi.server.*;
@@ -337,6 +338,61 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      */
     public Map<Integer, Integer> admin() throws RemoteException {
         return AdminModule.getActiveDownloaderAndBarrels();
+    }
+
+    /**
+     * Retrieves a map of active downloader and barrels threads
+     *
+     * @return a Map with Integer keys representing thread IDs and Integer values representing the current progress of each thread
+     */
+    public AdminInfo maven_admin() throws RemoteException, InterruptedException {
+        AdminInfo adminInfo = new AdminInfo();
+        Map<Integer, Integer> d_and_b = AdminModule.getActiveDownloaderAndBarrels();
+
+        Map.Entry<Integer, Integer> firstEntry = d_and_b.entrySet().iterator().next();
+
+        Integer numDownloads = firstEntry.getKey();
+        Integer numActiveBarrels = firstEntry.getValue();
+
+        adminInfo.setNumDownloads(numDownloads);
+        adminInfo.setNumActiveBarrels(numActiveBarrels);
+
+        String topTenSearches = "";
+        List<HashMap<Integer, String>> results = getTopTenSeaches();
+
+        topTenSearches += "\n          ---------------Top Ten Searches---------------          ";
+        if(results == null){
+            topTenSearches += "There weren't barrels to respond to this request in an interval of 5 seconds\n" +
+                    "or a barrel or a downloader were shutdown during the search\n";
+        }else {
+            if (results.isEmpty()) {
+                topTenSearches += "                   No Searches have been done yet                   ";
+            } else {
+                //System.out.println("topTenSearches size: " + topTenSearches.size());
+                final int[] counter = {1};
+
+                for (HashMap<Integer, String> tTS : results) {
+                    for (Map.Entry<Integer, String> entry : tTS.entrySet()) {
+                        int key = entry.getKey();
+                        String value = entry.getValue();
+
+                        topTenSearches += "\t\t" + counter[0] + ". ";
+                        if (key == 1) {
+                            topTenSearches += "Term: " + value;
+                        } else if (key == 2) {
+                            topTenSearches += "Url: " + value;
+                        }
+                        counter[0]++;
+                    }
+                }
+
+            }
+        }
+        topTenSearches += "\n------------------------------------------------------------------\n";
+
+        adminInfo.setMostSearchedItems(topTenSearches);
+
+        return adminInfo;
     }
 
     /**

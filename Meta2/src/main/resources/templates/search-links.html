@@ -8,7 +8,6 @@
         $(document).ready(function() {
             var currentPage = 1;
 
-
             $('#searchForm').submit(function(event) {
                 event.preventDefault(); // Prevent form submission
 
@@ -46,6 +45,13 @@
                 // Clear previous results
                 $('#searchResults').empty();
 
+                if (results.length === 0) {
+                    $('#searchResults').text('There are no pages that correspond to the request.');
+                    $('#previousPage').hide();
+                    $('#nextPage').hide();
+                    return;
+                }
+
                 // Loop through the results and append them to the searchResults div
                 $.each(results, function(index, result) {
                     var resultItem = $('<div>');
@@ -56,12 +62,11 @@
                 });
 
                 // Update pagination
-                updatePagination();
+                updatePagination(results.length);
             }
 
             function updatePagination(totalResults) {
-                var resultsPerPage = [[${RESULTS_PER_PAGE}]]
-                console.log(resultsPerPage);
+                var resultsPerPage = 10;
                 var totalPages = Math.ceil(totalResults / resultsPerPage); // Calculate the total number of pages
                 if (currentPage > 1) {
                     $('#previousPage').show();
@@ -88,6 +93,8 @@
 
 <button id="previousPage" style="display: none;">Previous</button>
 <button id="nextPage" style="display: none;">Next</button>
+
+<div id="searchResults"></div>
 
 </body>
 </html>

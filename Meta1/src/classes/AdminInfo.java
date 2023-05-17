@@ -1,11 +1,11 @@
-package com.example.webserver.the_data;
+package classes;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class AdminInfo {
+public class AdminInfo implements Serializable {
     private int numDownloads;
     private int numActiveBarrels;
-    private List<String> mostSearchedItems;
+    private String mostSearchedItems;
 
     public AdminInfo() {
         this.numDownloads = 0;
@@ -13,7 +13,7 @@ public class AdminInfo {
         this.mostSearchedItems = null;
     }
 
-    public AdminInfo(int numDownloads, int numActiveBarrels, List<String> mostSearchedItems) {
+    public AdminInfo(int numDownloads, int numActiveBarrels, String mostSearchedItems) {
         this.numDownloads = numDownloads;
         this.numActiveBarrels = numActiveBarrels;
         this.mostSearchedItems = mostSearchedItems;
@@ -35,11 +35,11 @@ public class AdminInfo {
         this.numActiveBarrels = numActiveBarrels;
     }
 
-    public List<String> getMostSearchedItems() {
+    public String getMostSearchedItems() {
         return mostSearchedItems;
     }
 
-    public void setMostSearchedItems(List<String> mostSearchedItems) {
+    public void setMostSearchedItems(String mostSearchedItems) {
         this.mostSearchedItems = mostSearchedItems;
     }
 }

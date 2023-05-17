@@ -170,7 +170,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
         Connection connect = null;
         PreparedStatement stm = null;
-        ResultSet resultSet = null;
         try {
             connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
 
@@ -181,12 +180,12 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                     ResultSet.CONCUR_READ_ONLY
             );
             stm.setString(1, url);
-            resultSet = stm.executeQuery();
+            ResultSet resultSet = stm.executeQuery();
 
             ArrayList<Page> pages = new ArrayList<>();
 
             if (n_page == -1){
-                // In case if for the maven project
+                // Add the pages to a list
                 resultSet.beforeFirst();
                 while (resultSet.next()) {
                     Page page = new Page();
@@ -234,9 +233,6 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
         } finally {
             // Close the result set, statement, and connection
             try {
-                if (resultSet != null) {
-                    resultSet.close();
-                }
                 if (stm != null) {
                     stm.close();
                 }

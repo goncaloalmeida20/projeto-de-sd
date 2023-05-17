@@ -1,6 +1,7 @@
 package com.example.webserver;
 
 import RMISearchModule.SearchModuleC_S_I;
+import classes.AdminInfo;
 import classes.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -324,6 +325,29 @@ public class RMIWrapper {
             try{
                 RMISem.acquire();
                 return searchC.maven_searchPages(url);
+            }
+            catch(Exception e){
+                logger.info("Server is not responding, retrying...");
+            }
+            finally{
+                RMISem.release();
+            }
+
+            try{
+                Thread.sleep(RETRY_INTERVAL);
+            }catch(Exception e){
+                logger.info("Retries interrupted");
+            }
+        }
+        throw new RemoteException("Server timed out");
+    }
+
+    public AdminInfo maven_admin() throws RemoteException {
+        long timeout_time = System.currentTimeMillis() + TIMEOUT;
+        while(System.currentTimeMillis() < timeout_time){
+            try{
+                RMISem.acquire();
+                return searchC.maven_admin();
             }
             catch(Exception e){
                 logger.info("Server is not responding, retrying...");

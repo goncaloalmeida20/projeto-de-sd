@@ -1,9 +1,8 @@
 package com.example.webserver;
 
-import RMISearchModule.SearchModuleC_S_I;
+import classes.AdminInfo;
 import classes.Page;
 import com.example.webserver.forms.Login;
-import com.example.webserver.the_data.AdminInfo;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -23,12 +22,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.HtmlUtils;
 
 import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -291,23 +285,14 @@ public class WebserverController {
     @MessageMapping("/admin")
     @SendTo("/topic/admin")
     public AdminInfo onAdminInfo(AdminInfo adminInfo) {
-        return new AdminInfo(Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumDownloads())), Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumActiveBarrels())), Collections.singletonList(HtmlUtils.htmlEscape(adminInfo.getMostSearchedItems().toString())));
+        return new AdminInfo(Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumDownloads())), Integer.parseInt(HtmlUtils.htmlEscape(adminInfo.getNumActiveBarrels())), HtmlUtils.htmlEscape(adminInfo.getMostSearchedItems()));
 
     }
 
 
     @GetMapping("/admin/info")
     @ResponseBody
-    public AdminInfo getAdminInfo() {
-        AdminInfo adminInfo = new AdminInfo();
-
-        //TODO: Get info from server
-
-        //TEST
-        adminInfo.setMostSearchedItems(new ArrayList<>());
-        adminInfo.setNumDownloads(2);
-        adminInfo.setNumActiveBarrels(3);
-
-        return adminInfo;
+    public AdminInfo getAdminInfo() throws RemoteException {
+        return rmiw.maven_admin();
     }
 }
