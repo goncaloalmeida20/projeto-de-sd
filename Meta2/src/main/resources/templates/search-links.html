@@ -8,38 +8,60 @@
         $(document).ready(function() {
             var currentPage = 1;
 
-            $('#searchForm').submit(function(event) {
-                event.preventDefault(); // Prevent form submission
-
-                var url = $('#url').val();
-
-                // Send an AJAX request to the server
-                $.ajax({
-                    type: 'POST',
-                    url: '/search-links-results?page=' + currentPage,
-                    contentType: 'application/json',
-                    data: JSON.stringify({ url: url }),
-                    success: function(response) {
-                        displayResults(response); // Call the function to display the results
-                    },
-                    error: function(xhr, status, error) {
-                        var err = eval("(" + xhr.responseText + ")");
-                        alert(err.Message);
+            // Perform AJAX request to check authentication status
+            $.ajax({
+                type: 'POST',
+                url: '/check-authentication',
+                success: function(response) {
+                    if (response === 'authenticated') {
+                        initSearchPage();
+                    } else {
+                        alert('Authentication failed. Please login.');
+                        window.location.href = '/login';
                     }
-                });
-            });
-
-            $('#previousPage').click(function() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    $('#searchForm').submit();
+                },
+                error: function(xhr, status, error) {
+                    alert('Authentication failed. Please login.');
+                    window.location.href = '/login';
                 }
             });
 
-            $('#nextPage').click(function() {
-                currentPage++;
-                $('#searchForm').submit();
-            });
+            function initSearchPage() {
+                $('#searchForm').submit(function(event) {
+                    event.preventDefault(); // Prevent form submission
+
+                    var url = $('#url').val();
+
+                    // Send an AJAX request to the server
+                    $.ajax({
+                        type: 'POST',
+                        url: '/search-links-results?page=' + currentPage,
+                        contentType: 'application/json',
+                        data: JSON.stringify({ url: url }),
+                        success: function(response) {
+                            displayResults(response); // Call the function to display the results
+                        },
+                        error: function(xhr, status, error) {
+                            var err = eval("(" + xhr.responseText + ")");
+                            alert(err.Message);
+                        }
+                    });
+                });
+
+                // Bind previous page button click event
+                $('#previousPage').click(function() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        $('#searchForm').submit();
+                    }
+                });
+
+                // Bind next page button click event
+                $('#nextPage').click(function() {
+                    currentPage++;
+                    $('#searchForm').submit();
+                });
+            }
 
             function displayResults(results) {
                 // Clear previous results

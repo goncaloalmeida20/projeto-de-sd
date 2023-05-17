@@ -127,13 +127,23 @@ public class WebserverController {
         if (res == 0) {
             ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             HttpSession session = attr.getRequest().getSession(true);
-            session.setAttribute("login", true);
+            session.setAttribute("login", false);
             return "logged-off"; // Redirect to login page if Client is log off
         } else{
             return "is-guest"; // Redirect to guest page if Client is not logged on
         }
     }
 
+    @PostMapping("/check-authentication")
+    @ResponseBody
+    public String checkAuthentication() {
+       ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+       HttpSession session = attr.getRequest().getSession(true);
+       if((boolean) session.getAttribute("login")){
+           return "authenticated";
+       }
+       return "not-authenticated";
+    }
 
 
     //===========================================================================

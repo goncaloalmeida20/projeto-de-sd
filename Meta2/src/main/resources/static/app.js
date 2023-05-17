@@ -39,13 +39,6 @@ function disconnect() {
     clearInterval(intervalId);
 }
 
-function logout() {
-    if (confirm("Are you sure you want to log out?")) {
-        alert("Logged out successfully.");
-        window.location.href = "/logout";
-    }
-}
-
 function fetchAdminInfo() {
     $.ajax({
         url: "/admin/info",

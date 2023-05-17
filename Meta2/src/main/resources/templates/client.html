@@ -57,7 +57,7 @@
     if (confirm("Are you sure you want to log out?")) {
       $.ajax({
         url: "/logout",
-        type: "GET",
+        type: "POST",
         success: function (response) {
           if (response === "logged-off") {
             openPopup("Success", "Logged out successfully.");
