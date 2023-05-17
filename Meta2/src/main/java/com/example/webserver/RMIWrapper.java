@@ -346,7 +346,7 @@ public class RMIWrapper {
         while(System.currentTimeMillis() < timeout_time){
             try{
                 RMISem.acquire();
-                return searchC.searchPages(url,1, 1, true);
+                return searchC.maven_searchPages(url);
             }
             catch(Exception e){
                 logger.info("Server is not responding, retrying...");

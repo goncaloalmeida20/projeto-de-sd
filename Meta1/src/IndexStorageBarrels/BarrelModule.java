@@ -162,14 +162,19 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
     /**
      * Searches for pages that contain a specific URL in their links
      * and returns the list of ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page
-     * @param url URL to search for in the links of all the pages with their url indexed
+     * @param i_url URL to search for in the links of all the pages with their url indexed
      * @param n_page Number of the group of ten pages that should be return having index ∈ [totalPages / 10, totalPages / 10 + 1] equal to it
      * @return ArrayList ten pages that have index ∈ [totalPages / 10, totalPages / 10 + 1] = n_page and that match the search criteria (having the URL in their links)
      * @throws RemoteException If there is an error in the remote connection
      */
-    public ArrayList<Page> search_pages(String url, int n_page) throws RemoteException {
+    public ArrayList<Page> search_pages(String i_url, int n_page) throws RemoteException {
         Connection connect = null;
         PreparedStatement stm = null;
+        String url = i_url;
+        if (i_url.charAt(0) == '{') {
+            url = i_url.substring(8, i_url.length() - 2);
+        }
+        System.out.println(url);
         try {
             connect = DriverManager.getConnection(Barrel.bdb.urldb, Barrel.bdb.user, Barrel.bdb.password);
 
@@ -184,8 +189,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
 
             ArrayList<Page> pages = new ArrayList<>();
 
-            if (n_page == -1){
-                // Add the pages to a list
+            if(n_page == -1){
                 resultSet.beforeFirst();
                 while (resultSet.next()) {
                     Page page = new Page();
@@ -225,7 +229,7 @@ public class BarrelModule extends UnicastRemoteObject implements BarrelModule_S_
                     counter++;
                 }
             }
-            System.out.println(pages.size());
+
             Barrel.bdb.addSearch(2, url);
             return pages;
         } catch (SQLException e) {
