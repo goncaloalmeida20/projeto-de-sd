@@ -34,7 +34,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 // Code to be executed when the program is shutting down
-                File file = new File("src/databases/serverInfo.ser");
+                File file = new File("serverInfo.ser");
                 ObjectOutputStream oos;
                 try {
                     oos = new ObjectOutputStream(new FileOutputStream(file));
@@ -50,7 +50,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
         result_pages = new HashMap<>();
         resultsTopTen = new HashMap<>();
 
-        File file = new File("src/databases/serverInfo.ser");
+        File file = new File("serverInfo.ser");
         if (!file.exists()) {
             sI = new ServerInfo();
         } else{
@@ -79,7 +79,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModule_S_
      * Deletes the server information file.
      */
     private static void deleteServerSave(){
-        File siFile = new File("src/databases/serverInfo.ser");
+        File siFile = new File("serverInfo.ser");
         if (siFile.exists()) {
             if (siFile.delete()) {
                 System.out.println("serverInfo.ser deleted successfully.");

@@ -57,11 +57,8 @@ public class SearchModuleC extends UnicastRemoteObject implements Runnable, Sear
      * The saveServer method saves the server instance to a file.
      */
     private void saveServer() {
-        // Create the directory if it doesn't exist
-        File directory = new File("src/databases");
-
         // Save the instance to a file
-        File file = new File(directory, "serverInfo.ser");
+        File file = new File("serverInfo.ser");
         ObjectOutputStream oos = null;
         try {
             oos = new ObjectOutputStream(new FileOutputStream(file));
