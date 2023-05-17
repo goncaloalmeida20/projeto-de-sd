@@ -80,6 +80,9 @@ public class WebserverController {
 
     @GetMapping("/client")
     public String clientPage() {
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        HttpSession session = attr.getRequest().getSession(true);
+        session.setAttribute("login", false);
         return "client";
     }
 
