@@ -265,7 +265,6 @@ public class WebserverController {
     //===========================================================================
 
 
-    //TODO: Verify if the client is logged on
     @GetMapping("/search-links")
     public String showSearchLinksPage(Model model) {
         model.addAttribute("RESULTS_PER_PAGE", RESULTS_PER_PAGE);
